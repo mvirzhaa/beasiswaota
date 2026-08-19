@@ -7,7 +7,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-beasiswaota}
       POSTGRES_DB: ${POSTGRES_DB:-beasiswaota}
     ports:
-      - "5432:5432"
+      # Host 5433 -> container 5432. Port host 5432 sengaja tidak dipakai
+      # karena bentrok dengan Postgres lain yang sudah jalan di beberapa
+      # mesin developer.
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
