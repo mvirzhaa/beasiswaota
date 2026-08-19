@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Prisma, PrismaClient } from "@prisma/client";
+import { catatAudit } from "../audit";
 
 // ============================================================================
 // Mesin alokasi — Sistem Beasiswa Orangtua Asuh UIKA.
@@ -448,20 +449,18 @@ export async function setujuiBatch(
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          aktorId: opsi.disetujuiOlehId,
-          aksi: "alokasi.setujui",
-          entitas: "tagihan",
-          entitasId: tagihanSebelum.id,
-          sebelum: {
-            terbayar: tagihanSebelum.terbayar.toString(),
-            status: tagihanSebelum.status,
-          },
-          sesudah: { terbayar: terbayarBaru.toString(), status: statusBaru },
-          ipAddress: opsi.ipAddress,
-          userAgent: opsi.userAgent,
+      await catatAudit(tx, {
+        aktorId: opsi.disetujuiOlehId,
+        aksi: "alokasi.setujui",
+        entitas: "tagihan",
+        entitasId: tagihanSebelum.id,
+        sebelum: {
+          terbayar: tagihanSebelum.terbayar.toString(),
+          status: tagihanSebelum.status,
         },
+        sesudah: { terbayar: terbayarBaru.toString(), status: statusBaru },
+        ipAddress: opsi.ipAddress,
+        userAgent: opsi.userAgent,
       });
     }
   });
