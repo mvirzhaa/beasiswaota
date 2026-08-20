@@ -42,6 +42,18 @@ export const registerOrtuAsuhSchema = z.object({
   atasNamaMunfiq: z.string().optional(),
 });
 
+// Admin mendaftarkan mahasiswa (mis. camaba) langsung — semua field sama
+// dengan pendaftaran mandiri KECUALI password, karena sistem yang
+// membuatkan password sementara dan mengirimkannya lewat email.
+export const daftarkanMahasiswaAdminSchema = registerMahasiswaSchema.omit({
+  password: true,
+});
+
+export const tolakAkunSchema = z.object({
+  alasan: z.string().min(5, "Alasan wajib diisi (minimal 5 karakter)"),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterMahasiswaInput = z.infer<typeof registerMahasiswaSchema>;
 export type RegisterOrtuAsuhInput = z.infer<typeof registerOrtuAsuhSchema>;
+export type DaftarkanMahasiswaAdminInput = z.infer<typeof daftarkanMahasiswaAdminSchema>;

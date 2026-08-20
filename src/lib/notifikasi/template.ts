@@ -66,6 +66,26 @@ export function templateKomitmenMenunggak(input: {
   };
 }
 
+export function templateAkunDibuatAdmin(input: {
+  nama: string;
+  email: string;
+  password: string;
+  loginUrl: string;
+}): EmailTerkomposisi {
+  return {
+    subject: "Akun Beasiswa Orangtua Asuh Anda sudah dibuat",
+    html: BUNGKUS(`
+      <p>Yth. ${input.nama},</p>
+      <p>Admin telah membuatkan akun untuk Anda di Sistem Beasiswa Orangtua Asuh UIKA.</p>
+      <p>Email: <strong>${input.email}</strong><br/>
+      Kata sandi sementara: <strong>${input.password}</strong></p>
+      <p>Silakan masuk di <a href="${input.loginUrl}">${input.loginUrl}</a>. Simpan kata sandi
+      ini baik-baik dan hubungi admin bila ingin menggantinya.</p>
+      <p>Beasiswa Orangtua Asuh — Universitas Ibn Khaldun Bogor</p>
+    `),
+  };
+}
+
 export function templateKonfirmasiPembayaran(input: {
   namaDonatur: string;
   nominal: bigint;

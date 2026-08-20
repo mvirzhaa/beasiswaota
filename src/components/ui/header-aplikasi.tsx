@@ -7,6 +7,11 @@ export interface NavLinkAplikasi {
   label: string;
 }
 
+export interface NavGroupAplikasi {
+  label: string;
+  items: NavLinkAplikasi[];
+}
+
 const LABEL_ROLE: Record<string, string> = {
   ADMIN: "Admin",
   MAHASISWA: "Mahasiswa",
@@ -15,9 +20,11 @@ const LABEL_ROLE: Record<string, string> = {
 
 export async function HeaderAplikasi({
   navLinks,
+  navGroup,
   beranda,
 }: {
   navLinks: NavLinkAplikasi[];
+  navGroup?: NavGroupAplikasi;
   beranda: string;
 }) {
   const session = await auth();
@@ -36,6 +43,24 @@ export async function HeaderAplikasi({
               {l.label}
             </Link>
           ))}
+          {navGroup && (
+            <details className="group relative">
+              <summary className="cursor-pointer text-ink marker:text-muted hover:text-primary">
+                {navGroup.label}
+              </summary>
+              <div className="absolute right-0 z-10 mt-2 w-52 rounded-lg border border-border bg-surface py-1 shadow-[0_0_15px_rgba(0,0,0,0.12)]">
+                {navGroup.items.map((l) => (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    className="block px-3 py-2 text-ink hover:bg-surface-alt hover:text-primary"
+                  >
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
+            </details>
+          )}
         </nav>
 
         <div className="flex items-center gap-3 text-sm">
