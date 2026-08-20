@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { ambilDaftarPengajuanAdmin } from "@/server/queries/pengajuan";
+import { TombolHitungUlangSkor } from "./hitung-ulang-skor";
 
 type StatusFilter =
   | "DRAFT"
@@ -64,6 +65,10 @@ export default async function HalamanDaftarPengajuanAdmin({
           Filter
         </button>
       </form>
+
+      <div className="mt-3">
+        <TombolHitungUlangSkor periodeId={params.periodeId || undefined} />
+      </div>
 
       <table className="mt-4 w-full text-left text-sm">
         <thead>

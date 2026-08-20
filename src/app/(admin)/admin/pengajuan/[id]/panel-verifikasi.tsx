@@ -57,6 +57,8 @@ export function PanelVerifikasi({ pengajuan }: { pengajuan: PengajuanDetail }) {
 
       <SkorManual pengajuanId={pengajuan.id} skorSaatIni={pengajuan.skor?.toString()} />
 
+      <RincianSkor skorDetail={pengajuan.skorDetail} />
+
       {bisaDiputuskan && <Keputusan pengajuanId={pengajuan.id} />}
     </div>
   );
@@ -155,6 +157,62 @@ function SkorManual({
           </span>
         )}
       </form>
+    </section>
+  );
+}
+
+const LABEL_KRITERIA: Record<string, string> = {
+  penghasilan: "Penghasilan orang tua",
+  tanggungan: "Jumlah tanggungan",
+  statusOrtu: "Status orang tua",
+  ipk: "IPK",
+  semester: "Semester berjalan",
+};
+
+function RincianSkor({ skorDetail }: { skorDetail: unknown }) {
+  if (
+    !skorDetail ||
+    typeof skorDetail !== "object" ||
+    !("rincian" in skorDetail) ||
+    typeof (skorDetail as { rincian?: unknown }).rincian !== "object"
+  ) {
+    return null;
+  }
+
+  const rincian = (
+    skorDetail as {
+      rincian: Record<
+        string,
+        { nilaiMentah: unknown; skorNormalisasi: number; bobot: number; kontribusi: number }
+      >;
+    }
+  ).rincian;
+
+  return (
+    <section>
+      <h2 className="text-lg font-semibold">Rincian skor otomatis (terakhir dihitung)</h2>
+      <table className="mt-2 w-full text-left text-sm">
+        <thead>
+          <tr className="border-b text-gray-500">
+            <th className="py-1">Kriteria</th>
+            <th>Nilai mentah</th>
+            <th>Skor 0-100</th>
+            <th>Bobot</th>
+            <th>Kontribusi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.entries(rincian).map(([kunci, r]) => (
+            <tr key={kunci} className="border-b">
+              <td className="py-1">{LABEL_KRITERIA[kunci] ?? kunci}</td>
+              <td>{String(r.nilaiMentah ?? "-")}</td>
+              <td>{r.skorNormalisasi}</td>
+              <td>{r.bobot}%</td>
+              <td>{r.kontribusi}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </section>
   );
 }

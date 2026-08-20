@@ -1,5 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import argon2 from "argon2";
+import {
+  BOBOT_SKORING_DEFAULT,
+  KUNCI_PENGATURAN_BOBOT_SKORING,
+} from "../src/lib/skoring/bobot.schema";
 
 const prisma = new PrismaClient();
 
@@ -131,11 +135,21 @@ async function main() {
     },
   });
 
+  await prisma.pengaturan.upsert({
+    where: { kunci: KUNCI_PENGATURAN_BOBOT_SKORING },
+    update: {},
+    create: {
+      kunci: KUNCI_PENGATURAN_BOBOT_SKORING,
+      nilai: BOBOT_SKORING_DEFAULT,
+    },
+  });
+
   console.log("Seed selesai:");
   console.log(`  Admin      : ${admin.email}`);
   console.log(`  Mahasiswa  : ${dataMahasiswa.length} akun`);
   console.log(`  Ortu asuh  : ${dataOrtuAsuh.length} akun`);
   console.log(`  Periode    : ${periode.kode} (${periode.status})`);
+  console.log(`  Pengaturan : ${KUNCI_PENGATURAN_BOBOT_SKORING} (bobot skoring default)`);
   console.log(`  Password semua akun seed: ${PASSWORD_SEED}`);
 }
 

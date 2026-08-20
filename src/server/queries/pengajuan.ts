@@ -66,6 +66,28 @@ export async function ambilDaftarPengajuanAdmin(filter: {
   });
 }
 
+/**
+ * Pengajuan yang layak dihitung ulang skornya untuk satu periode: hanya
+ * yang masih bisa diputuskan (DIAJUKAN / VERIFIKASI_BERKAS), lengkap dengan
+ * data akademik mahasiswa yang dibutuhkan hitungSkor().
+ */
+export async function ambilPengajuanUntukSkoring(periodeId: string) {
+  return prisma.pengajuan.findMany({
+    where: {
+      periodeId,
+      status: { in: ["DIAJUKAN", "VERIFIKASI_BERKAS"] },
+    },
+    select: {
+      id: true,
+      penghasilanOrtu: true,
+      jmlTanggungan: true,
+      statusOrtu: true,
+      skor: true,
+      mahasiswa: { select: { ipk: true, semesterBerjalan: true } },
+    },
+  });
+}
+
 export async function ambilPengajuanDetailAdmin(id: string) {
   return prisma.pengajuan.findUnique({
     where: { id },
