@@ -341,3 +341,48 @@ lalu `pm2 reload beasiswaota` atau `systemctl restart beasiswaota`.
 Setelah tiap update yang mengubah dependency native (`argon2`, dst) atau
 `prisma/schema.prisma`, jalankan `npx tsc --noEmit` dan `npm run test`
 LOKAL dulu sebelum deploy — bukan langsung coba-coba di produksi.
+
+---
+
+## 12. Troubleshooting
+
+### App container segfault berulang ("Empty reply from server")
+
+Gejala: `docker logs beasiswaota-app` cuma menampilkan banner startup
+Next.js berulang-ulang tanpa error, container terus restart
+(`RestartCount` naik), dan request ke `http://127.0.0.1:3000` selalu
+dapat "Empty reply from server". Konfirmasi lewat:
+
+```bash
+dmesg -T | grep -i segfault
+cat /proc/cpuinfo | grep -m1 flags | tr ' ' '\n' | grep -E "^(avx2|bmi2)$"
+```
+
+Kalau `dmesg` menunjukkan `next-server ... segfault ... in node[...]`
+DAN `cpuinfo` tidak menampilkan `avx2`/`bmi2` sama sekali — ini bukan bug
+aplikasi, tapi V8 (mesin JS Node.js) yang crash karena CPU virtual VM ini
+tidak mendukung instruksi AVX2 yang dibutuhkan versi Node terbaru.
+Ditemukan pertama kali saat deploy produksi: VM ini terpasang dengan tipe
+CPU virtual "QEMU Virtual CPU version 2.5+" (sangat lama/generik).
+
+**Perbaikan yang benar (permanen):** minta pengelola VM (tim IT/penyedia
+VPS) mengganti tipe CPU virtual lewat panel hypervisor (Proxmox/VMware/
+dst) ke `host` (passthrough — VM langsung pakai instruksi CPU fisik) atau
+minimal model `Haswell` atau lebih baru (semua sudah dukung AVX2, standar
+sejak 2013). Perlu VM di-restart dari panel (bukan cuma reboot dari
+dalam OS) supaya berlaku.
+
+**Workaround sementara** (sudah aktif di `docker-compose.prod.yml`,
+service `app`, lihat `NODE_OPTIONS: "--jitless"`): mematikan seluruh JIT
+V8 supaya tidak pernah menyentuh AVX2 — aplikasi tetap jalan, tapi lebih
+lambat dari seharusnya (JavaScript murni diinterpretasi, tidak
+dioptimalkan). **Setelah tipe CPU VM diperbaiki, hapus baris
+`NODE_OPTIONS: "--jitless"` dari `docker-compose.prod.yml`, lalu:**
+
+```bash
+cat /proc/cpuinfo | grep -m1 flags | tr ' ' '\n' | grep -E "^(avx2|bmi2)$"
+# harus muncul "avx2" — baru lanjut ke bawah ini
+
+git pull
+docker compose --env-file .env -f deploy/docker-compose.prod.yml -p beasiswaota up -d app
+```

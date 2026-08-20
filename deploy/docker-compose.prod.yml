@@ -21,6 +21,15 @@ services:
     restart: unless-stopped
     env_file:
       - ../.env
+    environment:
+      # WORKAROUND SEMENTARA: VM ini punya CPU virtual tanpa AVX2 (model
+      # "QEMU Virtual CPU version 2.5+", dikonfirmasi lewat /proc/cpuinfo),
+      # dan V8 (mesin JS Node.js) segfault kalau JIT-nya coba pakai
+      # instruksi AVX2. --jitless mematikan seluruh JIT V8 (lebih lambat,
+      # tapi hanya interpretasi murni, jadi tidak menyentuh AVX2).
+      # HAPUS baris ini setelah tim pengelola VPS mengganti tipe CPU VM ke
+      # yang mendukung AVX2 (lihat deploy/README.md bagian troubleshooting).
+      NODE_OPTIONS: "--jitless"
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
