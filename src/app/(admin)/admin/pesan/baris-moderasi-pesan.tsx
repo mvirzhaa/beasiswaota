@@ -2,6 +2,9 @@
 
 import { useActionState } from "react";
 import type { HasilAksi } from "@/types/aksi";
+import { Lencana } from "@/components/ui/lencana";
+import { Tombol } from "@/components/ui/tombol";
+import { Check, X, Send, AlertCircle, ArrowRight, MessageSquare } from "lucide-react";
 import { teruskanPesan, tolakPesan } from "./actions";
 
 const STATE_AWAL: HasilAksi = { sukses: false, pesan: "" };
@@ -25,38 +28,73 @@ export function BarisModerasiPesan({ pesan }: { pesan: PesanModerasi }) {
     STATE_AWAL,
   );
 
-  return (
-    <div className="rounded border p-3 text-sm">
-      <p className="text-muted">
-        {pesan.namaOrtuAsuh} ↔ {pesan.namaMahasiswa} · dikirim oleh {pesan.pengirimRole}
-      </p>
-      <p className="mt-1">{pesan.isi}</p>
+  const isFromMahasiswa = pesan.pengirimRole === "MAHASISWA";
 
-      <div className="mt-3 flex flex-col gap-2">
-        <form action={actionTeruskan}>
-          <button
+  return (
+    <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs transition-all hover:border-primary/40">
+      {/* Sender - Receiver Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 pb-3.5">
+        <div className="flex items-center gap-2 text-xs">
+          <span className="font-semibold text-ink">{pesan.namaOrtuAsuh}</span>
+          <span className="text-muted">↔</span>
+          <span className="font-semibold text-ink">{pesan.namaMahasiswa}</span>
+        </div>
+        <Lencana nada={isFromMahasiswa ? "info" : "sukses"}>
+          Dikirim oleh: {pesan.pengirimRole}
+        </Lencana>
+      </div>
+
+      {/* Message Content */}
+      <div className="mt-4 rounded-xl bg-surface-alt/60 p-4">
+        <p className="whitespace-pre-wrap text-sm text-ink leading-relaxed font-sans">
+          {pesan.isi}
+        </p>
+      </div>
+
+      {/* Moderation Actions */}
+      <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between border-t border-border/60 pt-4">
+        {/* Approve / Forward Action */}
+        <form action={actionTeruskan} className="flex items-center gap-2">
+          <Tombol
             type="submit"
             disabled={pendingTeruskan}
-            className="rounded-lg bg-primary px-3 py-1 text-xs text-white disabled:opacity-50"
+            variant="primer"
+            ukuran="sm"
           >
-            {pendingTeruskan ? "Memproses..." : "Teruskan"}
-          </button>
+            <Check className="h-4 w-4" />
+            <span>{pendingTeruskan ? "Meneruskan..." : "Loloskan & Teruskan Pesan"}</span>
+          </Tombol>
           {stateTeruskan.pesan && !stateTeruskan.sukses && (
-            <span className="ml-2 text-xs text-red-600">{stateTeruskan.pesan}</span>
+            <span className="text-xs text-red-600 font-medium">{stateTeruskan.pesan}</span>
           )}
         </form>
 
-        <form action={actionTolak} className="flex flex-col gap-1">
-          <textarea name="alasan" placeholder="Alasan penolakan (wajib)" rows={2} className="rounded-lg border border-border px-2 py-1 text-xs" />
-          <button
-            type="submit"
-            disabled={pendingTolak}
-            className="w-fit rounded-lg border border-red-600 px-3 py-1 text-xs text-red-600 disabled:opacity-50"
-          >
-            {pendingTolak ? "Memproses..." : "Tolak"}
-          </button>
+        {/* Reject Action with Reason */}
+        <form action={actionTolak} className="flex flex-col gap-2 sm:max-w-md w-full">
+          <div className="flex gap-2">
+            <input
+              name="alasan"
+              placeholder="Alasan penolakan (misal: terdapat nomor HP/kontak pribadi)..."
+              required
+              className="w-full rounded-xl border border-border bg-surface px-3 py-1.5 text-xs text-ink transition-all focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+            />
+            <Tombol
+              type="submit"
+              disabled={pendingTolak}
+              variant="bahaya"
+              ukuran="sm"
+              className="shrink-0"
+            >
+              <X className="h-3.5 w-3.5" />
+              <span>{pendingTolak ? "Menolak..." : "Tolak Pesan"}</span>
+            </Tombol>
+          </div>
           {stateTolak.pesan && (
-            <span className={`text-xs ${stateTolak.sukses ? "text-green-700" : "text-red-600"}`}>
+            <span
+              className={`text-xs font-medium ${
+                stateTolak.sukses ? "text-green-700" : "text-red-600"
+              }`}
+            >
               {stateTolak.pesan}
             </span>
           )}

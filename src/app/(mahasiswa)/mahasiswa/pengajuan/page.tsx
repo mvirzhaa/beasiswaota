@@ -3,6 +3,7 @@ import {
   ambilPeriodePendaftaranAktif,
   ambilPengajuanMahasiswa,
 } from "@/server/queries/pengajuan";
+import { FileText, Calendar, AlertCircle } from "lucide-react";
 import { FormPengajuan } from "./form-pengajuan";
 
 export default async function HalamanPengajuanMahasiswa() {
@@ -13,11 +14,26 @@ export default async function HalamanPengajuanMahasiswa() {
 
   if (!periode) {
     return (
-      <main className="mx-auto max-w-2xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
-        <h1 className="font-heading text-2xl font-bold text-ink">Pengajuan Beasiswa</h1>
-        <p className="mt-4 text-sm text-muted">
-          Belum ada periode pendaftaran yang dibuka saat ini.
-        </p>
+      <main className="mx-auto mt-6 mb-12 max-w-4xl px-4 sm:px-6">
+        <div className="flex flex-col gap-1 border-b border-border pb-5">
+          <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-accent-dark uppercase">
+            <FileText className="h-4 w-4 text-primary" />
+            <span>Pendaftaran Beasiswa</span>
+          </div>
+          <h1 className="font-heading text-2xl font-bold text-ink sm:text-3xl">
+            Pengajuan Beasiswa
+          </h1>
+        </div>
+
+        <div className="mt-8 flex flex-col items-center justify-center rounded-3xl border border-border bg-surface py-16 text-center shadow-xs">
+          <Calendar className="h-12 w-12 text-muted/40" />
+          <h2 className="mt-3 font-heading text-lg font-bold text-ink">
+            Pendaftaran Belum Dibuka
+          </h2>
+          <p className="mt-1 max-w-md text-xs text-muted">
+            Saat ini belum ada periode pendaftaran beasiswa yang aktif. Silakan pantau pengumuman resmi dari pengelola beasiswa UIKA Bogor.
+          </p>
+        </div>
       </main>
     );
   }
@@ -25,11 +41,22 @@ export default async function HalamanPengajuanMahasiswa() {
   const pengajuan = await ambilPengajuanMahasiswa(userId, periode.id);
 
   return (
-    <main className="mx-auto max-w-2xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
-      <h1 className="font-heading text-2xl font-bold text-ink">Pengajuan Beasiswa</h1>
-      <p className="mt-1 text-sm text-muted">Periode {periode.kode}</p>
+    <main className="mx-auto mt-6 mb-12 max-w-4xl px-4 sm:px-6">
+      {/* Header Halaman */}
+      <div className="flex flex-col gap-1 border-b border-border pb-5">
+        <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-accent-dark uppercase">
+          <FileText className="h-4 w-4 text-primary" />
+          <span>Pendaftaran Beasiswa</span>
+        </div>
+        <h1 className="font-heading text-2xl font-bold text-ink sm:text-3xl">
+          Pengajuan Beasiswa
+        </h1>
+        <p className="text-sm text-muted">
+          Periode Aktif: <strong className="text-ink">{periode.kode}</strong> (Semester {periode.semester} - {periode.tahunAkademik})
+        </p>
+      </div>
 
-      <div className="mt-6">
+      <div className="mt-8">
         <FormPengajuan periodeId={periode.id} pengajuan={pengajuan} />
       </div>
     </main>

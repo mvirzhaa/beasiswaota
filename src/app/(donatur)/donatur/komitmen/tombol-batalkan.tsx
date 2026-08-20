@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import type { HasilAksi } from "@/types/aksi";
+import { Tombol } from "@/components/ui/tombol";
 import { batalkanKomitmen } from "./actions";
 
 const STATE_AWAL: HasilAksi = { sukses: false, pesan: "" };
@@ -13,16 +14,17 @@ export function TombolBatalkanKomitmen({ komitmenId }: { komitmenId: string }) {
   );
 
   return (
-    <form action={formAction} className="flex items-center gap-2">
-      <button
+    <form action={formAction} className="flex flex-wrap items-center gap-2">
+      <Tombol
         type="submit"
         disabled={pending}
-        className="rounded-lg border border-red-600 px-3 py-1 text-sm text-red-600 disabled:opacity-50"
+        variant="bahaya"
+        ukuran="sm"
       >
-        {pending ? "Membatalkan..." : "Batalkan komitmen"}
-      </button>
+        {pending ? "Membatalkan..." : "Batalkan Komitmen"}
+      </Tombol>
       {state.pesan && (
-        <span className={`text-sm ${state.sukses ? "text-green-700" : "text-red-600"}`}>
+        <span className={`text-xs ${state.sukses ? "text-green-700 font-medium" : "text-red-600"}`}>
           {state.pesan}
         </span>
       )}

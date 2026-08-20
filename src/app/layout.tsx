@@ -17,8 +17,20 @@ const fontHeading = Yantramanav({
 });
 
 export const metadata: Metadata = {
-  title: "Beasiswa Orangtua Asuh — UIKA",
-  description: "Sistem Beasiswa Orangtua Asuh Universitas Ibn Khaldun Bogor",
+  title: {
+    default: "Beasiswa Orang Tua Asuh — Universitas Ibn Khaldun Bogor",
+    template: "%s | Beasiswa Orang Tua Asuh UIKA Bogor",
+  },
+  description:
+    "Portal Resmi Program Beasiswa Orang Tua Asuh Universitas Ibn Khaldun (UIKA) Bogor. Membantu biaya pendidikan mahasiswa berprestasi dan membutuhkan secara transparan dan akuntabel.",
+  icons: {
+    icon: [
+      { url: "/images/logo-uika.png", sizes: "any" },
+      { url: "/images/logo-uika.png", type: "image/png" },
+    ],
+    shortcut: "/images/logo-uika.png",
+    apple: "/images/logo-uika.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -4,6 +4,20 @@ import { useActionState } from "react";
 import Link from "next/link";
 import type { Periode } from "@prisma/client";
 import { formatRupiah } from "@/lib/uang";
+import { Lencana } from "@/components/ui/lencana";
+import { Tombol } from "@/components/ui/tombol";
+import {
+  Shuffle,
+  Play,
+  Sparkles,
+  CheckCircle2,
+  AlertCircle,
+  Coins,
+  Users,
+  Wallet,
+  ArrowRight,
+  TrendingDown,
+} from "lucide-react";
 import { simulasiAlokasi, eksekusiAlokasi, type HasilSimulasi, type HasilEksekusi } from "../actions";
 
 const STATE_SIMULASI_AWAL: HasilSimulasi = { sukses: false, pesan: "" };
@@ -23,63 +37,104 @@ export function FormSimulasi({ periodeList }: { periodeList: Periode[] }) {
 
   if (periodeList.length === 0) {
     return (
-      <p className="mt-4 text-sm text-muted">
-        Belum ada periode berstatus SELEKSI/PENYALURAN yang bisa dijalankan.
-      </p>
+      <div className="rounded-2xl border border-border bg-surface p-8 text-center shadow-xs">
+        <p className="text-xs text-muted">
+          Belum ada periode semester berstatus <strong>SELEKSI</strong> atau <strong>PENYALURAN</strong> yang siap dialokasikan.
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="mt-4 flex flex-col gap-6">
-      <form className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          <span>Periode</span>
-          <select name="periodeId" className="rounded-lg border border-border px-3 py-2">
-            {periodeList.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.kode} ({p.status})
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          type="submit"
-          formAction={actionSimulasi}
-          disabled={pendingSimulasi || pendingEksekusi}
-          className="rounded-lg border border-border px-4 py-2 text-sm disabled:opacity-50"
-        >
-          {pendingSimulasi ? "Menyimulasikan..." : "Simulasikan"}
-        </button>
-        <button
-          type="submit"
-          formAction={actionEksekusi}
-          disabled={pendingSimulasi || pendingEksekusi}
-          className="rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
-        >
-          {pendingEksekusi ? "Menjalankan..." : "Jalankan (tulis batch DRAFT)"}
-        </button>
-      </form>
+    <div className="flex flex-col gap-8">
+      {/* Form Eksekusi / Simulasi */}
+      <div className="rounded-2xl border border-border bg-surface p-6 shadow-xs">
+        <h2 className="font-heading text-lg font-bold text-ink border-b border-border pb-3">
+          Konfigurasi Periode Alokasi
+        </h2>
 
-      {stateEksekusi.pesan && (
-        <p className={`text-sm ${stateEksekusi.sukses ? "text-green-700" : "text-red-600"}`}>
-          {stateEksekusi.pesan}
-          {stateEksekusi.batchId && (
-            <>
-              {" "}
-              <Link href={`/admin/alokasi/${stateEksekusi.batchId}`} className="underline">
-                Review batch
-              </Link>
-            </>
-          )}
-        </p>
-      )}
+        <form className="mt-5 flex flex-wrap items-end gap-3">
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-ink">
+            <span>Pilih Periode Semester</span>
+            <select
+              name="periodeId"
+              className="rounded-xl border border-border bg-surface-alt px-3.5 py-2 text-xs text-ink font-medium transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              {periodeList.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.kode} (Status: {p.status})
+                </option>
+              ))}
+            </select>
+          </label>
 
-      {stateSimulasi.pesan && (
-        <p className={`text-sm ${stateSimulasi.sukses ? "text-green-700" : "text-red-600"}`}>
-          {stateSimulasi.pesan}
-        </p>
-      )}
+          <Tombol
+            type="submit"
+            formAction={actionSimulasi}
+            disabled={pendingSimulasi || pendingEksekusi}
+            variant="garis"
+          >
+            <Sparkles className="h-4 w-4" />
+            <span>{pendingSimulasi ? "Menyimulasikan..." : "Jalankan Simulasi (Uji Coba)"}</span>
+          </Tombol>
 
+          <Tombol
+            type="submit"
+            formAction={actionEksekusi}
+            disabled={pendingSimulasi || pendingEksekusi}
+            variant="primer"
+          >
+            <Play className="h-4 w-4" />
+            <span>{pendingEksekusi ? "Memproses Batch..." : "Eksekusi Alokasi (Tulis Batch Draft)"}</span>
+          </Tombol>
+        </form>
+
+        {stateEksekusi.pesan && (
+          <div
+            className={`mt-4 flex items-start gap-2 rounded-xl p-3 text-xs ${
+              stateEksekusi.sukses
+                ? "border border-green-200 bg-green-50 text-green-800"
+                : "border border-red-200 bg-red-50 text-red-800"
+            }`}
+          >
+            {stateEksekusi.sukses ? (
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+            ) : (
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+            )}
+            <div>
+              <span>{stateEksekusi.pesan}</span>
+              {stateEksekusi.batchId && (
+                <Link
+                  href={`/admin/alokasi/${stateEksekusi.batchId}`}
+                  className="ml-2 font-bold underline hover:text-green-900"
+                >
+                  Review Batch Sekarang &rarr;
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+
+        {stateSimulasi.pesan && (
+          <div
+            className={`mt-4 flex items-start gap-2 rounded-xl p-3 text-xs ${
+              stateSimulasi.sukses
+                ? "border border-green-200 bg-green-50 text-green-800"
+                : "border border-red-200 bg-red-50 text-red-800"
+            }`}
+          >
+            {stateSimulasi.sukses ? (
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+            ) : (
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+            )}
+            <span>{stateSimulasi.pesan}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Hasil Simulasi */}
       {stateSimulasi.rencana && (
         <HasilSimulasiTampil
           rencana={stateSimulasi.rencana}
@@ -99,90 +154,157 @@ function HasilSimulasiTampil({
 }) {
   return (
     <div className="flex flex-col gap-6">
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-4">
-        <dt className="text-muted">Saldo awal</dt>
-        <dd>{formatRupiah(rencana.saldoAwal)}</dd>
-        <dt className="text-muted">Total dialokasikan</dt>
-        <dd>{formatRupiah(rencana.totalDialokasikan)}</dd>
-        <dt className="text-muted">Saldo akhir (digulirkan)</dt>
-        <dd>{formatRupiah(rencana.saldoAkhir)}</dd>
-        <dt className="text-muted">Mode</dt>
-        <dd>{rencana.mode}</dd>
-      </dl>
+      {/* Metrik Hasil Simulasi */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-xs">
+          <span className="text-xs text-muted flex items-center justify-between">
+            <span>Saldo Pool Awal</span>
+            <Wallet className="h-4 w-4 text-muted/60" />
+          </span>
+          <p className="mt-2 font-mono text-xl font-bold text-ink">
+            {formatRupiah(rencana.saldoAwal)}
+          </p>
+        </div>
 
-      <div>
-        <h2 className="font-heading text-lg font-bold text-ink">Calon penerima ({rencana.penerima.length})</h2>
-        <table className="mt-2 w-full text-left text-sm">
-          <thead>
-            <tr className="border-b">
-              <th className="py-1">Peringkat</th>
-              <th>Mahasiswa</th>
-              <th>Skor</th>
-              <th>Nominal</th>
-              <th>Sumber dana</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rencana.penerima.map((p) => (
-              <tr key={p.tagihanId} className="border-b">
-                <td className="py-1">#{p.ranking}</td>
-                <td>
-                  {mahasiswaMap[p.mahasiswaId]
-                    ? `${mahasiswaMap[p.mahasiswaId].nama} (${mahasiswaMap[p.mahasiswaId].nim})`
-                    : p.mahasiswaId}
-                </td>
-                <td>{p.skor}</td>
-                <td>{formatRupiah(p.nominal)}</td>
-                <td>{p.sumber.length} transaksi</td>
-              </tr>
-            ))}
-            {rencana.penerima.length === 0 && (
-              <tr>
-                <td colSpan={5} className="py-3 text-center text-muted">
-                  Tidak ada penerima.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <div className="rounded-2xl border border-primary/20 bg-primary-light/40 p-5 shadow-xs">
+          <span className="text-xs font-semibold text-primary-dark flex items-center justify-between">
+            <span>Total Dialokasikan</span>
+            <Coins className="h-4 w-4 text-primary" />
+          </span>
+          <p className="mt-2 font-mono text-xl font-bold text-primary">
+            {formatRupiah(rencana.totalDialokasikan)}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-xs">
+          <span className="text-xs text-muted flex items-center justify-between">
+            <span>Saldo Sisa (Digulirkan)</span>
+            <TrendingDown className="h-4 w-4 text-muted/60" />
+          </span>
+          <p className="mt-2 font-mono text-xl font-bold text-ink">
+            {formatRupiah(rencana.saldoAkhir)}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-xs">
+          <span className="text-xs text-muted flex items-center justify-between">
+            <span>Mode Alokasi</span>
+            <Shuffle className="h-4 w-4 text-muted/60" />
+          </span>
+          <p className="mt-2 font-heading text-lg font-bold text-ink">
+            {rencana.mode}
+          </p>
+        </div>
       </div>
 
-      <div>
-        <h2 className="font-heading text-lg font-bold text-ink">Antrian belum kebagian ({rencana.antrian.length})</h2>
-        <table className="mt-2 w-full text-left text-sm">
-          <thead>
-            <tr className="border-b">
-              <th className="py-1">Peringkat</th>
-              <th>Mahasiswa</th>
-              <th>Skor</th>
-              <th>Sisa tagihan</th>
-              <th>Alasan</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rencana.antrian.map((a) => (
-              <tr key={a.tagihanId} className="border-b">
-                <td className="py-1">#{a.ranking}</td>
-                <td>
-                  {mahasiswaMap[a.mahasiswaId]
-                    ? `${mahasiswaMap[a.mahasiswaId].nama} (${mahasiswaMap[a.mahasiswaId].nim})`
-                    : a.mahasiswaId}
-                </td>
-                <td>{a.skor}</td>
-                <td>{formatRupiah(a.sisaTagihan)}</td>
-                <td>{a.alasan}</td>
+      {/* Tabel Calon Penerima */}
+      <div className="rounded-2xl border border-border bg-surface p-6 shadow-xs">
+        <div className="flex items-center justify-between border-b border-border pb-4">
+          <div>
+            <h3 className="font-heading text-lg font-bold text-ink">
+              Calon Penerima Beasiswa ({rencana.penerima.length} Mahasiswa)
+            </h3>
+            <p className="text-xs text-muted">Mahasiswa dengan skor prioritas tertinggi yang mencukupi kuota dana</p>
+          </div>
+          <Lencana nada="sukses">{rencana.penerima.length} Mahasiswa Lolos</Lencana>
+        </div>
+
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-border/80 text-xs font-semibold uppercase tracking-wider text-muted">
+                <th className="pb-3 pl-2 text-center">Rank</th>
+                <th className="pb-3">Mahasiswa</th>
+                <th className="pb-3 text-center">Skor Kebutuhan</th>
+                <th className="pb-3">Alokasi Bantuan</th>
+                <th className="pb-3 pr-2 text-right">Sumber Donasi</th>
               </tr>
-            ))}
-            {rencana.antrian.length === 0 && (
-              <tr>
-                <td colSpan={5} className="py-3 text-center text-muted">
-                  Tidak ada antrian.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border/60">
+              {rencana.penerima.map((p) => (
+                <tr key={p.tagihanId} className="transition-colors hover:bg-surface-alt/40">
+                  <td className="py-3.5 pl-2 text-center font-bold text-primary font-mono">
+                    #{p.ranking}
+                  </td>
+                  <td className="py-3.5 font-bold text-ink">
+                    {mahasiswaMap[p.mahasiswaId]
+                      ? `${mahasiswaMap[p.mahasiswaId].nama} (${mahasiswaMap[p.mahasiswaId].nim})`
+                      : p.mahasiswaId}
+                  </td>
+                  <td className="py-3.5 text-center font-mono font-semibold text-ink">
+                    {p.skor}
+                  </td>
+                  <td className="py-3.5 font-mono font-bold text-primary">
+                    {formatRupiah(p.nominal)}
+                  </td>
+                  <td className="py-3.5 pr-2 text-right text-xs text-muted">
+                    {p.sumber.length} transaksi transfer
+                  </td>
+                </tr>
+              ))}
+              {rencana.penerima.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-xs text-muted">
+                    Tidak ada calon penerima yang memenuhi kriteria.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {/* Tabel Antrean Belum Kebagian */}
+      {rencana.antrian.length > 0 && (
+        <div className="rounded-2xl border border-border bg-surface p-6 shadow-xs">
+          <div className="flex items-center justify-between border-b border-border pb-4">
+            <div>
+              <h3 className="font-heading text-lg font-bold text-ink">
+                Antrean Cadangan ({rencana.antrian.length} Mahasiswa)
+              </h3>
+              <p className="text-xs text-muted">Mahasiswa yang belum tercover karena keterbatasan saldo pool</p>
+            </div>
+            <Lencana nada="peringatan">{rencana.antrian.length} Menunggu</Lencana>
+          </div>
+
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-border/80 text-xs font-semibold uppercase tracking-wider text-muted">
+                  <th className="pb-3 pl-2 text-center">Rank</th>
+                  <th className="pb-3">Mahasiswa</th>
+                  <th className="pb-3 text-center">Skor</th>
+                  <th className="pb-3">Sisa Tagihan UKT</th>
+                  <th className="pb-3 pr-2 text-right">Alasan Belum Tercover</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/60">
+                {rencana.antrian.map((a) => (
+                  <tr key={a.tagihanId} className="transition-colors hover:bg-surface-alt/40">
+                    <td className="py-3.5 pl-2 text-center font-bold text-muted font-mono">
+                      #{a.ranking}
+                    </td>
+                    <td className="py-3.5 font-bold text-ink">
+                      {mahasiswaMap[a.mahasiswaId]
+                        ? `${mahasiswaMap[a.mahasiswaId].nama} (${mahasiswaMap[a.mahasiswaId].nim})`
+                        : a.mahasiswaId}
+                    </td>
+                    <td className="py-3.5 text-center font-mono font-semibold text-ink">
+                      {a.skor}
+                    </td>
+                    <td className="py-3.5 font-mono font-bold text-ink">
+                      {formatRupiah(a.sisaTagihan)}
+                    </td>
+                    <td className="py-3.5 pr-2 text-right text-xs text-muted">
+                      {a.alasan}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
