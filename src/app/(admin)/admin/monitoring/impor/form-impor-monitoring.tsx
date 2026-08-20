@@ -27,7 +27,7 @@ export function FormImporMonitoring({ periodeList }: { periodeList: { id: string
   );
 
   if (periodeList.length === 0) {
-    return <p className="mt-4 text-sm text-gray-500">Belum ada periode.</p>;
+    return <p className="mt-4 text-sm text-muted">Belum ada periode.</p>;
   }
 
   const barisValid = (statePratinjau.valid ?? []).filter((v) => v.mahasiswaId !== null);
@@ -41,7 +41,7 @@ export function FormImporMonitoring({ periodeList }: { periodeList: { id: string
           <select
             value={periodeId}
             onChange={(e) => setPeriodeId(e.target.value)}
-            className="rounded border px-3 py-2"
+            className="rounded-lg border border-border px-3 py-2"
           >
             {periodeList.map((p) => (
               <option key={p.id} value={p.id}>
@@ -63,17 +63,17 @@ export function FormImporMonitoring({ periodeList }: { periodeList: { id: string
         <button
           type="submit"
           disabled={pendingPratinjau}
-          className="rounded border px-4 py-2 text-sm disabled:opacity-50"
+          className="rounded-lg border border-border px-4 py-2 text-sm disabled:opacity-50"
         >
           {pendingPratinjau ? "Membaca..." : "Pratinjau"}
         </button>
       </form>
 
-      {statePratinjau.pesan && <p className="text-sm text-gray-700">{statePratinjau.pesan}</p>}
+      {statePratinjau.pesan && <p className="text-sm text-muted">{statePratinjau.pesan}</p>}
 
       {statePratinjau.valid && (
         <div>
-          <h2 className="text-lg font-semibold">Pratinjau ({barisValid.length} siap disimpan)</h2>
+          <h2 className="font-heading text-lg font-bold text-ink">Pratinjau ({barisValid.length} siap disimpan)</h2>
           <table className="mt-2 w-full text-left text-sm">
             <thead>
               <tr className="border-b">
@@ -118,7 +118,7 @@ export function FormImporMonitoring({ periodeList }: { periodeList: { id: string
               <button
                 type="submit"
                 disabled={pendingKomit}
-                className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+                className="rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
               >
                 {pendingKomit ? "Menyimpan..." : `Konfirmasi simpan ${barisValid.length} baris`}
               </button>

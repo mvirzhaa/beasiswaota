@@ -23,7 +23,7 @@ export function FormSimulasi({ periodeList }: { periodeList: Periode[] }) {
 
   if (periodeList.length === 0) {
     return (
-      <p className="mt-4 text-sm text-gray-500">
+      <p className="mt-4 text-sm text-muted">
         Belum ada periode berstatus SELEKSI/PENYALURAN yang bisa dijalankan.
       </p>
     );
@@ -34,7 +34,7 @@ export function FormSimulasi({ periodeList }: { periodeList: Periode[] }) {
       <form className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1 text-sm">
           <span>Periode</span>
-          <select name="periodeId" className="rounded border px-3 py-2">
+          <select name="periodeId" className="rounded-lg border border-border px-3 py-2">
             {periodeList.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.kode} ({p.status})
@@ -46,7 +46,7 @@ export function FormSimulasi({ periodeList }: { periodeList: Periode[] }) {
           type="submit"
           formAction={actionSimulasi}
           disabled={pendingSimulasi || pendingEksekusi}
-          className="rounded border px-4 py-2 text-sm disabled:opacity-50"
+          className="rounded-lg border border-border px-4 py-2 text-sm disabled:opacity-50"
         >
           {pendingSimulasi ? "Menyimulasikan..." : "Simulasikan"}
         </button>
@@ -54,7 +54,7 @@ export function FormSimulasi({ periodeList }: { periodeList: Periode[] }) {
           type="submit"
           formAction={actionEksekusi}
           disabled={pendingSimulasi || pendingEksekusi}
-          className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
         >
           {pendingEksekusi ? "Menjalankan..." : "Jalankan (tulis batch DRAFT)"}
         </button>
@@ -100,18 +100,18 @@ function HasilSimulasiTampil({
   return (
     <div className="flex flex-col gap-6">
       <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-4">
-        <dt className="text-gray-500">Saldo awal</dt>
+        <dt className="text-muted">Saldo awal</dt>
         <dd>{formatRupiah(rencana.saldoAwal)}</dd>
-        <dt className="text-gray-500">Total dialokasikan</dt>
+        <dt className="text-muted">Total dialokasikan</dt>
         <dd>{formatRupiah(rencana.totalDialokasikan)}</dd>
-        <dt className="text-gray-500">Saldo akhir (digulirkan)</dt>
+        <dt className="text-muted">Saldo akhir (digulirkan)</dt>
         <dd>{formatRupiah(rencana.saldoAkhir)}</dd>
-        <dt className="text-gray-500">Mode</dt>
+        <dt className="text-muted">Mode</dt>
         <dd>{rencana.mode}</dd>
       </dl>
 
       <div>
-        <h2 className="text-lg font-semibold">Calon penerima ({rencana.penerima.length})</h2>
+        <h2 className="font-heading text-lg font-bold text-ink">Calon penerima ({rencana.penerima.length})</h2>
         <table className="mt-2 w-full text-left text-sm">
           <thead>
             <tr className="border-b">
@@ -138,7 +138,7 @@ function HasilSimulasiTampil({
             ))}
             {rencana.penerima.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-3 text-center text-gray-500">
+                <td colSpan={5} className="py-3 text-center text-muted">
                   Tidak ada penerima.
                 </td>
               </tr>
@@ -148,7 +148,7 @@ function HasilSimulasiTampil({
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold">Antrian belum kebagian ({rencana.antrian.length})</h2>
+        <h2 className="font-heading text-lg font-bold text-ink">Antrian belum kebagian ({rencana.antrian.length})</h2>
         <table className="mt-2 w-full text-left text-sm">
           <thead>
             <tr className="border-b">
@@ -175,7 +175,7 @@ function HasilSimulasiTampil({
             ))}
             {rencana.antrian.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-3 text-center text-gray-500">
+                <td colSpan={5} className="py-3 text-center text-muted">
                   Tidak ada antrian.
                 </td>
               </tr>

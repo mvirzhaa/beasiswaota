@@ -27,7 +27,7 @@ export function BarisModerasiPesan({ pesan }: { pesan: PesanModerasi }) {
 
   return (
     <div className="rounded border p-3 text-sm">
-      <p className="text-gray-500">
+      <p className="text-muted">
         {pesan.namaOrtuAsuh} ↔ {pesan.namaMahasiswa} · dikirim oleh {pesan.pengirimRole}
       </p>
       <p className="mt-1">{pesan.isi}</p>
@@ -37,7 +37,7 @@ export function BarisModerasiPesan({ pesan }: { pesan: PesanModerasi }) {
           <button
             type="submit"
             disabled={pendingTeruskan}
-            className="rounded bg-black px-3 py-1 text-xs text-white disabled:opacity-50"
+            className="rounded-lg bg-primary px-3 py-1 text-xs text-white disabled:opacity-50"
           >
             {pendingTeruskan ? "Memproses..." : "Teruskan"}
           </button>
@@ -47,11 +47,11 @@ export function BarisModerasiPesan({ pesan }: { pesan: PesanModerasi }) {
         </form>
 
         <form action={actionTolak} className="flex flex-col gap-1">
-          <textarea name="alasan" placeholder="Alasan penolakan (wajib)" rows={2} className="rounded border px-2 py-1 text-xs" />
+          <textarea name="alasan" placeholder="Alasan penolakan (wajib)" rows={2} className="rounded-lg border border-border px-2 py-1 text-xs" />
           <button
             type="submit"
             disabled={pendingTolak}
-            className="w-fit rounded border border-red-600 px-3 py-1 text-xs text-red-600 disabled:opacity-50"
+            className="w-fit rounded-lg border border-red-600 px-3 py-1 text-xs text-red-600 disabled:opacity-50"
           >
             {pendingTolak ? "Memproses..." : "Tolak"}
           </button>

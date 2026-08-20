@@ -29,7 +29,7 @@ export function FormInputMonitoring({
     <form action={formAction} className="mt-4 flex flex-col gap-3">
       <label className="flex flex-col gap-1 text-sm">
         <span>Mahasiswa</span>
-        <select name="mahasiswaId" defaultValue={mahasiswaIdAwal} required className="rounded border px-3 py-2">
+        <select name="mahasiswaId" defaultValue={mahasiswaIdAwal} required className="rounded-lg border border-border px-3 py-2">
           <option value="">Pilih mahasiswa</option>
           {mahasiswaList.map((m) => (
             <option key={m.id} value={m.id}>
@@ -41,7 +41,7 @@ export function FormInputMonitoring({
 
       <label className="flex flex-col gap-1 text-sm">
         <span>Periode</span>
-        <select name="periodeId" defaultValue={periodeIdAwal} required className="rounded border px-3 py-2">
+        <select name="periodeId" defaultValue={periodeIdAwal} required className="rounded-lg border border-border px-3 py-2">
           <option value="">Pilih periode</option>
           {periodeList.map((p) => (
             <option key={p.id} value={p.id}>
@@ -56,7 +56,7 @@ export function FormInputMonitoring({
         <input
           name="ipk"
           defaultValue={existing?.ipk?.toString() ?? ""}
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         />
       </label>
 
@@ -65,7 +65,7 @@ export function FormInputMonitoring({
         <input
           name="ipSemester"
           defaultValue={existing?.ipSemester?.toString() ?? ""}
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         />
       </label>
 
@@ -74,7 +74,7 @@ export function FormInputMonitoring({
         <input
           name="sksSemester"
           defaultValue={existing?.sksSemester?.toString() ?? ""}
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         />
       </label>
 
@@ -83,7 +83,7 @@ export function FormInputMonitoring({
         <input
           name="sksKumulatif"
           defaultValue={existing?.sksKumulatif?.toString() ?? ""}
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         />
       </label>
 
@@ -92,7 +92,7 @@ export function FormInputMonitoring({
         <select
           name="statusAkademik"
           defaultValue={existing?.statusAkademik ?? "AKTIF"}
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         >
           <option value="AKTIF">Aktif</option>
           <option value="CUTI">Cuti</option>
@@ -106,7 +106,7 @@ export function FormInputMonitoring({
         <input
           name="persenKehadiran"
           defaultValue={existing?.persenKehadiran?.toString() ?? ""}
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         />
       </label>
 
@@ -117,7 +117,7 @@ export function FormInputMonitoring({
       <button
         type="submit"
         disabled={pending}
-        className="w-fit rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+        className="w-fit rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
       >
         {pending ? "Menyimpan..." : "Simpan"}
       </button>

@@ -15,11 +15,11 @@ export default async function HalamanReviewLaporan({
   }
 
   return (
-    <main className="mx-auto max-w-2xl p-6">
-      <h1 className="text-xl font-semibold">
+    <main className="mx-auto max-w-2xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+      <h1 className="font-heading text-2xl font-bold text-ink">
         Laporan — {laporan.mahasiswa.nama} ({laporan.mahasiswa.nim})
       </h1>
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted">
         Periode {laporan.periode.kode} · Status {laporan.status} · Batas kirim{" "}
         {laporan.batasKirim.toLocaleDateString("id-ID")}
       </p>

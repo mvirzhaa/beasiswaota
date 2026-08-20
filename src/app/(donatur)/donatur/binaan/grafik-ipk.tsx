@@ -6,7 +6,7 @@ export function GrafikIpk({ data }: { data: { periodeKode: string; ipk: number |
   const dataChart = data.map((d) => ({ periode: d.periodeKode, ipk: d.ipk }));
 
   if (dataChart.every((d) => d.ipk === null)) {
-    return <p className="text-xs text-gray-500">Belum ada data IPK.</p>;
+    return <p className="text-xs text-muted">Belum ada data IPK.</p>;
   }
 
   return (

@@ -41,11 +41,11 @@ export default async function HalamanDaftarPengajuanAdmin({
   });
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <h1 className="text-xl font-semibold">Daftar Pengajuan</h1>
+    <main className="mx-auto max-w-5xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+      <h1 className="font-heading text-2xl font-bold text-ink">Daftar Pengajuan</h1>
 
       <form className="mt-4 flex flex-wrap gap-3 text-sm">
-        <select name="periodeId" defaultValue={params.periodeId ?? ""} className="rounded border px-2 py-1">
+        <select name="periodeId" defaultValue={params.periodeId ?? ""} className="rounded-lg border border-border px-2 py-1">
           <option value="">Semua periode</option>
           {periodeList.map((p) => (
             <option key={p.id} value={p.id}>
@@ -53,7 +53,7 @@ export default async function HalamanDaftarPengajuanAdmin({
             </option>
           ))}
         </select>
-        <select name="status" defaultValue={params.status ?? ""} className="rounded border px-2 py-1">
+        <select name="status" defaultValue={params.status ?? ""} className="rounded-lg border border-border px-2 py-1">
           <option value="">Semua status</option>
           {DAFTAR_STATUS.map((s) => (
             <option key={s} value={s}>
@@ -61,7 +61,7 @@ export default async function HalamanDaftarPengajuanAdmin({
             </option>
           ))}
         </select>
-        <button type="submit" className="rounded border px-3 py-1">
+        <button type="submit" className="rounded-lg border border-border px-3 py-1">
           Filter
         </button>
       </form>
@@ -103,7 +103,7 @@ export default async function HalamanDaftarPengajuanAdmin({
           ))}
           {daftar.length === 0 && (
             <tr>
-              <td colSpan={6} className="py-4 text-center text-gray-500">
+              <td colSpan={6} className="py-4 text-center text-muted">
                 Tidak ada pengajuan.
               </td>
             </tr>

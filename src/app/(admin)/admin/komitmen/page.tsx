@@ -30,18 +30,18 @@ export default async function HalamanKomitmenAdmin({
   const daftar = await ambilDaftarKomitmenAdmin({ status });
 
   return (
-    <main className="mx-auto max-w-4xl p-6">
-      <h1 className="text-xl font-semibold">Konfirmasi Komitmen</h1>
+    <main className="mx-auto max-w-4xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+      <h1 className="font-heading text-2xl font-bold text-ink">Konfirmasi Komitmen</h1>
 
       <form className="mt-4 flex gap-3 text-sm">
-        <select name="status" defaultValue={status} className="rounded border px-2 py-1">
+        <select name="status" defaultValue={status} className="rounded-lg border border-border px-2 py-1">
           {DAFTAR_STATUS.map((s) => (
             <option key={s} value={s}>
               {s}
             </option>
           ))}
         </select>
-        <button type="submit" className="rounded border px-3 py-1">
+        <button type="submit" className="rounded-lg border border-border px-3 py-1">
           Filter
         </button>
       </form>
@@ -72,7 +72,7 @@ export default async function HalamanKomitmenAdmin({
           ))}
           {daftar.length === 0 && (
             <tr>
-              <td colSpan={6} className="py-4 text-center text-gray-500">
+              <td colSpan={6} className="py-4 text-center text-muted">
                 Tidak ada komitmen.
               </td>
             </tr>

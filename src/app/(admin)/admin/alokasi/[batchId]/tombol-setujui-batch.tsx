@@ -17,7 +17,7 @@ export function TombolSetujuiBatch({ batchId }: { batchId: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+        className="rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
       >
         {pending ? "Memproses..." : "Setujui batch"}
       </button>

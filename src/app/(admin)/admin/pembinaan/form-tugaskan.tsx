@@ -26,7 +26,7 @@ export function FormTugaskan({
 
   if (ortuAsuhList.length === 0 || mahasiswaList.length === 0 || periodeList.length === 0) {
     return (
-      <p className="mt-3 text-sm text-gray-500">
+      <p className="mt-3 text-sm text-muted">
         Butuh minimal satu donatur, satu mahasiswa aktif, dan satu periode untuk menugaskan relasi.
       </p>
     );
@@ -36,7 +36,7 @@ export function FormTugaskan({
     <form action={formAction} className="mt-3 flex flex-col gap-3">
       <label className="flex flex-col gap-1 text-sm">
         <span>Donatur</span>
-        <select name="ortuAsuhId" required className="rounded border px-3 py-2">
+        <select name="ortuAsuhId" required className="rounded-lg border border-border px-3 py-2">
           {ortuAsuhList.map((o) => (
             <option key={o.id} value={o.id}>
               {o.atasNamaMunfiq || o.nama}
@@ -47,7 +47,7 @@ export function FormTugaskan({
 
       <label className="flex flex-col gap-1 text-sm">
         <span>Mahasiswa binaan</span>
-        <select name="mahasiswaId" required className="rounded border px-3 py-2">
+        <select name="mahasiswaId" required className="rounded-lg border border-border px-3 py-2">
           {mahasiswaList.map((m) => (
             <option key={m.id} value={m.id}>
               {m.nama} ({m.nim}) — {m.prodi}
@@ -58,7 +58,7 @@ export function FormTugaskan({
 
       <label className="flex flex-col gap-1 text-sm">
         <span>Periode mulai</span>
-        <select name="periodeMulaiId" required className="rounded border px-3 py-2">
+        <select name="periodeMulaiId" required className="rounded-lg border border-border px-3 py-2">
           {periodeList.map((p) => (
             <option key={p.id} value={p.id}>
               {p.kode}
@@ -69,7 +69,7 @@ export function FormTugaskan({
 
       <label className="flex flex-col gap-1 text-sm">
         <span>Catatan (opsional)</span>
-        <textarea name="catatan" rows={2} className="rounded border px-3 py-2" />
+        <textarea name="catatan" rows={2} className="rounded-lg border border-border px-3 py-2" />
       </label>
 
       {state.pesan && (
@@ -79,7 +79,7 @@ export function FormTugaskan({
       <button
         type="submit"
         disabled={pending}
-        className="w-fit rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+        className="w-fit rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
       >
         {pending ? "Menugaskan..." : "Tugaskan"}
       </button>

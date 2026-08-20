@@ -7,9 +7,9 @@ export default async function HalamanDaftarPesanMahasiswa() {
   const relasiList = await ambilRelasiUntukPesanMahasiswa(session!.user.id);
 
   return (
-    <main className="mx-auto max-w-2xl p-6">
-      <h1 className="text-xl font-semibold">Pesan</h1>
-      <p className="mt-1 text-sm text-gray-600">
+    <main className="mx-auto max-w-2xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+      <h1 className="font-heading text-2xl font-bold text-ink">Pesan</h1>
+      <p className="mt-1 text-sm text-muted">
         Semua pesan dimoderasi admin sebelum tersampaikan. Jangan cantumkan nomor telepon atau
         email — pesan seperti itu otomatis ditolak.
       </p>
@@ -25,7 +25,7 @@ export default async function HalamanDaftarPesanMahasiswa() {
           </Link>
         ))}
         {relasiList.length === 0 && (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted">
             Belum ada pembina yang bisa dikirimi pesan (perlu relasi aktif dan sudah Anda setujui).
           </p>
         )}

@@ -18,7 +18,7 @@ export function FormKomitmen({ periodeList }: { periodeList: Periode[] }) {
 
   if (periodeList.length === 0) {
     return (
-      <p className="mt-3 text-sm text-gray-500">
+      <p className="mt-3 text-sm text-muted">
         Belum ada periode yang bisa dipilih untuk komitmen baru.
       </p>
     );
@@ -28,7 +28,7 @@ export function FormKomitmen({ periodeList }: { periodeList: Periode[] }) {
     <form action={formAction} className="mt-3 flex flex-col gap-3">
       <label className="flex flex-col gap-1">
         <span className="text-sm">Periode awal</span>
-        <select name="periodeAwalId" required className="rounded border px-3 py-2">
+        <select name="periodeAwalId" required className="rounded-lg border border-border px-3 py-2">
           {periodeList.map((p) => (
             <option key={p.id} value={p.id}>
               {p.kode}
@@ -43,7 +43,7 @@ export function FormKomitmen({ periodeList }: { periodeList: Periode[] }) {
           name="skema"
           value={skema}
           onChange={(e) => setSkema(e.target.value)}
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         >
           <option value="FULL">Full (sesuai paket penuh periode)</option>
           <option value="PARSIAL">Parsial (sebagian dari paket penuh)</option>
@@ -57,7 +57,7 @@ export function FormKomitmen({ periodeList }: { periodeList: Periode[] }) {
           <input
             name="nominalPerPeriode"
             required
-            className="rounded border px-3 py-2"
+            className="rounded-lg border border-border px-3 py-2"
           />
         </label>
       )}
@@ -68,7 +68,7 @@ export function FormKomitmen({ periodeList }: { periodeList: Periode[] }) {
           name="jumlahPeriodeOpsi"
           value={jumlahPeriodeOpsi}
           onChange={(e) => setJumlahPeriodeOpsi(e.target.value)}
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         >
           <option value="1">1 semester (sekali)</option>
           <option value="2">2 semester</option>
@@ -86,7 +86,7 @@ export function FormKomitmen({ periodeList }: { periodeList: Periode[] }) {
             min={1}
             max={24}
             required
-            className="rounded border px-3 py-2"
+            className="rounded-lg border border-border px-3 py-2"
           />
         </label>
       )}
@@ -97,7 +97,7 @@ export function FormKomitmen({ periodeList }: { periodeList: Periode[] }) {
           name="mekanisme"
           value={mekanisme}
           onChange={(e) => setMekanisme(e.target.value)}
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         >
           <option value="TRANSFER_MANUAL">Transfer manual</option>
           <option value="VIRTUAL_ACCOUNT">Virtual account</option>
@@ -105,7 +105,7 @@ export function FormKomitmen({ periodeList }: { periodeList: Periode[] }) {
           <option value="LAINNYA">Lainnya</option>
         </select>
         {mekanisme === "POTONG_GAJI" && (
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-muted">
             Hanya tersedia untuk dosen/tenaga kependidikan UIKA dengan NIP terdaftar di
             profil Anda. Ritme otomatis bulanan.
           </span>
@@ -120,29 +120,29 @@ export function FormKomitmen({ periodeList }: { periodeList: Periode[] }) {
           <input
             name="preferensiFakultas"
             placeholder="Fakultas"
-            className="rounded border px-3 py-2 text-sm"
+            className="rounded-lg border border-border px-3 py-2 text-sm"
           />
           <input
             name="preferensiProdi"
             placeholder="Program studi"
-            className="rounded border px-3 py-2 text-sm"
+            className="rounded-lg border border-border px-3 py-2 text-sm"
           />
           <input
             name="preferensiGender"
             placeholder="Gender"
-            className="rounded border px-3 py-2 text-sm"
+            className="rounded-lg border border-border px-3 py-2 text-sm"
           />
           <input
             name="preferensiAsalDaerah"
             placeholder="Asal daerah"
-            className="rounded border px-3 py-2 text-sm"
+            className="rounded-lg border border-border px-3 py-2 text-sm"
           />
         </div>
       </fieldset>
 
       <label className="flex flex-col gap-1">
         <span className="text-sm">Catatan (opsional)</span>
-        <textarea name="catatan" rows={2} className="rounded border px-3 py-2" />
+        <textarea name="catatan" rows={2} className="rounded-lg border border-border px-3 py-2" />
       </label>
 
       {state.pesan && (
@@ -154,7 +154,7 @@ export function FormKomitmen({ periodeList }: { periodeList: Periode[] }) {
       <button
         type="submit"
         disabled={pending}
-        className="w-fit rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+        className="w-fit rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
       >
         {pending ? "Menyimpan..." : "Buat komitmen"}
       </button>

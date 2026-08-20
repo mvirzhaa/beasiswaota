@@ -39,7 +39,7 @@ export function BarisRelasi({
         {relasi.ortuAsuh.atasNamaMunfiq || relasi.ortuAsuh.nama} → {relasi.mahasiswa.nama} (
         {relasi.mahasiswa.nim})
       </p>
-      <p className="text-gray-600">
+      <p className="text-muted">
         Mulai {relasi.periodeMulai.kode} · {LABEL_STATUS[relasi.status] ?? relasi.status} ·{" "}
         Persetujuan mahasiswa: {relasi.persetujuanMahasiswa ? "Ya" : "Belum"}
       </p>
@@ -94,22 +94,22 @@ function FormAlihkan({
 
   return (
     <form action={formAction} className="flex flex-col gap-2 border-t pt-2">
-      <select name="ortuAsuhBaruId" required className="rounded border px-2 py-1 text-xs">
+      <select name="ortuAsuhBaruId" required className="rounded-lg border border-border px-2 py-1 text-xs">
         {ortuAsuhList.map((o) => (
           <option key={o.id} value={o.id}>
             {o.atasNamaMunfiq || o.nama}
           </option>
         ))}
       </select>
-      <select name="periodeMulaiId" required className="rounded border px-2 py-1 text-xs">
+      <select name="periodeMulaiId" required className="rounded-lg border border-border px-2 py-1 text-xs">
         {periodeList.map((p) => (
           <option key={p.id} value={p.id}>
             {p.kode}
           </option>
         ))}
       </select>
-      <textarea name="alasan" placeholder="Alasan alih pembina (wajib)" rows={2} className="rounded border px-2 py-1 text-xs" />
-      <button type="submit" disabled={pending} className="w-fit rounded border px-3 py-1 text-xs disabled:opacity-50">
+      <textarea name="alasan" placeholder="Alasan alih pembina (wajib)" rows={2} className="rounded-lg border border-border px-2 py-1 text-xs" />
+      <button type="submit" disabled={pending} className="w-fit rounded-lg border border-border px-3 py-1 text-xs disabled:opacity-50">
         {pending ? "Memproses..." : "Konfirmasi alihkan"}
       </button>
       {state.pesan && (
@@ -128,8 +128,8 @@ function FormAkhiri({ relasiId }: { relasiId: string }) {
 
   return (
     <form action={formAction} className="flex flex-col gap-2 border-t pt-2">
-      <textarea name="alasan" placeholder="Alasan mengakhiri relasi (wajib)" rows={2} className="rounded border px-2 py-1 text-xs" />
-      <button type="submit" disabled={pending} className="w-fit rounded border border-red-600 px-3 py-1 text-xs text-red-600 disabled:opacity-50">
+      <textarea name="alasan" placeholder="Alasan mengakhiri relasi (wajib)" rows={2} className="rounded-lg border border-border px-2 py-1 text-xs" />
+      <button type="submit" disabled={pending} className="w-fit rounded-lg border border-red-600 px-3 py-1 text-xs text-red-600 disabled:opacity-50">
         {pending ? "Memproses..." : "Konfirmasi akhiri"}
       </button>
       {state.pesan && (

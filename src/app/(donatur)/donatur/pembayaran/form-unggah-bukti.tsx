@@ -24,7 +24,7 @@ export function FormUnggahBukti({ jadwalTerbuka }: { jadwalTerbuka: JadwalTerbuk
     <form action={formAction} className="mt-3 flex flex-col gap-3">
       <label className="flex flex-col gap-1">
         <span className="text-sm">Untuk jadwal (opsional)</span>
-        <select name="jadwalBayarId" className="rounded border px-3 py-2">
+        <select name="jadwalBayarId" className="rounded-lg border border-border px-3 py-2">
           <option value="">Donasi bebas (tanpa jadwal tertentu)</option>
           {jadwalTerbuka.map((j) => (
             <option key={j.id} value={j.id}>
@@ -36,7 +36,7 @@ export function FormUnggahBukti({ jadwalTerbuka }: { jadwalTerbuka: JadwalTerbuk
 
       <label className="flex flex-col gap-1">
         <span className="text-sm">Nominal ditransfer (Rp)</span>
-        <input name="nominal" required className="rounded border px-3 py-2" />
+        <input name="nominal" required className="rounded-lg border border-border px-3 py-2" />
       </label>
 
       <label className="flex flex-col gap-1">
@@ -46,13 +46,13 @@ export function FormUnggahBukti({ jadwalTerbuka }: { jadwalTerbuka: JadwalTerbuk
           type="date"
           required
           defaultValue={new Date().toISOString().slice(0, 10)}
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         />
       </label>
 
       <label className="flex flex-col gap-1">
         <span className="text-sm">Metode</span>
-        <select name="metode" defaultValue="TRANSFER_MANUAL" className="rounded border px-3 py-2">
+        <select name="metode" defaultValue="TRANSFER_MANUAL" className="rounded-lg border border-border px-3 py-2">
           <option value="TRANSFER_MANUAL">Transfer manual</option>
           <option value="VIRTUAL_ACCOUNT">Virtual account</option>
           <option value="LAINNYA">Lainnya</option>
@@ -79,7 +79,7 @@ export function FormUnggahBukti({ jadwalTerbuka }: { jadwalTerbuka: JadwalTerbuk
       <button
         type="submit"
         disabled={pending}
-        className="w-fit rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+        className="w-fit rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
       >
         {pending ? "Mengunggah..." : "Unggah bukti"}
       </button>

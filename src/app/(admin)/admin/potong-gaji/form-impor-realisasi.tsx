@@ -40,7 +40,7 @@ export function FormImporRealisasi() {
             onChange={(e) => setNomorBatch(e.target.value)}
             placeholder="mis. 2026-08-01"
             required
-            className="rounded border px-3 py-2"
+            className="rounded-lg border border-border px-3 py-2"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
@@ -50,13 +50,13 @@ export function FormImporRealisasi() {
         <button
           type="submit"
           disabled={pendingPratinjau || !nomorBatch.trim()}
-          className="rounded border px-4 py-2 text-sm disabled:opacity-50"
+          className="rounded-lg border border-border px-4 py-2 text-sm disabled:opacity-50"
         >
           {pendingPratinjau ? "Membaca..." : "Pratinjau"}
         </button>
       </form>
 
-      {statePratinjau.pesan && <p className="text-sm text-gray-700">{statePratinjau.pesan}</p>}
+      {statePratinjau.pesan && <p className="text-sm text-muted">{statePratinjau.pesan}</p>}
 
       {statePratinjau.baris && (
         <div>
@@ -101,7 +101,7 @@ export function FormImporRealisasi() {
               <button
                 type="submit"
                 disabled={pendingKomit}
-                className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+                className="rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
               >
                 {pendingKomit ? "Menyimpan..." : `Konfirmasi simpan ${barisValid.length} baris`}
               </button>

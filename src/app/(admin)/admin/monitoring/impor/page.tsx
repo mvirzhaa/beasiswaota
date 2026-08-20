@@ -8,9 +8,9 @@ export default async function HalamanImporMonitoring() {
   });
 
   return (
-    <main className="mx-auto max-w-4xl p-6">
-      <h1 className="text-xl font-semibold">Impor Monitoring Akademik (XLSX)</h1>
-      <p className="mt-1 text-sm text-gray-600">
+    <main className="mx-auto max-w-4xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+      <h1 className="font-heading text-2xl font-bold text-ink">Impor Monitoring Akademik (XLSX)</h1>
+      <p className="mt-1 text-sm text-muted">
         Kolom: NIM, IP Semester, IPK, SKS Semester, SKS Kumulatif, Status Akademik, Persen
         Kehadiran. Baris pertama adalah header.
       </p>

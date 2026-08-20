@@ -8,7 +8,7 @@ export function TombolKeluar() {
         await signOut({ redirectTo: "/login" });
       }}
     >
-      <button type="submit" className="text-sm underline">
+      <button type="submit" className="text-sm text-primary underline hover:text-primary-dark">
         Keluar
       </button>
     </form>

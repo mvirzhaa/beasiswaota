@@ -20,15 +20,15 @@ export default async function HalamanLaporanDonatur({
   const total = laporan.reduce((acc, b) => acc + b.totalDisalurkan, 0n);
 
   return (
-    <main className="mx-auto max-w-2xl p-6">
-      <h1 className="text-xl font-semibold">Laporan Penyaluran</h1>
-      <p className="mt-1 text-sm text-gray-600">
+    <main className="mx-auto max-w-2xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+      <h1 className="font-heading text-2xl font-bold text-ink">Laporan Penyaluran</h1>
+      <p className="mt-1 text-sm text-muted">
         Dana Anda dipooling dan dibagi mesin alokasi ke beberapa mahasiswa — bukan
         earmark satu-ke-satu. Ini rincian ke mana saja rupiah Anda tersebar.
       </p>
 
       <form className="mt-4 flex gap-3 text-sm">
-        <select name="periodeId" defaultValue={params.periodeId ?? ""} className="rounded border px-2 py-1">
+        <select name="periodeId" defaultValue={params.periodeId ?? ""} className="rounded-lg border border-border px-2 py-1">
           <option value="">Semua periode</option>
           {periodeList.map((p) => (
             <option key={p.id} value={p.id}>
@@ -36,7 +36,7 @@ export default async function HalamanLaporanDonatur({
             </option>
           ))}
         </select>
-        <button type="submit" className="rounded border px-3 py-1">
+        <button type="submit" className="rounded-lg border border-border px-3 py-1">
           Filter
         </button>
       </form>
@@ -65,7 +65,7 @@ export default async function HalamanLaporanDonatur({
           ))}
           {laporan.length === 0 && (
             <tr>
-              <td colSpan={4} className="py-4 text-center text-gray-500">
+              <td colSpan={4} className="py-4 text-center text-muted">
                 Belum ada penyaluran.
               </td>
             </tr>

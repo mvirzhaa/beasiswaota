@@ -9,9 +9,9 @@ export default async function HalamanPembinaanMahasiswa() {
   const relasiList = await ambilRelasiMahasiswa(userId);
 
   return (
-    <main className="mx-auto max-w-2xl p-6">
-      <h1 className="text-xl font-semibold">Pembinaan</h1>
-      <p className="mt-1 text-sm text-gray-600">
+    <main className="mx-auto max-w-2xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+      <h1 className="font-heading text-2xl font-bold text-ink">Pembinaan</h1>
+      <p className="mt-1 text-sm text-muted">
         Orang tua asuh berikut ditugaskan admin untuk memantau progres akademik Anda. Anda boleh
         menyetujui atau menolak, dan boleh menarik persetujuan kapan saja tanpa memengaruhi
         beasiswa Anda.
@@ -23,7 +23,7 @@ export default async function HalamanPembinaanMahasiswa() {
             <p className="font-medium">
               {r.ortuAsuh.anonim ? "Donatur (anonim)" : r.ortuAsuh.atasNamaMunfiq || r.ortuAsuh.nama}
             </p>
-            <p className="text-gray-600">
+            <p className="text-muted">
               Sejak periode {r.periodeMulai.kode} · Status persetujuan:{" "}
               {r.persetujuanMahasiswa ? "Disetujui" : "Belum disetujui"}
             </p>
@@ -33,7 +33,7 @@ export default async function HalamanPembinaanMahasiswa() {
           </div>
         ))}
         {relasiList.length === 0 && (
-          <p className="text-sm text-gray-500">Belum ada relasi pembinaan.</p>
+          <p className="text-sm text-muted">Belum ada relasi pembinaan.</p>
         )}
       </div>
     </main>

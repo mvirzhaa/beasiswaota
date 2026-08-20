@@ -14,7 +14,7 @@ export function TombolHitungUlangSkor({ periodeId }: { periodeId?: string }) {
 
   if (!periodeId) {
     return (
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-muted">
         Pilih satu periode di atas untuk bisa menghitung ulang skor.
       </p>
     );
@@ -25,7 +25,7 @@ export function TombolHitungUlangSkor({ periodeId }: { periodeId?: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+        className="rounded-lg border border-border px-3 py-1 text-sm disabled:opacity-50"
       >
         {pending ? "Menghitung..." : "Hitung ulang skor periode ini"}
       </button>

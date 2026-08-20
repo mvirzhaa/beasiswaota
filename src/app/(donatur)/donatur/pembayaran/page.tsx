@@ -43,8 +43,8 @@ export default async function HalamanPembayaranDonatur() {
   ]);
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <h1 className="text-xl font-semibold">Jadwal Pembayaran</h1>
+    <main className="mx-auto max-w-3xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+      <h1 className="font-heading text-2xl font-bold text-ink">Jadwal Pembayaran</h1>
 
       <table className="mt-4 w-full text-left text-sm">
         <thead>
@@ -75,7 +75,7 @@ export default async function HalamanPembayaranDonatur() {
           })}
           {jadwal.length === 0 && (
             <tr>
-              <td colSpan={7} className="py-4 text-center text-gray-500">
+              <td colSpan={7} className="py-4 text-center text-muted">
                 Belum ada jadwal pembayaran.
               </td>
             </tr>
@@ -84,12 +84,12 @@ export default async function HalamanPembayaranDonatur() {
       </table>
 
       <section className="mt-10">
-        <h2 className="text-lg font-semibold">Unggah bukti transfer</h2>
+        <h2 className="font-heading text-lg font-bold text-ink">Unggah bukti transfer</h2>
         <FormUnggahBukti jadwalTerbuka={jadwalTerbuka} />
       </section>
 
       <section className="mt-10">
-        <h2 className="text-lg font-semibold">Riwayat transaksi</h2>
+        <h2 className="font-heading text-lg font-bold text-ink">Riwayat transaksi</h2>
         <table className="mt-2 w-full text-left text-sm">
           <thead>
             <tr className="border-b">
@@ -134,7 +134,7 @@ export default async function HalamanPembayaranDonatur() {
             ))}
             {riwayat.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-4 text-center text-gray-500">
+                <td colSpan={6} className="py-4 text-center text-muted">
                   Belum ada transaksi.
                 </td>
               </tr>

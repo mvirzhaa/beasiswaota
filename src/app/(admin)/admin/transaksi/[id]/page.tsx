@@ -19,21 +19,21 @@ export default async function HalamanReviewTransaksi({
   const periodeList = transaksi.jadwalBayar ? [] : await ambilPeriodeUntukKomitmen();
 
   return (
-    <main className="mx-auto max-w-2xl p-6">
-      <h1 className="text-xl font-semibold">
+    <main className="mx-auto max-w-2xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+      <h1 className="font-heading text-2xl font-bold text-ink">
         Review Transaksi — {transaksi.ortuAsuh.atasNamaMunfiq || transaksi.ortuAsuh.nama}
       </h1>
 
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-        <dt className="text-gray-500">Status</dt>
+        <dt className="text-muted">Status</dt>
         <dd>{transaksi.status}</dd>
-        <dt className="text-gray-500">Nominal</dt>
+        <dt className="text-muted">Nominal</dt>
         <dd>{formatRupiah(transaksi.nominal)}</dd>
-        <dt className="text-gray-500">Metode</dt>
+        <dt className="text-muted">Metode</dt>
         <dd>{transaksi.metode}</dd>
-        <dt className="text-gray-500">Tanggal bayar</dt>
+        <dt className="text-muted">Tanggal bayar</dt>
         <dd>{transaksi.tglBayar.toLocaleDateString("id-ID")}</dd>
-        <dt className="text-gray-500">Untuk jadwal</dt>
+        <dt className="text-muted">Untuk jadwal</dt>
         <dd>
           {transaksi.jadwalBayar
             ? `${transaksi.jadwalBayar.periode.kode} #${transaksi.jadwalBayar.urutan}`

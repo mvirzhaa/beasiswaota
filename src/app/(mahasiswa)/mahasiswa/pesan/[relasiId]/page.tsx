@@ -22,20 +22,20 @@ export default async function HalamanThreadPesanMahasiswa({
   const namaLawan = hasil.relasi.ortuAsuh.atasNamaMunfiq || hasil.relasi.ortuAsuh.nama;
 
   return (
-    <main className="mx-auto max-w-2xl p-6">
-      <h1 className="text-xl font-semibold">Pesan — {namaLawan}</h1>
+    <main className="mx-auto max-w-2xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+      <h1 className="font-heading text-2xl font-bold text-ink">Pesan — {namaLawan}</h1>
 
       <div className="mt-4 flex flex-col gap-2">
         {hasil.pesan.map((p) => (
           <div key={p.id} className="rounded border p-2 text-sm">
             <p>{p.isi}</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted">
               {p.createdAt.toLocaleString("id-ID")} · {p.status}
               {p.status === "DITOLAK" && p.alasanTolak ? ` — ${p.alasanTolak}` : ""}
             </p>
           </div>
         ))}
-        {hasil.pesan.length === 0 && <p className="text-sm text-gray-500">Belum ada pesan.</p>}
+        {hasil.pesan.length === 0 && <p className="text-sm text-muted">Belum ada pesan.</p>}
       </div>
 
       <div className="mt-6">

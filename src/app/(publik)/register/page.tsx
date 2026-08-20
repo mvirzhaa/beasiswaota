@@ -26,31 +26,39 @@ export default function HalamanRegister() {
   const [peran, setPeran] = useState<"MAHASISWA" | "ORTU_ASUH">("MAHASISWA");
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-6">
-      <h1 className="text-xl font-semibold">Daftar</h1>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-surface-alt p-6">
+      <div className="w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+        <p className="text-xs font-medium tracking-wide text-accent-dark uppercase">
+          Beasiswa Orangtua Asuh
+        </p>
+        <h1 className="mt-1 font-heading text-2xl font-bold text-ink">Daftar</h1>
 
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => setPeran("MAHASISWA")}
-          className={`rounded px-3 py-1 ${peran === "MAHASISWA" ? "bg-black text-white" : "border"}`}
-        >
-          Mahasiswa
-        </button>
-        <button
-          type="button"
-          onClick={() => setPeran("ORTU_ASUH")}
-          className={`rounded px-3 py-1 ${peran === "ORTU_ASUH" ? "bg-black text-white" : "border"}`}
-        >
-          Orangtua Asuh
-        </button>
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setPeran("MAHASISWA")}
+            className={`rounded-lg px-3 py-1 text-sm transition-colors ${peran === "MAHASISWA" ? "bg-primary text-white" : "border border-border text-ink hover:bg-surface-alt"}`}
+          >
+            Mahasiswa
+          </button>
+          <button
+            type="button"
+            onClick={() => setPeran("ORTU_ASUH")}
+            className={`rounded-lg px-3 py-1 text-sm transition-colors ${peran === "ORTU_ASUH" ? "bg-primary text-white" : "border border-border text-ink hover:bg-surface-alt"}`}
+          >
+            Orangtua Asuh
+          </button>
+        </div>
+
+        <div className="mt-4">{peran === "MAHASISWA" ? <FormMahasiswa /> : <FormOrtuAsuh />}</div>
+
+        <p className="mt-4 text-sm text-ink">
+          Sudah punya akun?{" "}
+          <Link href="/login" className="text-primary underline hover:text-primary-dark">
+            Masuk
+          </Link>
+        </p>
       </div>
-
-      {peran === "MAHASISWA" ? <FormMahasiswa /> : <FormOrtuAsuh />}
-
-      <p className="text-sm">
-        Sudah punya akun? <Link href="/login" className="underline">Masuk</Link>
-      </p>
     </main>
   );
 }
@@ -87,7 +95,7 @@ function FormMahasiswa() {
       <button
         type="submit"
         disabled={pending}
-        className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+        className="rounded-lg bg-primary px-4 py-2 text-white transition-colors hover:bg-primary-dark disabled:opacity-50"
       >
         {pending ? "Memproses..." : "Daftar sebagai mahasiswa"}
       </button>
@@ -113,7 +121,7 @@ function FormOrtuAsuh() {
 
       <label className="flex flex-col gap-1">
         <span className="text-sm">Tipe</span>
-        <select name="tipe" className="rounded border px-3 py-2">
+        <select name="tipe" className="rounded-lg border border-border px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
           <option value="INDIVIDU">Individu</option>
           <option value="DOSEN">Dosen</option>
           <option value="TENAGA_KEPENDIDIKAN">Tenaga Kependidikan</option>
@@ -141,7 +149,7 @@ function FormOrtuAsuh() {
       <button
         type="submit"
         disabled={pending}
-        className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+        className="rounded-lg bg-primary px-4 py-2 text-white transition-colors hover:bg-primary-dark disabled:opacity-50"
       >
         {pending ? "Memproses..." : "Daftar sebagai orangtua asuh"}
       </button>
@@ -162,12 +170,12 @@ function Input({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-sm">{label}</span>
+      <span className="text-sm text-ink">{label}</span>
       <input
         name={name}
         type={type}
         required={required}
-        className="rounded border px-3 py-2"
+        className="rounded-lg border border-border px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
       />
     </label>
   );

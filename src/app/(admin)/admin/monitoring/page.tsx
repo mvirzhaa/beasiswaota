@@ -26,9 +26,9 @@ export default async function HalamanMonitoringAdmin({
 
   if (!periodeId) {
     return (
-      <main className="mx-auto max-w-5xl p-6">
-        <h1 className="text-xl font-semibold">Monitoring Akademik</h1>
-        <p className="mt-4 text-sm text-gray-500">Belum ada periode.</p>
+      <main className="mx-auto max-w-5xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+        <h1 className="font-heading text-2xl font-bold text-ink">Monitoring Akademik</h1>
+        <p className="mt-4 text-sm text-muted">Belum ada periode.</p>
       </main>
     );
   }
@@ -42,28 +42,28 @@ export default async function HalamanMonitoringAdmin({
   const daftarFakultas = [...new Set(penerima.map((p) => p.fakultas))];
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
+    <main className="mx-auto max-w-5xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Monitoring Akademik</h1>
+        <h1 className="font-heading text-2xl font-bold text-ink">Monitoring Akademik</h1>
         <div className="flex gap-3 text-sm">
-          <Link href="/admin/monitoring/input" className="rounded border px-3 py-1">
+          <Link href="/admin/monitoring/input" className="rounded-lg border border-border px-3 py-1">
             Input manual
           </Link>
-          <Link href="/admin/monitoring/impor" className="rounded border px-3 py-1">
+          <Link href="/admin/monitoring/impor" className="rounded-lg border border-border px-3 py-1">
             Impor XLSX
           </Link>
         </div>
       </div>
 
       <form className="mt-4 flex flex-wrap gap-3 text-sm">
-        <select name="periodeId" defaultValue={periodeId} className="rounded border px-2 py-1">
+        <select name="periodeId" defaultValue={periodeId} className="rounded-lg border border-border px-2 py-1">
           {periodeList.map((p) => (
             <option key={p.id} value={p.id}>
               {p.kode}
             </option>
           ))}
         </select>
-        <select name="fakultas" defaultValue={params.fakultas ?? ""} className="rounded border px-2 py-1">
+        <select name="fakultas" defaultValue={params.fakultas ?? ""} className="rounded-lg border border-border px-2 py-1">
           <option value="">Semua fakultas</option>
           {daftarFakultas.map((f) => (
             <option key={f} value={f}>
@@ -71,7 +71,7 @@ export default async function HalamanMonitoringAdmin({
             </option>
           ))}
         </select>
-        <button type="submit" className="rounded border px-3 py-1">
+        <button type="submit" className="rounded-lg border border-border px-3 py-1">
           Filter
         </button>
       </form>
@@ -106,7 +106,7 @@ export default async function HalamanMonitoringAdmin({
       </section>
 
       <section className="mt-6">
-        <h2 className="text-lg font-semibold">Semua penerima aktif ({penerima.length})</h2>
+        <h2 className="font-heading text-lg font-bold text-ink">Semua penerima aktif ({penerima.length})</h2>
         <table className="mt-2 w-full text-left text-sm">
           <thead>
             <tr className="border-b">
@@ -142,7 +142,7 @@ export default async function HalamanMonitoringAdmin({
             ))}
             {penerima.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-4 text-center text-gray-500">
+                <td colSpan={6} className="py-4 text-center text-muted">
                   Tidak ada penerima aktif.
                 </td>
               </tr>

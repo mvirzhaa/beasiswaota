@@ -109,7 +109,7 @@ function FormData_({
           defaultValue={
             pengajuan ? pengajuan.nominalKebutuhan.toString() : ""
           }
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         />
       </label>
 
@@ -119,7 +119,7 @@ function FormData_({
           name="penghasilanOrtu"
           required
           defaultValue={pengajuan ? pengajuan.penghasilanOrtu.toString() : ""}
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         />
       </label>
 
@@ -131,7 +131,7 @@ function FormData_({
           min={0}
           required
           defaultValue={pengajuan?.jmlTanggungan ?? ""}
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         />
       </label>
 
@@ -140,7 +140,7 @@ function FormData_({
         <select
           name="statusOrtu"
           defaultValue={pengajuan?.statusOrtu ?? "LENGKAP"}
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         >
           <option value="LENGKAP">Lengkap</option>
           <option value="YATIM">Yatim</option>
@@ -156,7 +156,7 @@ function FormData_({
           required
           rows={4}
           defaultValue={pengajuan?.alasan ?? ""}
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         />
       </label>
 
@@ -174,7 +174,7 @@ function FormData_({
           type="submit"
           formAction={formActionDraft}
           disabled={pendingDraft || pendingSubmit}
-          className="rounded border px-4 py-2 disabled:opacity-50"
+          className="rounded-lg border border-border px-4 py-2 disabled:opacity-50"
         >
           {pendingDraft ? "Menyimpan..." : "Simpan draft"}
         </button>
@@ -182,7 +182,7 @@ function FormData_({
           type="submit"
           formAction={formActionSubmit}
           disabled={pendingDraft || pendingSubmit}
-          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+          className="rounded-lg bg-primary px-4 py-2 text-white disabled:opacity-50"
         >
           {pendingSubmit ? "Mengajukan..." : "Ajukan"}
         </button>
@@ -202,7 +202,7 @@ function UnggahBerkas({
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold">Berkas pendukung</h2>
+      <h2 className="font-heading text-lg font-bold text-ink">Berkas pendukung</h2>
       {semuaJenis.map((jenis) => {
         const existing = berkas.find((b) => b.jenis === jenis);
         return (
@@ -243,11 +243,11 @@ function BarisUnggahBerkas({
       <div className="text-sm">
         <p className="font-medium">{LABEL_JENIS_BERKAS[jenis] ?? jenis}</p>
         {existing ? (
-          <p className="text-gray-600">
+          <p className="text-muted">
             {existing.namaAsli} — {existing.status}
           </p>
         ) : (
-          <p className="text-gray-400">Belum diunggah</p>
+          <p className="text-muted">Belum diunggah</p>
         )}
         {state.pesan && (
           <p className={state.sukses ? "text-green-700" : "text-red-600"}>
@@ -267,7 +267,7 @@ function BarisUnggahBerkas({
         <button
           type="submit"
           disabled={pending}
-          className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+          className="rounded-lg border border-border px-3 py-1 text-sm disabled:opacity-50"
         >
           {pending ? "Mengunggah..." : existing ? "Ganti" : "Unggah"}
         </button>

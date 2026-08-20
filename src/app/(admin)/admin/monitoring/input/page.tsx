@@ -25,8 +25,8 @@ export default async function HalamanInputMonitoring({
   ]);
 
   return (
-    <main className="mx-auto max-w-xl p-6">
-      <h1 className="text-xl font-semibold">Input Monitoring Akademik</h1>
+    <main className="mx-auto max-w-xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+      <h1 className="font-heading text-2xl font-bold text-ink">Input Monitoring Akademik</h1>
       <FormInputMonitoring
         mahasiswaList={mahasiswaList}
         periodeList={periodeList}

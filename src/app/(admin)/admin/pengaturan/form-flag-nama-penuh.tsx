@@ -21,7 +21,7 @@ export function FormFlagNamaPenuh({ aktifSaatIni }: { aktifSaatIni: boolean }) {
       <button
         type="submit"
         disabled={pending}
-        className="w-fit rounded border px-3 py-1 text-sm disabled:opacity-50"
+        className="w-fit rounded-lg border border-border px-3 py-1 text-sm disabled:opacity-50"
       >
         {pending ? "Menyimpan..." : "Simpan"}
       </button>

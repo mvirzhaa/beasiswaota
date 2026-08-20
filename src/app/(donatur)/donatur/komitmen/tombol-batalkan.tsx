@@ -17,7 +17,7 @@ export function TombolBatalkanKomitmen({ komitmenId }: { komitmenId: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded border border-red-600 px-3 py-1 text-sm text-red-600 disabled:opacity-50"
+        className="rounded-lg border border-red-600 px-3 py-1 text-sm text-red-600 disabled:opacity-50"
       >
         {pending ? "Membatalkan..." : "Batalkan komitmen"}
       </button>

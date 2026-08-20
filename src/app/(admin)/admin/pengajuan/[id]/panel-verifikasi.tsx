@@ -24,33 +24,33 @@ export function PanelVerifikasi({ pengajuan }: { pengajuan: PengajuanDetail }) {
   return (
     <div className="mt-6 flex flex-col gap-8">
       <section>
-        <h2 className="text-lg font-semibold">Data pengajuan</h2>
+        <h2 className="font-heading text-lg font-bold text-ink">Data pengajuan</h2>
         <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-          <dt className="text-gray-500">Status</dt>
+          <dt className="text-muted">Status</dt>
           <dd>{pengajuan.status}</dd>
-          <dt className="text-gray-500">Nominal kebutuhan</dt>
+          <dt className="text-muted">Nominal kebutuhan</dt>
           <dd>Rp{pengajuan.nominalKebutuhan.toString()}</dd>
-          <dt className="text-gray-500">Penghasilan orang tua</dt>
+          <dt className="text-muted">Penghasilan orang tua</dt>
           <dd>Rp{pengajuan.penghasilanOrtu.toString()}</dd>
-          <dt className="text-gray-500">Jumlah tanggungan</dt>
+          <dt className="text-muted">Jumlah tanggungan</dt>
           <dd>{pengajuan.jmlTanggungan}</dd>
-          <dt className="text-gray-500">Status orang tua</dt>
+          <dt className="text-muted">Status orang tua</dt>
           <dd>{pengajuan.statusOrtu}</dd>
         </dl>
         <p className="mt-2 text-sm">
-          <span className="text-gray-500">Alasan: </span>
+          <span className="text-muted">Alasan: </span>
           {pengajuan.alasan}
         </p>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold">Berkas</h2>
+        <h2 className="font-heading text-lg font-bold text-ink">Berkas</h2>
         <div className="mt-2 flex flex-col gap-2">
           {pengajuan.berkas.map((b) => (
             <BarisBerkas key={b.id} id={b.id} jenis={b.jenis} status={b.status} />
           ))}
           {pengajuan.berkas.length === 0 && (
-            <p className="text-sm text-gray-500">Belum ada berkas diunggah.</p>
+            <p className="text-sm text-muted">Belum ada berkas diunggah.</p>
           )}
         </div>
       </section>
@@ -85,7 +85,7 @@ function BarisBerkas({
     <div className="flex items-center justify-between gap-3 border-b pb-2 text-sm">
       <div>
         <p className="font-medium">{LABEL_JENIS_BERKAS[jenis] ?? jenis}</p>
-        <p className="text-gray-500">
+        <p className="text-muted">
           Status: {status} {state.pesan && `· ${state.pesan}`}
         </p>
       </div>
@@ -100,13 +100,13 @@ function BarisBerkas({
         </a>
         <form action={formAction}>
           <input type="hidden" name="statusBaru" value="VALID" />
-          <button type="submit" disabled={pending} className="rounded border px-2 py-1">
+          <button type="submit" disabled={pending} className="rounded-lg border border-border px-2 py-1">
             Valid
           </button>
         </form>
         <form action={formAction}>
           <input type="hidden" name="statusBaru" value="TIDAK_VALID" />
-          <button type="submit" disabled={pending} className="rounded border px-2 py-1">
+          <button type="submit" disabled={pending} className="rounded-lg border border-border px-2 py-1">
             Tidak valid
           </button>
         </form>
@@ -130,8 +130,8 @@ function SkorManual({
 
   return (
     <section>
-      <h2 className="text-lg font-semibold">Skor (manual)</h2>
-      <p className="text-sm text-gray-500">
+      <h2 className="font-heading text-lg font-bold text-ink">Skor (manual)</h2>
+      <p className="text-sm text-muted">
         Skoring otomatis belum aktif — isi manual untuk sementara.
       </p>
       <form action={formAction} className="mt-2 flex items-center gap-2">
@@ -142,12 +142,12 @@ function SkorManual({
           max={100}
           step="0.01"
           defaultValue={skorSaatIni ?? ""}
-          className="w-24 rounded border px-2 py-1 text-sm"
+          className="w-24 rounded-lg border border-border px-2 py-1 text-sm"
         />
         <button
           type="submit"
           disabled={pending}
-          className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+          className="rounded-lg border border-border px-3 py-1 text-sm disabled:opacity-50"
         >
           {pending ? "Menyimpan..." : "Simpan skor"}
         </button>
@@ -190,10 +190,10 @@ function RincianSkor({ skorDetail }: { skorDetail: unknown }) {
 
   return (
     <section>
-      <h2 className="text-lg font-semibold">Rincian skor otomatis (terakhir dihitung)</h2>
+      <h2 className="font-heading text-lg font-bold text-ink">Rincian skor otomatis (terakhir dihitung)</h2>
       <table className="mt-2 w-full text-left text-sm">
         <thead>
-          <tr className="border-b text-gray-500">
+          <tr className="border-b text-muted">
             <th className="py-1">Kriteria</th>
             <th>Nilai mentah</th>
             <th>Skor 0-100</th>
@@ -230,13 +230,13 @@ function Keputusan({ pengajuanId }: { pengajuanId: string }) {
 
   return (
     <section className="flex flex-col gap-4 border-t pt-4">
-      <h2 className="text-lg font-semibold">Keputusan</h2>
+      <h2 className="font-heading text-lg font-bold text-ink">Keputusan</h2>
 
       <form action={actionSetuju}>
         <button
           type="submit"
           disabled={pendingSetuju}
-          className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
         >
           {pendingSetuju ? "Memproses..." : "Setujui pengajuan"}
         </button>
@@ -252,12 +252,12 @@ function Keputusan({ pengajuanId }: { pengajuanId: string }) {
       <form action={actionTolak} className="flex flex-col gap-2">
         <label className="flex flex-col gap-1 text-sm">
           <span>Catatan penolakan (wajib)</span>
-          <textarea name="catatan" rows={2} className="rounded border px-2 py-1" />
+          <textarea name="catatan" rows={2} className="rounded-lg border border-border px-2 py-1" />
         </label>
         <button
           type="submit"
           disabled={pendingTolak}
-          className="w-fit rounded border border-red-600 px-4 py-2 text-sm text-red-600 disabled:opacity-50"
+          className="w-fit rounded-lg border border-red-600 px-4 py-2 text-sm text-red-600 disabled:opacity-50"
         >
           {pendingTolak ? "Memproses..." : "Tolak pengajuan"}
         </button>

@@ -17,7 +17,7 @@ export function TombolKonfirmasi({ komitmenId }: { komitmenId: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+        className="rounded-lg border border-border px-3 py-1 text-sm disabled:opacity-50"
       >
         {pending ? "Memproses..." : "Konfirmasi"}
       </button>

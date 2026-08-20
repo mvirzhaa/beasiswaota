@@ -17,8 +17,8 @@ export function TombolPersetujuan({ relasiId, disetujui }: { relasiId: string; d
       <button
         type="submit"
         disabled={pending}
-        className={`rounded px-3 py-1 text-xs disabled:opacity-50 ${
-          disetujui ? "border border-red-600 text-red-600" : "bg-black text-white"
+        className={`rounded-lg px-3 py-1 text-xs transition-colors disabled:opacity-50 ${
+          disetujui ? "border border-red-600 text-red-600" : "bg-primary text-white"
         }`}
       >
         {pending ? "Memproses..." : disetujui ? "Tarik persetujuan" : "Setujui pemantauan"}

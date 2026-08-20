@@ -69,7 +69,7 @@ function FormIsi({ periodeId, laporan }: { periodeId: string; laporan: LaporanPe
           rows={6}
           required
           defaultValue={laporan?.isi ?? ""}
-          className="rounded border px-3 py-2"
+          className="rounded-lg border border-border px-3 py-2"
         />
       </label>
 
@@ -82,7 +82,7 @@ function FormIsi({ periodeId, laporan }: { periodeId: string; laporan: LaporanPe
           type="submit"
           formAction={actionDraft}
           disabled={pendingDraft || pendingSubmit}
-          className="rounded border px-4 py-2 text-sm disabled:opacity-50"
+          className="rounded-lg border border-border px-4 py-2 text-sm disabled:opacity-50"
         >
           {pendingDraft ? "Menyimpan..." : "Simpan draft"}
         </button>
@@ -90,7 +90,7 @@ function FormIsi({ periodeId, laporan }: { periodeId: string; laporan: LaporanPe
           type="submit"
           formAction={actionSubmit}
           disabled={pendingDraft || pendingSubmit}
-          className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
         >
           {pendingSubmit ? "Mengirim..." : "Kirim laporan"}
         </button>
@@ -111,7 +111,7 @@ function UnggahLampiran({ laporanId, lampiranAda }: { laporanId: string; lampira
       <span>Lampiran scan KHS {lampiranAda ? "(sudah ada, unggah untuk mengganti)" : ""}</span>
       <div className="flex items-center gap-2">
         <input type="file" name="file" accept="application/pdf,image/jpeg,image/png" className="text-sm" />
-        <button type="submit" disabled={pending} className="rounded border px-3 py-1 text-sm disabled:opacity-50">
+        <button type="submit" disabled={pending} className="rounded-lg border border-border px-3 py-1 text-sm disabled:opacity-50">
           {pending ? "Mengunggah..." : "Unggah"}
         </button>
       </div>
@@ -131,7 +131,7 @@ function TogglBacaPembina({ laporanId, boleh }: { laporanId: string; boleh: bool
   return (
     <form action={formAction} className="flex items-center gap-2 text-sm">
       <span>Laporan ini {boleh ? "boleh" : "tidak boleh"} dibaca pembina.</span>
-      <button type="submit" disabled={pending} className="rounded border px-3 py-1 text-xs disabled:opacity-50">
+      <button type="submit" disabled={pending} className="rounded-lg border border-border px-3 py-1 text-xs disabled:opacity-50">
         {pending ? "Memproses..." : boleh ? "Sembunyikan dari pembina" : "Izinkan dibaca pembina"}
       </button>
       {state.pesan && (

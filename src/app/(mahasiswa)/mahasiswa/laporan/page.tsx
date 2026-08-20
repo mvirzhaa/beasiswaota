@@ -19,9 +19,9 @@ export default async function HalamanLaporanMahasiswa({
 
   if (!periodeId) {
     return (
-      <main className="mx-auto max-w-2xl p-6">
-        <h1 className="text-xl font-semibold">Laporan Perkembangan</h1>
-        <p className="mt-4 text-sm text-gray-600">
+      <main className="mx-auto max-w-2xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+        <h1 className="font-heading text-2xl font-bold text-ink">Laporan Perkembangan</h1>
+        <p className="mt-4 text-sm text-muted">
           Anda belum tercatat sebagai penerima beasiswa di periode mana pun.
         </p>
       </main>
@@ -31,18 +31,18 @@ export default async function HalamanLaporanMahasiswa({
   const laporan = await ambilLaporanMahasiswa(userId, periodeId);
 
   return (
-    <main className="mx-auto max-w-2xl p-6">
-      <h1 className="text-xl font-semibold">Laporan Perkembangan</h1>
+    <main className="mx-auto max-w-2xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+      <h1 className="font-heading text-2xl font-bold text-ink">Laporan Perkembangan</h1>
 
       <form className="mt-4 flex gap-3 text-sm">
-        <select name="periodeId" defaultValue={periodeId} className="rounded border px-2 py-1">
+        <select name="periodeId" defaultValue={periodeId} className="rounded-lg border border-border px-2 py-1">
           {periodeList.map((p) => (
             <option key={p.id} value={p.id}>
               {p.kode}
             </option>
           ))}
         </select>
-        <button type="submit" className="rounded border px-3 py-1">
+        <button type="submit" className="rounded-lg border border-border px-3 py-1">
           Pilih periode
         </button>
       </form>

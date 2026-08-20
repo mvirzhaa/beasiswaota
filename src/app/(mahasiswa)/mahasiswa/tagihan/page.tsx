@@ -19,8 +19,8 @@ export default async function HalamanTagihanMahasiswa() {
   ]);
 
   return (
-    <main className="mx-auto max-w-2xl p-6">
-      <h1 className="text-xl font-semibold">Tagihan Saya</h1>
+    <main className="mx-auto max-w-2xl mt-6 mb-10 rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+      <h1 className="font-heading text-2xl font-bold text-ink">Tagihan Saya</h1>
 
       <table className="mt-4 w-full text-left text-sm">
         <thead>
@@ -44,7 +44,7 @@ export default async function HalamanTagihanMahasiswa() {
           ))}
           {tagihan.length === 0 && (
             <tr>
-              <td colSpan={5} className="py-4 text-center text-gray-500">
+              <td colSpan={5} className="py-4 text-center text-muted">
                 Belum ada tagihan.
               </td>
             </tr>
@@ -53,7 +53,7 @@ export default async function HalamanTagihanMahasiswa() {
       </table>
 
       <section className="mt-10">
-        <h2 className="text-lg font-semibold">Riwayat Bantuan Diterima</h2>
+        <h2 className="font-heading text-lg font-bold text-ink">Riwayat Bantuan Diterima</h2>
         <table className="mt-2 w-full text-left text-sm">
           <thead>
             <tr className="border-b">
@@ -74,7 +74,7 @@ export default async function HalamanTagihanMahasiswa() {
             ))}
             {riwayat.length === 0 && (
               <tr>
-                <td colSpan={4} className="py-4 text-center text-gray-500">
+                <td colSpan={4} className="py-4 text-center text-muted">
                   Belum ada bantuan yang tercatat.
                 </td>
               </tr>
