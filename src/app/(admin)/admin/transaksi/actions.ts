@@ -1,12 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { catatAudit } from "@/lib/audit";
-import { hitungSaldo } from "@/lib/keuangan/ledger";
 import { tolakTransaksiSchema } from "@/lib/transaksi/schema";
+import { verifikasiTransaksiInti } from "@/server/actions/verifikasi-transaksi-inti";
 import type { HasilAksi } from "@/types/aksi";
 
 async function sesiAdmin() {
@@ -16,8 +15,6 @@ async function sesiAdmin() {
   }
   return session.user;
 }
-
-const SUDAH_DIPROSES = "SUDAH_DIPROSES";
 
 /**
  * Ini sesi yang menyentuh uang — lihat CLAUDE.md aturan keras 1, 3, 6, 8, 9.
@@ -70,63 +67,22 @@ export async function verifikasiTransaksi(
     periodeId = periode.id;
   }
 
-  try {
-    await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT pg_advisory_xact_lock(4711, hashtext(${periodeId}))`;
+  const hasil = await verifikasiTransaksiInti(prisma, {
+    transaksiId,
+    periodeId,
+    nominal: transaksi.nominal,
+    jadwalBayarId: transaksi.jadwalBayar?.id ?? null,
+    verifiedById: admin.id,
+    keterangan: `Transfer terverifikasi dari ${transaksi.ortuAsuh.nama}`,
+    aktorAuditId: admin.id,
+    aksiAudit: "transaksi.verifikasi",
+  });
 
-      try {
-        await tx.transaksi.update({
-          where: { id: transaksiId, status: "MENUNGGU_VERIFIKASI" },
-          data: { status: "TERVERIFIKASI", verifiedById: admin.id, verifiedAt: new Date() },
-        });
-      } catch (error) {
-        if (
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === "P2025"
-        ) {
-          throw new Error(SUDAH_DIPROSES);
-        }
-        throw error;
-      }
-
-      const saldoSebelum = await hitungSaldo(tx, periodeId);
-      const saldoSetelah = saldoSebelum + transaksi.nominal;
-
-      await tx.danaLedger.create({
-        data: {
-          periodeId,
-          tipe: "KREDIT",
-          nominal: transaksi.nominal,
-          saldoSetelah,
-          transaksiId: transaksi.id,
-          keterangan: `Transfer terverifikasi dari ${transaksi.ortuAsuh.nama}`,
-        },
-      });
-
-      if (transaksi.jadwalBayar) {
-        await tx.jadwalBayar.update({
-          where: { id: transaksi.jadwalBayar.id },
-          data: { status: "TERBAYAR" },
-        });
-      }
-
-      await catatAudit(tx, {
-        aktorId: admin.id,
-        aksi: "transaksi.verifikasi",
-        entitas: "transaksi",
-        entitasId: transaksiId,
-        sebelum: { status: "MENUNGGU_VERIFIKASI" },
-        sesudah: { status: "TERVERIFIKASI", saldoSetelah: saldoSetelah.toString() },
-      });
-    });
-  } catch (error) {
-    if (error instanceof Error && error.message === SUDAH_DIPROSES) {
-      return {
-        sukses: false,
-        pesan: "Transaksi ini sudah diproses admin lain sesaat sebelumnya.",
-      };
-    }
-    throw error;
+  if (!hasil.sukses) {
+    return {
+      sukses: false,
+      pesan: "Transaksi ini sudah diproses admin lain sesaat sebelumnya.",
+    };
   }
 
   revalidatePath("/admin/transaksi");

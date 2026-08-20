@@ -6,6 +6,7 @@ import {
   ambilRiwayatTransaksiOrtuAsuh,
 } from "@/server/queries/transaksi";
 import { FormUnggahBukti } from "./form-unggah-bukti";
+import { TombolBayarVA } from "./tombol-bayar-va";
 
 const LABEL_STATUS_JADWAL: Record<string, string> = {
   BELUM_JATUH_TEMPO: "Belum jatuh tempo",
@@ -54,22 +55,27 @@ export default async function HalamanPembayaranDonatur() {
             <th>Jatuh tempo</th>
             <th>Sisa hari</th>
             <th>Status</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
-          {jadwal.map((j) => (
-            <tr key={j.id} className="border-b">
-              <td className="py-2">{j.periode.kode}</td>
-              <td>{j.urutan}</td>
-              <td>{formatRupiah(j.nominal)}</td>
-              <td>{j.jatuhTempo.toLocaleDateString("id-ID")}</td>
-              <td>{j.status === "TERBAYAR" || j.status === "DIBATALKAN" ? "-" : sisaHari(j.jatuhTempo)}</td>
-              <td>{LABEL_STATUS_JADWAL[j.status] ?? j.status}</td>
-            </tr>
-          ))}
+          {jadwal.map((j) => {
+            const bisaBayar = j.status !== "TERBAYAR" && j.status !== "DIBATALKAN";
+            return (
+              <tr key={j.id} className="border-b">
+                <td className="py-2">{j.periode.kode}</td>
+                <td>{j.urutan}</td>
+                <td>{formatRupiah(j.nominal)}</td>
+                <td>{j.jatuhTempo.toLocaleDateString("id-ID")}</td>
+                <td>{bisaBayar ? sisaHari(j.jatuhTempo) : "-"}</td>
+                <td>{LABEL_STATUS_JADWAL[j.status] ?? j.status}</td>
+                <td>{bisaBayar && <TombolBayarVA jadwalBayarId={j.id} />}</td>
+              </tr>
+            );
+          })}
           {jadwal.length === 0 && (
             <tr>
-              <td colSpan={6} className="py-4 text-center text-gray-500">
+              <td colSpan={7} className="py-4 text-center text-gray-500">
                 Belum ada jadwal pembayaran.
               </td>
             </tr>

@@ -1,0 +1,10 @@
+[Unit]
+Description=Jadwal harian: generate JadwalBayar periode berikutnya
+
+[Timer]
+# Sekali sehari dini hari — jadwal bayar tidak butuh presisi menit.
+OnCalendar=*-*-* 01:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

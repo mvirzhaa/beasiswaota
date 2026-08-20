@@ -1,0 +1,10 @@
+[Unit]
+Description=Beasiswa OTA - reminder laporan perkembangan H-7
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/beasiswaota/cron.env
+ExecStart=/usr/bin/curl -fsS -X POST \
+  -H "x-cron-secret: ${CRON_SECRET}" \
+  https://beasiswaota.uika-bogor.ac.id/api/cron/laporan-reminder

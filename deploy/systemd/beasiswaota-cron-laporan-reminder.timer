@@ -1,0 +1,9 @@
+[Unit]
+Description=Jadwal harian: reminder laporan perkembangan H-7
+
+[Timer]
+OnCalendar=*-*-* 07:15:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

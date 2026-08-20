@@ -8,9 +8,14 @@ import { catatAudit } from "@/lib/audit";
 import { unggahBerkas } from "@/lib/storage/minio";
 import { validasiBerkas } from "@/lib/berkas/validasi";
 import { unggahBuktiTransferSchema } from "@/lib/transaksi/schema";
-import { ambilOrtuAsuhIdUser } from "@/server/queries/komitmen";
+import { buatTransaksiSnap } from "@/lib/payment/midtrans";
+import { ambilOrtuAsuhIdUser, ambilOrtuAsuhDariUser } from "@/server/queries/komitmen";
 import { ambilJadwalBayarMilikOrtuAsuh } from "@/server/queries/transaksi";
 import type { HasilAksi } from "@/types/aksi";
+
+export interface HasilMulaiPembayaranVA extends HasilAksi {
+  redirectUrl?: string;
+}
 
 async function sesiOrtuAsuh() {
   const session = await auth();
@@ -92,4 +97,61 @@ export async function unggahBuktiTransfer(formData: FormData): Promise<HasilAksi
 
   revalidatePath("/donatur/pembayaran");
   return { sukses: true, pesan: `Bukti transfer terunggah, menunggu verifikasi admin (ID ${transaksi.id}).` };
+}
+
+/**
+ * Terbitkan token Snap Midtrans untuk satu JadwalBayar. Transaksi dibuat
+ * MENUNGGU_VERIFIKASI di sini (persis seperti unggahBuktiTransfer), lalu
+ * webhook /api/webhook/payment yang men-verifikasi lewat jalur kode yang
+ * sama dengan verifikasi manual admin.
+ */
+export async function mulaiPembayaranVA(jadwalBayarId: string): Promise<HasilMulaiPembayaranVA> {
+  const user = await sesiOrtuAsuh();
+  const ortuAsuh = await ambilOrtuAsuhDariUser(user.id);
+
+  const jadwal = await ambilJadwalBayarMilikOrtuAsuh(jadwalBayarId, user.id);
+  if (!jadwal) {
+    return { sukses: false, pesan: "Jadwal bayar tidak ditemukan." };
+  }
+  if (jadwal.status === "TERBAYAR" || jadwal.status === "DIBATALKAN") {
+    return { sukses: false, pesan: "Jadwal ini sudah tidak menerima pembayaran baru." };
+  }
+
+  const pengguna = await prisma.user.findUnique({ where: { id: user.id }, select: { email: true } });
+  const orderId = `jadwal-${jadwalBayarId}-${Date.now()}`;
+
+  let snap;
+  try {
+    snap = await buatTransaksiSnap({
+      orderId,
+      grossAmount: jadwal.nominal,
+      namaDonatur: ortuAsuh.atasNamaMunfiq || ortuAsuh.nama,
+      emailDonatur: pengguna?.email ?? "",
+    });
+  } catch (error) {
+    return { sukses: false, pesan: error instanceof Error ? error.message : "Gagal membuat transaksi pembayaran." };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const dibuat = await tx.transaksi.create({
+      data: {
+        ortuAsuhId: ortuAsuh.id,
+        komitmenId: jadwal.komitmenId,
+        jadwalBayarId,
+        nominal: jadwal.nominal,
+        metode: "VIRTUAL_ACCOUNT",
+        refEksternal: orderId,
+        tglBayar: new Date(),
+      },
+    });
+    await catatAudit(tx, {
+      aktorId: user.id,
+      aksi: "transaksi.mulai_bayar_va",
+      entitas: "transaksi",
+      entitasId: dibuat.id,
+      sesudah: { orderId, nominal: jadwal.nominal.toString() },
+    });
+  });
+
+  return { sukses: true, pesan: "Silakan lanjutkan pembayaran.", redirectUrl: snap.redirectUrl };
 }
