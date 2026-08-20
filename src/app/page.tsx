@@ -376,14 +376,12 @@ export default async function HalamanUtamaLandingPage() {
                 Pendidikan Berkualitas untuk Seluruh Umat
               </h2>
 
-              <blockquote className="mt-4 rounded-2xl border-l-4 border-primary bg-primary-light/40 p-5 text-xs sm:text-sm italic leading-relaxed text-ink/90">
-                &ldquo;Program Beasiswa Orangtua Asuh adalah wujud nyata kepedulian sivitas akademika dan para munfiq untuk memastikan tidak ada mahasiswa berprestasi dan dhuafa di UIKA yang terhenti cita-citanya karena keterbatasan finansial. Mari bersama menanam benih amal jariyah yang tak terputus.&rdquo;
-              </blockquote>
-
-              <div className="mt-4 text-xs font-semibold text-ink">
-                Prof. Dr. H.E. Mujahidin, M.Si.
-                <span className="block font-normal text-muted">Rektor Universitas Ibn Khaldun Bogor</span>
-              </div>
+              <p className="mt-4 rounded-2xl border-l-4 border-primary bg-primary-light/40 p-5 text-xs sm:text-sm leading-relaxed text-ink/90">
+                Program Beasiswa Orangtua Asuh adalah wujud nyata kepedulian sivitas akademika dan
+                para munfiq untuk memastikan tidak ada mahasiswa berprestasi dan dhuafa di UIKA
+                yang terhenti cita-citanya karena keterbatasan finansial. Mari bersama menanam
+                benih amal jariyah yang tak terputus.
+              </p>
 
               <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-xs text-muted border-t border-border pt-4">
                 <span className="font-semibold text-primary">
