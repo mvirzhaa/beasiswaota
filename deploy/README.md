@@ -101,15 +101,30 @@ chmod 600 /etc/letsencrypt/live/beasiswaota.uika-bogor.ac.id/privkey.pem
 
 Nginx juga butuh `/etc/letsencrypt/options-ssl-nginx.conf` dan
 `ssl-dhparam.pem` (dipakai bareng, bukan per-domain) — kalau belum ada
-karena tidak pernah menjalankan Certbot sama sekali, generate manual:
+karena tidak pernah menjalankan Certbot sama sekali, generate manual
+(isi `options-ssl-nginx.conf` di bawah adalah default Certbot sendiri —
+ditulis langsung, bukan di-download dari luar, supaya tidak bergantung
+ke ketersediaan/perubahan URL pihak ketiga):
 
 ```bash
-apt install -y certbot
 mkdir -p /etc/letsencrypt
-curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/_internal/tls_configs/options-ssl-nginx.conf \
-  -o /etc/letsencrypt/options-ssl-nginx.conf
+
+cat > /etc/letsencrypt/options-ssl-nginx.conf <<'EOF'
+ssl_session_cache shared:le_nginx_SSL:10m;
+ssl_session_timeout 1440m;
+ssl_session_tickets off;
+
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_prefer_server_ciphers off;
+
+ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384";
+EOF
+
 openssl dhparam -out /etc/letsencrypt/ssl-dhparam.pem 2048
 ```
+
+`openssl dhparam` butuh 1–3 menit (kadang lebih lama di VPS dengan CPU
+terbatas) — itu normal, tunggu sampai kembali ke prompt.
 
 **B. Belum ada sertifikat — pakai Certbot (Let's Encrypt), gratis.**
 
