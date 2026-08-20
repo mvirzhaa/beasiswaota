@@ -33,7 +33,7 @@ sistem yang menangani uang dan data pribadi.
 
 ## Infrastruktur
 
-- [ ] `docker compose --env-file .env -f deploy/docker-compose.prod.yml config` tidak
+- [ ] `docker compose --env-file .env -f deploy/docker-compose.prod.yml -p beasiswaota config` tidak
       error (validasi syntax + interpolasi env).
 - [ ] Tidak ada port aplikasi/db/minio yang ter-bind ke `0.0.0.0` — semua
       lewat `127.0.0.1:...` di `docker-compose.prod.yml`, cek dengan
