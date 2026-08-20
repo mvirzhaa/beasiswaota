@@ -13,6 +13,7 @@ import {
   ScrollText,
   Landmark,
   PhoneCall,
+  MessageCircle,
   CheckCircle2,
   LogIn,
   UserPlus,
@@ -426,6 +427,7 @@ export default async function HalamanUtamaLandingPage() {
                 Setiap donasi Anda dikelola secara amanah dan disalurkan langsung untuk pembiayaan pendidikan mahasiswa UIKA Bogor.
               </p>
 
+              {/* Card Nomor Rekening BSI */}
               <div className="mt-6 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary-dark via-primary to-[#0e584f] p-6 text-white shadow-md">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-white/80">Bank Syariah Indonesia (BSI)</span>
@@ -437,28 +439,88 @@ export default async function HalamanUtamaLandingPage() {
                     className="h-6 w-6 object-contain"
                   />
                 </div>
-                <p className="mt-3 font-mono text-2xl font-bold tracking-wider text-accent">
+                <p className="mt-3 font-mono text-2xl sm:text-3xl font-bold tracking-wider text-accent">
                   7367215121
                 </p>
                 <p className="mt-1 text-xs font-medium text-white/90">
                   a.n. Orang Tua Asuh UIKA Bogor
                 </p>
+
+                {/* Quick CTA di dalam card rekening */}
+                <div className="mt-5 border-t border-white/20 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                  <span className="text-white/80 text-[11px]">
+                    Sudah transfer? Konfirmasi ke admin kami:
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a
+                      href="https://wa.me/6281383155797?text=Assalamu%27alaikum%20Warahmatullahi%20Wabarakatuh%2C%20saya%20ingin%20konfirmasi%20transfer%20donasi%20Program%20Beasiswa%20Orang%20Tua%20Asuh%20UIKA%20Bogor."
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-500"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      <span>WA Kontak 1</span>
+                    </a>
+                    <a
+                      href="https://wa.me/6281807146988?text=Assalamu%27alaikum%20Warahmatullahi%20Wabarakatuh%2C%20saya%20ingin%20konfirmasi%20transfer%20donasi%20Program%20Beasiswa%20Orang%20Tua%20Asuh%20UIKA%20Bogor."
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-500"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      <span>WA Kontak 2</span>
+                    </a>
+                  </div>
+                </div>
               </div>
 
-              {/* Kontak Pengelola */}
-              <div className="mt-6 rounded-2xl border border-border bg-surface p-4 text-xs text-ink shadow-xs">
-                <p className="font-semibold text-primary flex items-center gap-1.5">
-                  <PhoneCall className="h-3.5 w-3.5" />
-                  <span>Kontak Pengelola Program Beasiswa UIKA:</span>
-                </p>
-                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-muted">
-                  <div className="border-b sm:border-b-0 pb-1">
-                    <p className="font-medium text-ink">Nurseha Marasabessy, S.H.</p>
-                    <p className="font-mono text-primary font-semibold">0813-8315-5797</p>
+              {/* Kontak Pengelola dengan Tombol Konfirmasi Lengkap */}
+              <div className="mt-4 rounded-2xl border border-border bg-surface p-5 text-xs text-ink shadow-xs">
+                <div className="flex items-center justify-between border-b border-border pb-3">
+                  <p className="font-semibold text-primary flex items-center gap-1.5 text-xs sm:text-sm">
+                    <PhoneCall className="h-4 w-4 text-primary" />
+                    <span>Layanan Konfirmasi & Informasi Donasi:</span>
+                  </p>
+                  <span className="text-[11px] font-medium text-muted">Respon Cepat (WhatsApp)</span>
+                </div>
+
+                <div className="mt-3.5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Kontak 1: Nurseha Marasabessy */}
+                  <div className="flex flex-col justify-between rounded-xl border border-border bg-surface-alt/40 p-3.5 transition-all hover:border-primary/50 hover:bg-surface">
+                    <div>
+                      <p className="font-bold text-ink text-xs sm:text-sm">Nurseha Marasabessy, S.H.</p>
+                      <p className="font-mono text-xs text-primary font-semibold mt-0.5">0813-8315-5797</p>
+                    </div>
+                    <div className="mt-3">
+                      <a
+                        href="https://wa.me/6281383155797?text=Assalamu%27alaikum%20Warahmatullahi%20Wabarakatuh%2C%20saya%20ingin%20konfirmasi%20transfer%20donasi%20Program%20Beasiswa%20Orang%20Tua%20Asuh%20UIKA%20Bogor."
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-700 active:scale-[0.98]"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        <span>Konfirmasi ke Kontak 1</span>
+                      </a>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-ink">Siti Nuraziyah, S.Ak.</p>
-                    <p className="font-mono text-primary font-semibold">0818-0714-6988</p>
+
+                  {/* Kontak 2: Siti Nuraziyah */}
+                  <div className="flex flex-col justify-between rounded-xl border border-border bg-surface-alt/40 p-3.5 transition-all hover:border-primary/50 hover:bg-surface">
+                    <div>
+                      <p className="font-bold text-ink text-xs sm:text-sm">Siti Nuraziyah, S.Ak.</p>
+                      <p className="font-mono text-primary font-semibold text-xs mt-0.5">0818-0714-6988</p>
+                    </div>
+                    <div className="mt-3">
+                      <a
+                        href="https://wa.me/6281807146988?text=Assalamu%27alaikum%20Warahmatullahi%20Wabarakatuh%2C%20saya%20ingin%20konfirmasi%20transfer%20donasi%20Program%20Beasiswa%20Orang%20Tua%20Asuh%20UIKA%20Bogor."
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-700 active:scale-[0.98]"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        <span>Konfirmasi ke Kontak 2</span>
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
