@@ -372,17 +372,28 @@ minimal model `Haswell` atau lebih baru (semua sudah dukung AVX2, standar
 sejak 2013). Perlu VM di-restart dari panel (bukan cuma reboot dari
 dalam OS) supaya berlaku.
 
-**Workaround sementara** (sudah aktif di `docker-compose.prod.yml`,
-service `app`, lihat `NODE_OPTIONS: "--jitless"`): mematikan seluruh JIT
-V8 supaya tidak pernah menyentuh AVX2 — aplikasi tetap jalan, tapi lebih
-lambat dari seharusnya (JavaScript murni diinterpretasi, tidak
-dioptimalkan). **Setelah tipe CPU VM diperbaiki, hapus baris
-`NODE_OPTIONS: "--jitless"` dari `docker-compose.prod.yml`, lalu:**
+**Sudah dicoba dan TIDAK berhasil:** `NODE_OPTIONS=--jitless` (mematikan
+JIT V8 total) — crash tetap terjadi di alamat instruksi yang sama persis
+walau JIT sudah mati total, dan malah memicu bug baru
+(`WebAssembly is not defined`, karena beberapa bagian inti Node — parser
+HTTP di `undici` — butuh WebAssembly yang ikut mati kalau jitless).
+Kesimpulan: ini bukan sekadar soal kode JS yang di-JIT pakai AVX2,
+kemungkinan bug pada build Node 20 versi terbaru sendiri di CPU ini.
+
+**Workaround yang sedang dipakai** (di `deploy/Dockerfile`,
+`ARG NODE_VERSION`): pin ke rilis LTS lama `20.11.1-bookworm-slim`
+(bukan tag mengambang `20-bookworm-slim` yang selalu ambil patch
+terbaru), dengan asumsi bug ini regresi di patch Node yang lebih baru.
+**Setelah tipe CPU VM diperbaiki**, boleh dicoba naikkan lagi ke
+`ARG NODE_VERSION=20-bookworm-slim` untuk dapat patch keamanan terkini:
 
 ```bash
 cat /proc/cpuinfo | grep -m1 flags | tr ' ' '\n' | grep -E "^(avx2|bmi2)$"
 # harus muncul "avx2" — baru lanjut ke bawah ini
 
 git pull
+# lalu ubah ARG NODE_VERSION di deploy/Dockerfile kembali ke
+# "20-bookworm-slim", commit, git pull lagi di VPS, baru:
+docker compose --env-file .env -f deploy/docker-compose.prod.yml -p beasiswaota build app migrate
 docker compose --env-file .env -f deploy/docker-compose.prod.yml -p beasiswaota up -d app
 ```
