@@ -358,42 +358,48 @@ dmesg -T | grep -i segfault
 cat /proc/cpuinfo | grep -m1 flags | tr ' ' '\n' | grep -E "^(avx2|bmi2)$"
 ```
 
-Kalau `dmesg` menunjukkan `next-server ... segfault ... in node[...]`
-DAN `cpuinfo` tidak menampilkan `avx2`/`bmi2` sama sekali — ini bukan bug
-aplikasi, tapi V8 (mesin JS Node.js) yang crash karena CPU virtual VM ini
-tidak mendukung instruksi AVX2 yang dibutuhkan versi Node terbaru.
-Ditemukan pertama kali saat deploy produksi: VM ini terpasang dengan tipe
-CPU virtual "QEMU Virtual CPU version 2.5+" (sangat lama/generik).
+Kalau `dmesg` menunjukkan `next-server ... segfault at a0 ... in
+node[...]` DAN `cpuinfo` tidak menampilkan `avx2`/`bmi2` sama sekali —
+ini bukan bug aplikasi. Ditemukan saat deploy produksi: VM ini terpasang
+dengan tipe CPU virtual **"QEMU Virtual CPU version 2.5+"** (sangat
+lama/generik, tidak mendukung AVX2/BMI2).
 
-**Perbaikan yang benar (permanen):** minta pengelola VM (tim IT/penyedia
-VPS) mengganti tipe CPU virtual lewat panel hypervisor (Proxmox/VMware/
-dst) ke `host` (passthrough — VM langsung pakai instruksi CPU fisik) atau
-minimal model `Haswell` atau lebih baru (semua sudah dukung AVX2, standar
-sejak 2013). Perlu VM di-restart dari panel (bukan cuma reboot dari
-dalam OS) supaya berlaku.
+**Sudah dicoba dan TIDAK berhasil menyelesaikan (jangan diulang):**
+- `NODE_OPTIONS=--jitless` (mematikan JIT V8 total) — crash tetap terjadi
+  persis di offset yang sama, dan malah memicu bug baru
+  (`WebAssembly is not defined`, karena `undici` — parser HTTP inti
+  Node — butuh WebAssembly yang ikut mati kalau jitless).
+- Downgrade ke Node 20.11.1 (LTS lama, dari tag mengambang
+  `20-bookworm-slim`) — crash tetap terjadi di offset yang nyaris sama
+  (`segfault at a0`) walau alamat instruksi persisnya beda (build
+  berbeda).
 
-**Sudah dicoba dan TIDAK berhasil:** `NODE_OPTIONS=--jitless` (mematikan
-JIT V8 total) — crash tetap terjadi di alamat instruksi yang sama persis
-walau JIT sudah mati total, dan malah memicu bug baru
-(`WebAssembly is not defined`, karena beberapa bagian inti Node — parser
-HTTP di `undici` — butuh WebAssembly yang ikut mati kalau jitless).
-Kesimpulan: ini bukan sekadar soal kode JS yang di-JIT pakai AVX2,
-kemungkinan bug pada build Node 20 versi terbaru sendiri di CPU ini.
+**Kesimpulan:** crash konsisten di offset yang sama di DUA versi Node
+berbeda, dan tidak terpengaruh JIT dimatikan — ini kode pengecekan
+kemampuan CPU milik V8 sendiri yang jalan di awal startup (sebelum kode
+JavaScript apa pun dieksekusi, makanya `--jitless` tidak berpengaruh).
+Kemungkinan besar CPU virtual "QEMU Virtual CPU version 2.5+" memberi
+data CPUID yang tidak lengkap/tidak wajar, membuat V8 crash saat
+membacanya — bukan sekadar "AVX2 tidak ada", tapi datanya sendiri
+bermasalah. **Tidak ada workaround dari sisi kode/Node yang terbukti
+berhasil.** Jangan buang waktu mencoba versi Node lain atau flag V8
+lain — satu-satunya jalan adalah perbaikan di bawah.
 
-**Workaround yang sedang dipakai** (di `deploy/Dockerfile`,
-`ARG NODE_VERSION`): pin ke rilis LTS lama `20.11.1-bookworm-slim`
-(bukan tag mengambang `20-bookworm-slim` yang selalu ambil patch
-terbaru), dengan asumsi bug ini regresi di patch Node yang lebih baru.
-**Setelah tipe CPU VM diperbaiki**, boleh dicoba naikkan lagi ke
-`ARG NODE_VERSION=20-bookworm-slim` untuk dapat patch keamanan terkini:
+**Perbaikan yang benar (satu-satunya yang terbukti perlu):** minta
+pengelola VM (tim IT/penyedia VPS) mengganti tipe CPU virtual lewat
+panel hypervisor (Proxmox/VMware/dst) ke `host` (passthrough — VM
+langsung pakai instruksi CPU fisik) atau minimal model `Haswell` atau
+lebih baru (semua sudah dukung AVX2, standar sejak 2013). Perlu VM
+di-restart dari panel (bukan cuma reboot dari dalam OS) supaya berlaku.
+
+Setelah CPU VM diperbaiki, verifikasi dulu sebelum lanjut:
 
 ```bash
 cat /proc/cpuinfo | grep -m1 flags | tr ' ' '\n' | grep -E "^(avx2|bmi2)$"
 # harus muncul "avx2" — baru lanjut ke bawah ini
 
 git pull
-# lalu ubah ARG NODE_VERSION di deploy/Dockerfile kembali ke
-# "20-bookworm-slim", commit, git pull lagi di VPS, baru:
 docker compose --env-file .env -f deploy/docker-compose.prod.yml -p beasiswaota build app migrate
 docker compose --env-file .env -f deploy/docker-compose.prod.yml -p beasiswaota up -d app
+curl -I http://127.0.0.1:3000   # harus dapat respons HTTP asli, bukan "Empty reply"
 ```

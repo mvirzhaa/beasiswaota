@@ -13,17 +13,7 @@
 # penuh. Lihat deploy/docker-compose.prod.yml (service "migrate") dan
 # deploy/README.md.
 
-# Dipin ke rilis LTS spesifik (bukan tag "20-bookworm-slim" yang mengambang
-# ke patch terbaru) — ditemukan saat deploy produksi bahwa versi 20.20.2
-# (patch terbaru per Agustus 2026) segfault konsisten di VM dengan CPU
-# virtual tanpa AVX2 ("QEMU Virtual CPU version 2.5+"), bahkan dengan V8
-# JIT dimatikan total (--jitless), jadi ini bukan sekadar soal JIT/AVX2 di
-# kode JS — kemungkinan bug spesifik build Node itu sendiri. 20.11.1 versi
-# lama yang sudah lama luas dipakai, dicoba sebagai kandidat lebih stabil.
-# Kalau tim IT sudah mengganti CPU VM ke yang mendukung AVX2 (lihat
-# deploy/README.md bagian troubleshooting), boleh dicoba naikkan lagi ke
-# "20-bookworm-slim" untuk dapat patch keamanan terbaru.
-ARG NODE_VERSION=20.11.1-bookworm-slim
+ARG NODE_VERSION=20-bookworm-slim
 
 # ---------------------------------------------------------------------------
 # Stage 1: dependencies (cache terpisah supaya rebuild kode tidak reinstall)
