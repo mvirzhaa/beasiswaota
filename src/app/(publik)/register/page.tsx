@@ -2,11 +2,13 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
+import { GraduationCap } from "lucide-react";
 import {
   registerMahasiswa,
   registerOrtuAsuh,
   type HasilRegistrasi,
 } from "./actions";
+import { FooterProgram } from "@/components/ui/footer-program";
 
 const STATE_AWAL: HasilRegistrasi = { sukses: false, pesan: "" };
 
@@ -26,39 +28,45 @@ export default function HalamanRegister() {
   const [peran, setPeran] = useState<"MAHASISWA" | "ORTU_ASUH">("MAHASISWA");
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-surface-alt p-6">
-      <div className="w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
-        <p className="text-xs font-medium tracking-wide text-accent-dark uppercase">
-          Beasiswa Orangtua Asuh
-        </p>
-        <h1 className="mt-1 font-heading text-2xl font-bold text-ink">Daftar</h1>
+    <main className="flex min-h-screen flex-col bg-gradient-to-br from-primary-light via-surface-alt to-accent/10">
+      <div className="flex flex-1 flex-col items-center justify-center p-6">
+        <div className="w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-[0_0_40px_5px_rgb(0_0_0_/_5%)]">
+          <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-white">
+            <GraduationCap className="h-7 w-7" strokeWidth={1.75} />
+          </span>
+          <p className="mt-3 text-xs font-medium tracking-wide text-accent-dark uppercase">
+            Beasiswa Orangtua Asuh
+          </p>
+          <h1 className="mt-1 font-heading text-2xl font-bold text-ink">Daftar</h1>
 
-        <div className="mt-4 flex gap-2">
-          <button
-            type="button"
-            onClick={() => setPeran("MAHASISWA")}
-            className={`rounded-lg px-3 py-1 text-sm transition-colors ${peran === "MAHASISWA" ? "bg-primary text-white" : "border border-border text-ink hover:bg-surface-alt"}`}
-          >
-            Mahasiswa
-          </button>
-          <button
-            type="button"
-            onClick={() => setPeran("ORTU_ASUH")}
-            className={`rounded-lg px-3 py-1 text-sm transition-colors ${peran === "ORTU_ASUH" ? "bg-primary text-white" : "border border-border text-ink hover:bg-surface-alt"}`}
-          >
-            Orangtua Asuh
-          </button>
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setPeran("MAHASISWA")}
+              className={`rounded-lg px-3 py-1 text-sm transition-colors ${peran === "MAHASISWA" ? "bg-primary text-white" : "border border-border text-ink hover:bg-surface-alt"}`}
+            >
+              Mahasiswa
+            </button>
+            <button
+              type="button"
+              onClick={() => setPeran("ORTU_ASUH")}
+              className={`rounded-lg px-3 py-1 text-sm transition-colors ${peran === "ORTU_ASUH" ? "bg-primary text-white" : "border border-border text-ink hover:bg-surface-alt"}`}
+            >
+              Orangtua Asuh
+            </button>
+          </div>
+
+          <div className="mt-4">{peran === "MAHASISWA" ? <FormMahasiswa /> : <FormOrtuAsuh />}</div>
+
+          <p className="mt-4 text-sm text-ink">
+            Sudah punya akun?{" "}
+            <Link href="/login" className="text-primary underline hover:text-primary-dark">
+              Masuk
+            </Link>
+          </p>
         </div>
-
-        <div className="mt-4">{peran === "MAHASISWA" ? <FormMahasiswa /> : <FormOrtuAsuh />}</div>
-
-        <p className="mt-4 text-sm text-ink">
-          Sudah punya akun?{" "}
-          <Link href="/login" className="text-primary underline hover:text-primary-dark">
-            Masuk
-          </Link>
-        </p>
       </div>
+      <FooterProgram />
     </main>
   );
 }

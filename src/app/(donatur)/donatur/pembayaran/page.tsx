@@ -85,6 +85,16 @@ export default async function HalamanPembayaranDonatur() {
 
       <section className="mt-10">
         <h2 className="font-heading text-lg font-bold text-ink">Unggah bukti transfer</h2>
+        <div className="mt-3 rounded-lg border border-accent/40 bg-accent/10 p-4 text-sm">
+          <p className="font-semibold text-ink">Rekening resmi Program Beasiswa Orangtua Asuh</p>
+          <p className="mt-1 text-ink">
+            No. Rekening <span className="font-semibold">7367215121</span> a.n.{" "}
+            <span className="font-semibold">Orang Tua Asuh UIKA Bogor</span>
+          </p>
+          <p className="mt-1 text-muted">
+            Transfer ke rekening ini, lalu unggah buktinya di bawah supaya bisa diverifikasi admin.
+          </p>
+        </div>
         <FormUnggahBukti jadwalTerbuka={jadwalTerbuka} />
       </section>
 

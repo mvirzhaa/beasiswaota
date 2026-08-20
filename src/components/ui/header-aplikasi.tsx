@@ -1,10 +1,13 @@
 import Link from "next/link";
+import { GraduationCap } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { TombolKeluar } from "./tombol-keluar";
 
 export interface NavLinkAplikasi {
   href: string;
   label: string;
+  ikon?: LucideIcon;
 }
 
 export interface NavGroupAplikasi {
@@ -31,15 +34,28 @@ export async function HeaderAplikasi({
 
   return (
     <header className="border-b border-border bg-surface">
+      <div className="h-1 bg-gradient-to-r from-primary via-primary to-accent" />
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-3">
         <Link href={beranda} className="flex items-center gap-2">
-          <span className="font-heading text-lg font-bold text-primary">UIKA</span>
-          <span className="hidden text-xs text-muted sm:inline">Beasiswa Orangtua Asuh</span>
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white">
+            <GraduationCap className="h-5 w-5" strokeWidth={1.75} />
+          </span>
+          <span>
+            <span className="block font-heading text-lg leading-none font-bold text-primary">
+              UIKA
+            </span>
+            <span className="hidden text-xs text-muted sm:inline">Beasiswa Orangtua Asuh</span>
+          </span>
         </Link>
 
         <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
           {navLinks.map((l) => (
-            <Link key={l.href} href={l.href} className="text-ink hover:text-primary">
+            <Link
+              key={l.href}
+              href={l.href}
+              className="flex items-center gap-1.5 text-ink hover:text-primary"
+            >
+              {l.ikon && <l.ikon className="h-4 w-4" strokeWidth={1.75} />}
               {l.label}
             </Link>
           ))}
@@ -53,8 +69,9 @@ export async function HeaderAplikasi({
                   <Link
                     key={l.href}
                     href={l.href}
-                    className="block px-3 py-2 text-ink hover:bg-surface-alt hover:text-primary"
+                    className="flex items-center gap-2 px-3 py-2 text-ink hover:bg-surface-alt hover:text-primary"
                   >
+                    {l.ikon && <l.ikon className="h-4 w-4" strokeWidth={1.75} />}
                     {l.label}
                   </Link>
                 ))}
