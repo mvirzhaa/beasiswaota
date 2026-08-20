@@ -3,21 +3,27 @@
 Panduan dari VPS kosong sampai aplikasi jalan. Ikuti berurutan — tiap
 bagian mengasumsikan bagian sebelumnya sudah selesai.
 
-Catatan koneksi: kalau VPS ini pakai port SSH kustom (bukan 22 default),
-tambahkan `-p <port>` di setiap perintah `ssh`/`scp` di bawah sesuai info
-provisioning VPS yang Anda terima dari penyedia — cek dulu port mana yang
-sebenarnya dibuka sebelum mulai, jangan asumsikan 22.
+Catatan koneksi: kalau VPS ini pakai port SSH kustom (bukan 22 default,
+mis. di-forward lewat NAT ke 22 internal), tambahkan `-p <port>` di setiap
+perintah `ssh`/`scp` di bawah — dan ingat aturan UFW harus mengizinkan
+port **internal** yang benar-benar didengarkan `sshd` (cek dengan
+`grep -i "^Port" /etc/ssh/sshd_config`, biasanya tetap `22` meski port
+eksternal/NAT-nya beda), bukan port eksternal itu sendiri.
+
+Panduan ini ditulis untuk dijalankan sebagai **root langsung** (bukan
+user non-root terpisah) dan menaruh kode di `/var/www/html/beasiswaota` —
+sesuaikan path kalau susunan VPS Anda beda.
 
 ---
 
 ## 0. Prasyarat
 
-- VPS Ubuntu 22.04/24.04 LTS, akses root awal.
-- DNS: **dua** A record mengarah ke IP VPS:
-  - `beasiswaota.uika-bogor.ac.id` — aplikasi
-  - `storage.beasiswaota.uika-bogor.ac.id` — proxy MinIO (lihat catatan di
-    `deploy/nginx/beasiswaota.conf` kenapa ini perlu subdomain terpisah,
-    bukan cuma path)
+- VPS Ubuntu 22.04/24.04 LTS, akses root.
+- DNS: satu A record `beasiswaota.uika-bogor.ac.id` mengarah ke IP VPS.
+  Bucket MinIO diproxy lewat path (`/beasiswaota-berkas/`) di domain yang
+  sama — lihat catatan di `deploy/nginx/beasiswaota.conf` — jadi tidak
+  perlu subdomain/sertifikat kedua kalau memang cuma satu domain yang
+  disediakan.
 - Kredensial VPS, domain, dan email `beasiswaota@uika-bogor.ac.id` sudah
   di tangan (jangan simpan di repo ini dalam bentuk apa pun).
 
@@ -25,46 +31,37 @@ sebenarnya dibuka sebelum mulai, jangan asumsikan 22.
 
 ## 1. Hardening dasar VPS
 
-Login pertama kali sebagai root, lalu:
+Sebagai root:
 
 ```bash
-# Buat user non-root untuk operasional sehari-hari.
-adduser beasiswaota
-usermod -aG sudo beasiswaota
-
-# Salin SSH key Anda ke user baru (dari mesin lokal):
-#   ssh-copy-id -p <port-ssh> beasiswaota@<ip-vps>
-
-# --- Sebagai root, matikan login password & root SSH ---
-nano /etc/ssh/sshd_config
-#   PasswordAuthentication no
-#   PermitRootLogin no
-systemctl restart sshd
-
-# --- Firewall (UFW) ---
+# Firewall — WAJIB izinkan port SSH yang BENAR-BENAR didengarkan sshd
+# (cek dulu: grep -i "^Port" /etc/ssh/sshd_config, default 22) sebelum
+# ufw enable, atau Anda bisa terkunci dari VPS sendiri.
 ufw default deny incoming
 ufw default allow outgoing
-ufw allow <port-ssh>/tcp
+ufw allow 22/tcp
 ufw allow 80/tcp
 ufw allow 443/tcp
 ufw enable
 
-# --- fail2ban untuk SSH ---
+# fail2ban untuk SSH
 apt update && apt install -y fail2ban
 systemctl enable --now fail2ban
 ```
 
-Login ulang sebagai `beasiswaota` untuk semua langkah berikutnya — jangan
-lagi pakai root kecuali benar-benar perlu (`sudo` saja).
+Kalau root login masih pakai password (bukan SSH key), pertimbangkan
+ganti ke key-only (`PasswordAuthentication no` di
+`/etc/ssh/sshd_config`, lalu `systemctl restart sshd`) — tapi **jangan
+tutup sesi SSH yang sedang aktif sebelum mengonfirmasi key-based login
+berhasil dari sesi terpisah**, supaya tidak terkunci kalau ada salah
+konfigurasi.
 
 ---
 
 ## 2. Docker
 
 ```bash
-curl -fsSL https://get.docker.com | sudo sh
-sudo usermod -aG docker beasiswaota
-# logout/login lagi supaya grup docker aktif
+curl -fsSL https://get.docker.com | sh
 docker --version && docker compose version
 ```
 
@@ -73,17 +70,13 @@ docker --version && docker compose version
 ## 3. Ambil kode & siapkan .env
 
 ```bash
-sudo mkdir -p /opt/beasiswaota/shared
-sudo chown -R beasiswaota:beasiswaota /opt/beasiswaota
+mkdir -p /var/www/html/beasiswaota
+git clone https://github.com/mvirzhaa/beasiswaota.git /var/www/html/beasiswaota
+cd /var/www/html/beasiswaota
 
-git clone <url-repo-git-anda> /opt/beasiswaota/current
-cd /opt/beasiswaota/current
-
-cp deploy/.env.production.example /opt/beasiswaota/shared/.env
-nano /opt/beasiswaota/shared/.env   # isi semua nilai GANTI_* dan kunci asli
-chmod 600 /opt/beasiswaota/shared/.env
-
-ln -s /opt/beasiswaota/shared/.env /opt/beasiswaota/current/.env
+cp deploy/.env.production.example .env
+nano .env   # isi semua nilai GANTI_*/isi_* dengan nilai asli
+chmod 600 .env
 ```
 
 `AUTH_SECRET` baru: `openssl rand -base64 32`.
@@ -91,30 +84,53 @@ ln -s /opt/beasiswaota/shared/.env /opt/beasiswaota/current/.env
 
 ---
 
-## 4. Certbot (TLS) — untuk KEDUA domain
+## 4. Sertifikat TLS
+
+Dua opsi, tergantung sertifikat yang Anda punya:
+
+**A. Sudah ada sertifikat (mis. wildcard dari CA kampus/komersial).**
+Susun jadi `fullchain.pem` (leaf cert + intermediate, urutan dari yang
+paling spesifik ke paling umum, TANPA root CA) dan `privkey.pem`, lalu:
 
 ```bash
-sudo apt install -y nginx certbot python3-certbot-nginx
-
-# Nginx belum ada config beasiswaota, jadi pakai mode standalone dulu:
-sudo systemctl stop nginx
-sudo certbot certonly --standalone \
-  -d beasiswaota.uika-bogor.ac.id \
-  -d storage.beasiswaota.uika-bogor.ac.id
-
-sudo mkdir -p /var/www/certbot
+mkdir -p /etc/letsencrypt/live/beasiswaota.uika-bogor.ac.id
+# upload fullchain.pem + privkey.pem ke situ (scp dari laptop Anda),
+# lalu:
+chmod 600 /etc/letsencrypt/live/beasiswaota.uika-bogor.ac.id/privkey.pem
 ```
 
-Certbot menaruh sertifikat di `/etc/letsencrypt/live/<domain>/` — kedua
-domain di atas dipakai persis di `deploy/nginx/beasiswaota.conf`.
-
-Perpanjangan otomatis (systemd timer certbot sudah terpasang bawaan paket
-Ubuntu, cek): `systemctl list-timers | grep certbot`. Tambahkan hook reload
-Nginx setelah renew kalau belum ada:
+Nginx juga butuh `/etc/letsencrypt/options-ssl-nginx.conf` dan
+`ssl-dhparam.pem` (dipakai bareng, bukan per-domain) — kalau belum ada
+karena tidak pernah menjalankan Certbot sama sekali, generate manual:
 
 ```bash
-echo 'systemctl reload nginx' | sudo tee /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
-sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+apt install -y certbot
+mkdir -p /etc/letsencrypt
+curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/_internal/tls_configs/options-ssl-nginx.conf \
+  -o /etc/letsencrypt/options-ssl-nginx.conf
+openssl dhparam -out /etc/letsencrypt/ssl-dhparam.pem 2048
+```
+
+**B. Belum ada sertifikat — pakai Certbot (Let's Encrypt), gratis.**
+
+```bash
+apt install -y nginx certbot
+systemctl stop nginx 2>/dev/null
+certbot certonly --standalone -d beasiswaota.uika-bogor.ac.id
+mkdir -p /var/www/certbot
+```
+
+Ini otomatis membuat `fullchain.pem`/`privkey.pem` DAN file bersama
+`options-ssl-nginx.conf`/`ssl-dhparam.pem` sekaligus.
+
+Perpanjangan otomatis kalau pakai Certbot (Let's Encrypt kedaluwarsa tiap
+90 hari; sertifikat CA komersial biasanya manual, catat tanggal
+kedaluwarsanya): `systemctl list-timers | grep certbot`. Tambahkan hook
+reload Nginx kalau belum ada:
+
+```bash
+echo 'systemctl reload nginx' | tee /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
 ```
 
 ---
@@ -122,14 +138,15 @@ sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
 ## 5. Nginx
 
 ```bash
-sudo cp deploy/nginx/beasiswaota.conf /etc/nginx/sites-available/beasiswaota.conf
-sudo cp deploy/nginx/proxy_params_beasiswaota /etc/nginx/proxy_params_beasiswaota
-sudo ln -s /etc/nginx/sites-available/beasiswaota.conf /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
+apt install -y nginx   # kalau belum ter-install dari langkah 4
+cp deploy/nginx/beasiswaota.conf /etc/nginx/sites-available/beasiswaota.conf
+cp deploy/nginx/proxy_params_beasiswaota /etc/nginx/proxy_params_beasiswaota
+ln -s /etc/nginx/sites-available/beasiswaota.conf /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
 
-sudo nginx -t   # WAJIB lolos sebelum lanjut
-sudo systemctl start nginx
-sudo systemctl enable nginx
+nginx -t   # WAJIB lolos sebelum lanjut
+systemctl start nginx
+systemctl enable nginx
 ```
 
 ---
@@ -139,7 +156,7 @@ sudo systemctl enable nginx
 ### Jalur A: semuanya di Docker (direkomendasikan, paling sedikit moving parts)
 
 ```bash
-cd /opt/beasiswaota/current
+cd /var/www/html/beasiswaota
 docker compose -f deploy/docker-compose.prod.yml up -d db minio
 docker compose -f deploy/docker-compose.prod.yml run --rm migrate
 docker compose -f deploy/docker-compose.prod.yml up -d app
@@ -162,20 +179,20 @@ Docker aplikasi.
 
 ```bash
 docker compose -f deploy/docker-compose.prod.yml up -d db minio
-# .env untuk jalur ini pakai DATABASE_URL 127.0.0.1:5433 dan
-# MINIO tetap domain publik seperti di .env.production.example (bukan
-# nama service Docker "db"/"minio" — itu hanya berlaku dari DALAM
+# .env untuk jalur ini pakai DATABASE_URL 127.0.0.1:5433 (bukan "db") dan
+# MINIO_ENDPOINT tetap domain publik seperti di .env.production.example
+# (bukan nama service Docker "db"/"minio" — itu hanya berlaku dari DALAM
 # jaringan compose, bukan dari proses native di host).
 
-sudo npm install -g pm2
-cd /opt/beasiswaota/current
+npm install -g pm2
+cd /var/www/html/beasiswaota
 npm ci
 npx prisma migrate deploy
 npm run build
 
 pm2 start deploy/pm2/ecosystem.config.js
 pm2 save
-pm2 startup   # ikuti instruksi yang ditampilkan (jalankan sebagai root)
+pm2 startup   # ikuti instruksi yang ditampilkan
 
 pm2 install pm2-logrotate
 pm2 set pm2-logrotate:max_size 20M
@@ -184,12 +201,13 @@ pm2 set pm2-logrotate:compress true
 ```
 
 Kalau PM2 tidak tersedia/tidak diinginkan sama sekali, `deploy/systemd/beasiswaota.service`
-adalah alternatifnya — sesuaikan `User=`/`WorkingDirectory=` lalu:
+adalah alternatifnya — sesuaikan `User=`/`WorkingDirectory=` (ke
+`/var/www/html/beasiswaota`) lalu:
 
 ```bash
-sudo cp deploy/systemd/beasiswaota.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now beasiswaota.service
+cp deploy/systemd/beasiswaota.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now beasiswaota.service
 ```
 
 ---
@@ -200,16 +218,16 @@ Ketiga endpoint cron (Sesi 8) dilindungi `CRON_SECRET`. Setup lengkap ada
 di `deploy/systemd/README.md` — ringkasnya:
 
 ```bash
-sudo mkdir -p /etc/beasiswaota
-echo "CRON_SECRET=$(grep ^CRON_SECRET /opt/beasiswaota/shared/.env | cut -d= -f2)" \
-  | sudo tee /etc/beasiswaota/cron.env
-sudo chmod 600 /etc/beasiswaota/cron.env
+mkdir -p /etc/beasiswaota
+echo "CRON_SECRET=$(grep ^CRON_SECRET /var/www/html/beasiswaota/.env | cut -d= -f2)" \
+  | tee /etc/beasiswaota/cron.env
+chmod 600 /etc/beasiswaota/cron.env
 
-sudo cp deploy/systemd/beasiswaota-cron-*.service deploy/systemd/beasiswaota-cron-*.timer /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now beasiswaota-cron-jadwal-bayar.timer
-sudo systemctl enable --now beasiswaota-cron-reminder.timer
-sudo systemctl enable --now beasiswaota-cron-laporan-reminder.timer
+cp deploy/systemd/beasiswaota-cron-*.service deploy/systemd/beasiswaota-cron-*.timer /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now beasiswaota-cron-jadwal-bayar.timer
+systemctl enable --now beasiswaota-cron-reminder.timer
+systemctl enable --now beasiswaota-cron-laporan-reminder.timer
 ```
 
 ---
@@ -260,16 +278,16 @@ Lihat komentar lengkap di `deploy/backup.sh` dan `deploy/restore.sh`.
 Ringkas:
 
 ```bash
-sudo mkdir -p /etc/beasiswaota
-sudo cp deploy/backup.env.example /etc/beasiswaota/backup.env
-sudo nano /etc/beasiswaota/backup.env   # isi passphrase GPG, host remote, dst
-sudo chmod 600 /etc/beasiswaota/backup.env
+mkdir -p /etc/beasiswaota
+cp deploy/backup.env.example /etc/beasiswaota/backup.env
+nano /etc/beasiswaota/backup.env   # isi passphrase GPG, host remote, dst
+chmod 600 /etc/beasiswaota/backup.env
 
 # Perlu: mc (MinIO Client), gpg, rsync sudah terpasang, dan SSH key
 # passwordless ke BACKUP_REMOTE_HOST sudah disiapkan.
-sudo apt install -y gpg rsync
+apt install -y gpg rsync
 curl https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc
-sudo chmod +x /usr/local/bin/mc
+chmod +x /usr/local/bin/mc
 mc alias set beasiswaota http://127.0.0.1:9000 <MINIO_ROOT_USER> <MINIO_ROOT_PASSWORD>
 ```
 
@@ -277,8 +295,8 @@ Jadwalkan harian lewat cron sistem (bukan systemd timer aplikasi, supaya
 independen kalau ada masalah di sisi app):
 
 ```bash
-echo "0 2 * * * beasiswaota /opt/beasiswaota/current/deploy/backup.sh >> /var/log/beasiswaota-backup.log 2>&1" \
-  | sudo tee /etc/cron.d/beasiswaota-backup
+echo "0 2 * * * root /var/www/html/beasiswaota/deploy/backup.sh >> /var/log/beasiswaota-backup.log 2>&1" \
+  | tee /etc/cron.d/beasiswaota-backup
 ```
 
 ### Menguji restore

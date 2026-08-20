@@ -16,7 +16,7 @@ sistem yang menangani uang dan data pribadi.
 - [ ] `MAIL_FROM=beasiswaota@uika-bogor.ac.id` (akun asli, bukan dummy).
 - [ ] `MIDTRANS_IS_PRODUCTION=true` dan server/client key adalah key
       **produksi** Midtrans, bukan sandbox.
-- [ ] `MINIO_ENDPOINT=storage.beasiswaota.uika-bogor.ac.id`,
+- [ ] `MINIO_ENDPOINT=beasiswaota.uika-bogor.ac.id`,
       `MINIO_PORT=443`, `MINIO_USE_SSL=true` — bukan `minio`/`localhost`.
 - [ ] File `.env` berizin `600`, dimiliki user aplikasi, dan **tidak**
       pernah ter-commit ke git (`git status` di root repo bersih).
@@ -38,15 +38,19 @@ sistem yang menangani uang dan data pribadi.
 - [ ] Tidak ada port aplikasi/db/minio yang ter-bind ke `0.0.0.0` — semua
       lewat `127.0.0.1:...` di `docker-compose.prod.yml`, cek dengan
       `docker compose ... ps` dan `ss -tlnp` dari VPS.
-- [ ] `sudo nginx -t` lolos, kedua server block (app + storage) aktif.
-- [ ] Sertifikat TLS valid untuk **kedua** domain:
-      `beasiswaota.uika-bogor.ac.id` dan
-      `storage.beasiswaota.uika-bogor.ac.id`
-      (`curl -vI https://<domain>` tidak menunjukkan warning sertifikat).
-- [ ] Certbot auto-renew aktif (`systemctl list-timers | grep certbot`) dan
-      hook reload Nginx terpasang.
-- [ ] UFW aktif, hanya port SSH-kustom/80/443 yang terbuka
-      (`sudo ufw status`).
+- [ ] `nginx -t` lolos, dan location `/beasiswaota-berkas/` untuk proxy
+      MinIO ada di server block yang aktif.
+- [ ] Sertifikat TLS valid untuk `beasiswaota.uika-bogor.ac.id`
+      (`curl -vI https://beasiswaota.uika-bogor.ac.id` tidak menunjukkan
+      warning sertifikat).
+- [ ] Kalau pakai Certbot: auto-renew aktif
+      (`systemctl list-timers | grep certbot`) dan hook reload Nginx
+      terpasang. Kalau pakai sertifikat CA komersial manual: tanggal
+      kedaluwarsa dicatat dan diingatkan sebelum jatuh tempo.
+- [ ] UFW aktif dan mengizinkan port SSH **internal** yang benar-benar
+      didengarkan `sshd` (cek `grep -i "^Port" /etc/ssh/sshd_config`,
+      biasanya `22` meskipun ada port eksternal/NAT yang berbeda) plus
+      80/443 (`ufw status`).
 - [ ] `PermitRootLogin no` dan `PasswordAuthentication no` di
       `/etc/ssh/sshd_config`.
 - [ ] fail2ban aktif untuk jail SSH.
