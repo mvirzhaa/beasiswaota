@@ -4,6 +4,10 @@ import {
   BOBOT_SKORING_DEFAULT,
   KUNCI_PENGATURAN_BOBOT_SKORING,
 } from "../src/lib/skoring/bobot.schema";
+import {
+  AMBANG_RISIKO_DEFAULT,
+  KUNCI_PENGATURAN_AMBANG_RISIKO,
+} from "../src/lib/monitoring/risiko.schema";
 
 const prisma = new PrismaClient();
 
@@ -141,6 +145,15 @@ async function main() {
     create: {
       kunci: KUNCI_PENGATURAN_BOBOT_SKORING,
       nilai: BOBOT_SKORING_DEFAULT,
+    },
+  });
+
+  await prisma.pengaturan.upsert({
+    where: { kunci: KUNCI_PENGATURAN_AMBANG_RISIKO },
+    update: {},
+    create: {
+      kunci: KUNCI_PENGATURAN_AMBANG_RISIKO,
+      nilai: AMBANG_RISIKO_DEFAULT,
     },
   });
 
