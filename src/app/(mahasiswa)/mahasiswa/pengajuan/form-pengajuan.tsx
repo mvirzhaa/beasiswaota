@@ -15,13 +15,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Upload,
-  ShieldCheck,
-  FileUp,
-  Clock,
   Send,
   Save,
-  Check,
-} from "lucide-react";
+  } from "lucide-react";
 import { simpanPengajuan, unggahBerkasPengajuan } from "./actions";
 
 type PengajuanDenganBerkas = Pengajuan & { berkas: PengajuanBerkas[] };

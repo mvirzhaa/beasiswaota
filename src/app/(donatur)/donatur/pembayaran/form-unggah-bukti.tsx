@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { formatRupiah } from "@/lib/uang";
 import type { HasilAksi } from "@/types/aksi";
 import { Tombol } from "@/components/ui/tombol";
-import { UploadCloud, CheckCircle2, AlertCircle, Calendar, DollarSign } from "lucide-react";
+import { UploadCloud, CheckCircle2, AlertCircle } from "lucide-react";
 import { unggahBuktiTransfer } from "./actions";
 
 const STATE_AWAL: HasilAksi = { sukses: false, pesan: "" };

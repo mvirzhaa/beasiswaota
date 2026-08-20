@@ -3,7 +3,7 @@ import {
   ambilPeriodePendaftaranAktif,
   ambilPengajuanMahasiswa,
 } from "@/server/queries/pengajuan";
-import { FileText, Calendar, AlertCircle } from "lucide-react";
+import { FileText, Calendar } from "lucide-react";
 import { FormPengajuan } from "./form-pengajuan";
 
 export default async function HalamanPengajuanMahasiswa() {

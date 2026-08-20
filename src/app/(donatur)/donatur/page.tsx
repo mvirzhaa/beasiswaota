@@ -8,7 +8,6 @@ import {
   MessageCircle,
   HeartHandshake,
   ShieldCheck,
-  Award,
   ArrowRight,
   Sparkles,
   ScrollText,

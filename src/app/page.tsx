@@ -8,7 +8,6 @@ import {
   ShieldCheck,
   TrendingUp,
   FileCheck2,
-  Users,
   ArrowRight,
   Sparkles,
   ScrollText,

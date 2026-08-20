@@ -10,10 +10,7 @@ import {
   ArrowRight,
   GraduationCap,
   Sparkles,
-  BookOpen,
-  HeartHandshake,
-  CheckCircle2,
-} from "lucide-react";
+  } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { Tombol } from "@/components/ui/tombol";
 import { ambilPeringatanLaporan } from "@/server/queries/laporan-perkembangan";

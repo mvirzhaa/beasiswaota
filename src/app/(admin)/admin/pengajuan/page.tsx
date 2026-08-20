@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { ambilDaftarPengajuanAdmin } from "@/server/queries/pengajuan";
 import { Lencana } from "@/components/ui/lencana";
 import { Tombol } from "@/components/ui/tombol";
-import { FileText, Filter, ArrowRight, CheckCircle2, AlertCircle } from "lucide-react";
+import { FileText, Filter, ArrowRight } from "lucide-react";
 import { TombolHitungUlangSkor } from "./hitung-ulang-skor";
 
 type StatusFilter =

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { ambilPesanRelasiUntukUser } from "@/server/queries/pesan-binaan";
 import { Lencana } from "@/components/ui/lencana";
-import { MessageCircle, ArrowLeft, ShieldAlert, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { MessageCircle, ArrowLeft, ShieldAlert } from "lucide-react";
 import { FormKirimPesan } from "./form-kirim-pesan";
 
 const NADA_STATUS_PESAN: Record<string, "sukses" | "peringatan" | "bahaya" | "info" | "netral"> = {

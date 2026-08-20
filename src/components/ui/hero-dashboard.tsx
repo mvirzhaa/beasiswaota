@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Award } from "lucide-react";
 
 export function HeroDashboard({
   judul,

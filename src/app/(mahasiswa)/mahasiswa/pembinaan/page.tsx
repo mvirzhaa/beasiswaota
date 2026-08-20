@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { ambilRelasiMahasiswa } from "@/server/queries/relasi";
-import { Users, ShieldCheck, HeartHandshake, Info } from "lucide-react";
+import { Users, ShieldCheck, HeartHandshake } from "lucide-react";
 import { Lencana } from "@/components/ui/lencana";
 import { TombolPersetujuan } from "./tombol-persetujuan";
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { ambilRelasiUntukPesanOrtuAsuh } from "@/server/queries/pesan-binaan";
-import { MessageCircle, ShieldAlert, ChevronRight, UserCheck, Inbox } from "lucide-react";
+import { MessageCircle, ShieldAlert, ChevronRight, Inbox } from "lucide-react";
 
 export default async function HalamanDaftarPesanDonatur() {
   const session = await auth();

@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { formatRupiah } from "@/lib/uang";
 import { ambilTagihanMahasiswa, ambilRiwayatBantuanMahasiswa } from "@/server/queries/tagihan";
 import { Lencana } from "@/components/ui/lencana";
-import { Receipt, Wallet, History, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { Receipt, History, CheckCircle2, Clock } from "lucide-react";
 
 const LABEL_STATUS: Record<string, string> = {
   BELUM_LUNAS: "Belum Lunas",

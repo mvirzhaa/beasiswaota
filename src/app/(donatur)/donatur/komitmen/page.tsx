@@ -1,4 +1,4 @@
-import { HandCoins, Calendar, Info, Layers, CheckCircle2 } from "lucide-react";
+import { HandCoins, Calendar, Layers, CheckCircle2 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { formatRupiah } from "@/lib/uang";
 import {

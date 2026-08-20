@@ -2,7 +2,7 @@ import { formatRupiah } from "@/lib/uang";
 import { ambilDaftarKomitmenAdmin } from "@/server/queries/komitmen";
 import { Lencana } from "@/components/ui/lencana";
 import { Tombol } from "@/components/ui/tombol";
-import { HandCoins, Filter, CheckCircle2 } from "lucide-react";
+import { HandCoins, Filter } from "lucide-react";
 import { TombolKonfirmasi } from "./tombol-konfirmasi";
 
 type StatusFilter =

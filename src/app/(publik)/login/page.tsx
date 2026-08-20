@@ -4,7 +4,7 @@ import { Suspense, useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { LogIn, HeartHandshake, ShieldCheck, Sparkles } from "lucide-react";
+import { LogIn, Sparkles } from "lucide-react";
 import { loginAction, type HasilLogin } from "./actions";
 import { FooterProgram } from "@/components/ui/footer-program";
 import { Tombol } from "@/components/ui/tombol";

@@ -13,9 +13,7 @@ import {
   EyeOff,
   AlertCircle,
   CheckCircle2,
-  FileText,
-  FileUp,
-} from "lucide-react";
+  } from "lucide-react";
 import { simpanLaporan, unggahLampiranLaporan, togglBolehDibacaPembina } from "./actions";
 
 const STATE_AWAL: HasilAksi = { sukses: false, pesan: "" };

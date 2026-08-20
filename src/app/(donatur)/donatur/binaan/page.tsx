@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { ambilDaftarBinaanOrtuAsuh } from "@/server/queries/relasi";
-import { Users, User, MessageCircle, FileText, ShieldAlert, GraduationCap, TrendingUp, Info, HeartHandshake } from "lucide-react";
+import { Users, MessageCircle, FileText, ShieldAlert, GraduationCap, TrendingUp, Info } from "lucide-react";
 import { GrafikIpk } from "./grafik-ipk";
 
 export default async function HalamanBinaanDonatur() {

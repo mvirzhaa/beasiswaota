@@ -13,9 +13,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Coins,
-  Users,
   Wallet,
-  ArrowRight,
   TrendingDown,
 } from "lucide-react";
 import { simulasiAlokasi, eksekusiAlokasi, type HasilSimulasi, type HasilEksekusi } from "../actions";

@@ -1,5 +1,5 @@
 import { ambilAntrianModerasiPesan } from "@/server/queries/pesan-binaan";
-import { MessageCircle, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { MessageCircle, CheckCircle2 } from "lucide-react";
 import { BarisModerasiPesan } from "./baris-moderasi-pesan";
 
 export default async function HalamanModerasiPesan() {

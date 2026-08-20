@@ -14,8 +14,7 @@ import {
   FileSpreadsheet,
   PlusCircle,
   ArrowRight,
-  ShieldAlert,
-} from "lucide-react";
+  } from "lucide-react";
 
 const LABEL_RISIKO: Record<string, string> = {
   AMAN: "Aman",

@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { formatRupiah } from "@/lib/uang";
 import { ambilDaftarTransaksiAdmin } from "@/server/queries/transaksi";
-import { Lencana } from "@/components/ui/lencana";
 import { Tombol } from "@/components/ui/tombol";
-import { Receipt, Filter, ArrowRight, CreditCard } from "lucide-react";
+import { Receipt, Filter, ArrowRight } from "lucide-react";
 
 type StatusFilter = "MENUNGGU_VERIFIKASI" | "TERVERIFIKASI" | "DITOLAK" | "DIKEMBALIKAN";
 
@@ -19,13 +18,6 @@ const LABEL_STATUS_TRANSAKSI: Record<string, string> = {
   TERVERIFIKASI: "Terverifikasi (Sah)",
   DITOLAK: "Ditolak",
   DIKEMBALIKAN: "Dikembalikan",
-};
-
-const NADA_STATUS_TRANSAKSI: Record<string, "sukses" | "peringatan" | "bahaya" | "info" | "netral"> = {
-  MENUNGGU_VERIFIKASI: "peringatan",
-  TERVERIFIKASI: "sukses",
-  DITOLAK: "bahaya",
-  DIKEMBALIKAN: "netral",
 };
 
 export default async function HalamanTransaksiAdmin({

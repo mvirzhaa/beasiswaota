@@ -3,7 +3,7 @@ import {
   ambilPeriodePenerimaMahasiswa,
   ambilLaporanMahasiswa,
 } from "@/server/queries/laporan-perkembangan";
-import { ClipboardList, Calendar, Info } from "lucide-react";
+import { ClipboardList, Info } from "lucide-react";
 import { FormLaporan } from "./form-laporan";
 import { Tombol } from "@/components/ui/tombol";
 

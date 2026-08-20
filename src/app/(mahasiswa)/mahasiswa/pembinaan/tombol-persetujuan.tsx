@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import type { HasilAksi } from "@/types/aksi";
 import { Tombol } from "@/components/ui/tombol";
-import { Check, X, ShieldCheck } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { setujuiPembinaan, tarikPersetujuanPembinaan } from "./actions";
 
 const STATE_AWAL: HasilAksi = { sukses: false, pesan: "" };

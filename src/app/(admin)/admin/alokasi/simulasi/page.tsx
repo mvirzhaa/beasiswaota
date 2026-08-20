@@ -1,5 +1,5 @@
 import { ambilPeriodeUntukAlokasi } from "@/server/queries/alokasi";
-import { Shuffle, ShieldAlert, Sparkles } from "lucide-react";
+import { Shuffle, ShieldAlert } from "lucide-react";
 import { FormSimulasi } from "./form-simulasi";
 
 export default async function HalamanSimulasiAlokasi() {
