@@ -1,0 +1,27 @@
+[Unit]
+Description=Beasiswa Orangtua Asuh UIKA - Next.js app
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=beasiswaota
+Group=beasiswaota
+WorkingDirectory=/opt/beasiswaota/current
+# Next.js otomatis memuat .env dari WorkingDirectory di atas — taruh file
+# .env produksi di /opt/beasiswaota/current/.env (lihat deploy/README.md).
+ExecStart=/usr/bin/node node_modules/next/dist/bin/next start -p 3000
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=beasiswaota
+
+# Hardening dasar tingkat service.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/beasiswaota/current/.next/cache
+
+[Install]
+WantedBy=multi-user.target

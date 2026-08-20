@@ -1,0 +1,105 @@
+# Dijalankan dari ROOT repo: docker compose -f deploy/docker-compose.prod.yml up -d
+#
+# Postgres dan MinIO TIDAK di-bind ke 0.0.0.0 — hanya ke 127.0.0.1, supaya
+# hanya proses di VPS ini sendiri (Nginx) yang bisa menjangkaunya, bukan
+# publik. Aplikasi Next.js menjangkau keduanya lewat jaringan internal
+# compose (nama service sebagai hostname), tidak lewat 127.0.0.1.
+#
+# Kalau Next.js mau dijalankan lewat PM2 (bukan Docker) — lihat
+# deploy/README.md — cukup jangan start service "app" di sini, tetap start
+# "db" dan "minio" saja.
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: runner
+    image: beasiswaota:latest
+    container_name: beasiswaota-app
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - internal
+
+  # Service satu-kali untuk migrasi — TIDAK auto-start (tidak ada restart
+  # policy jalan terus). Jalankan manual tiap rilis baru:
+  #   docker compose -f deploy/docker-compose.prod.yml run --rm migrate
+  migrate:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: builder
+    image: beasiswaota:builder
+    container_name: beasiswaota-migrate
+    env_file:
+      - ../.env
+    entrypoint: ["npx", "prisma", "migrate", "deploy"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+    profiles:
+      - tools
+
+  db:
+    image: postgres:16-alpine
+    container_name: beasiswaota-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  minio:
+    image: minio/minio:latest
+    container_name: beasiswaota-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio-data:/data
+    ports:
+      # 9000 = S3 API, WAJIB dijangkau Nginx untuk mengalirkan signed URL
+      # (lihat deploy/nginx/beasiswaota.conf, lokasi /minio-storage/).
+      # 9001 = console admin MinIO, jangan diproksi publik, akses lewat
+      # SSH tunnel: ssh -L 9001:127.0.0.1:9001 user@vps
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  db-data:
+  minio-data:
