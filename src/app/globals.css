@@ -1,26 +1,52 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /*
+   * Palet resmi UIKA — diambil langsung dari :root custom properties di
+   * frontend/css/style.css milik uika-bogor.ac.id (--theme-color,
+   * --theme-color2, --footer-bg, --color-dark, dst), bukan ditaksir dari
+   * tangkapan layar. --primary-dark/--primary-light adalah turunan kami
+   * sendiri untuk hover/tint karena situs sumber tidak mempublikasikan
+   * varian itu.
+   */
+  --color-uika-primary: #116e63; /* --theme-color2 */
+  --color-uika-primary-dark: #0b5249;
+  --color-uika-primary-light: #e5f1ef;
+  --color-uika-accent: #fda31b; /* --theme-color */
+  --color-uika-accent-dark: #d98a0f;
+  --color-uika-navy: #012758; /* --footer-bg */
+  --color-uika-ink: #19232b; /* --color-dark */
+  --color-uika-muted: #757f95; /* --body-text-color */
+  --color-uika-surface: #ffffff;
+  --color-uika-surface-alt: #f2f3f5; /* --theme-bg-light */
+  --color-uika-border: #e3e6ea;
+
+  --background: var(--color-uika-surface);
+  --foreground: var(--color-uika-ink);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-primary: var(--color-uika-primary);
+  --color-primary-dark: var(--color-uika-primary-dark);
+  --color-primary-light: var(--color-uika-primary-light);
+  --color-accent: var(--color-uika-accent);
+  --color-accent-dark: var(--color-uika-accent-dark);
+  --color-navy: var(--color-uika-navy);
+  --color-ink: var(--color-uika-ink);
+  --color-muted: var(--color-uika-muted);
+  --color-surface: var(--color-uika-surface);
+  --color-surface-alt: var(--color-uika-surface-alt);
+  --color-border: var(--color-uika-border);
+
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
