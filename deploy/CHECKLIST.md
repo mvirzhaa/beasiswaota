@@ -6,7 +6,7 @@ sistem yang menangani uang dan data pribadi.
 
 ## Environment variables
 
-- [ ] `/opt/beasiswaota/shared/.env` berisi nilai ASLI, bukan placeholder
+- [ ] `.env` di server berisi nilai ASLI, bukan placeholder
       `GANTI_*`/`isi_*` dari `deploy/.env.production.example`.
 - [ ] `AUTH_SECRET` di-generate baru untuk produksi (`openssl rand -base64 32`),
       BUKAN disalin dari `.env` development.
@@ -33,7 +33,7 @@ sistem yang menangani uang dan data pribadi.
 
 ## Infrastruktur
 
-- [ ] `docker compose -f deploy/docker-compose.prod.yml config` tidak
+- [ ] `docker compose --env-file .env -f deploy/docker-compose.prod.yml config` tidak
       error (validasi syntax + interpolasi env).
 - [ ] Tidak ada port aplikasi/db/minio yang ter-bind ke `0.0.0.0` — semua
       lewat `127.0.0.1:...` di `docker-compose.prod.yml`, cek dengan

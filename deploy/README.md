@@ -172,18 +172,18 @@ systemctl enable nginx
 
 ```bash
 cd /var/www/html/beasiswaota
-docker compose -f deploy/docker-compose.prod.yml up -d db minio
-docker compose -f deploy/docker-compose.prod.yml run --rm migrate
-docker compose -f deploy/docker-compose.prod.yml up -d app
+docker compose --env-file .env -f deploy/docker-compose.prod.yml up -d db minio
+docker compose --env-file .env -f deploy/docker-compose.prod.yml run --rm migrate
+docker compose --env-file .env -f deploy/docker-compose.prod.yml up -d app
 ```
 
 Rilis baru:
 
 ```bash
 git pull
-docker compose -f deploy/docker-compose.prod.yml build app migrate
-docker compose -f deploy/docker-compose.prod.yml run --rm migrate
-docker compose -f deploy/docker-compose.prod.yml up -d app
+docker compose --env-file .env -f deploy/docker-compose.prod.yml build app migrate
+docker compose --env-file .env -f deploy/docker-compose.prod.yml run --rm migrate
+docker compose --env-file .env -f deploy/docker-compose.prod.yml up -d app
 ```
 
 ### Jalur B: PM2 native (db & MinIO tetap Docker, hanya Next.js native)
@@ -193,7 +193,7 @@ Sesuai CLAUDE.md ("Proses Next.js dijalankan lewat PM2 dengan nama proses
 Docker aplikasi.
 
 ```bash
-docker compose -f deploy/docker-compose.prod.yml up -d db minio
+docker compose --env-file .env -f deploy/docker-compose.prod.yml up -d db minio
 # .env untuk jalur ini pakai DATABASE_URL 127.0.0.1:5433 (bukan "db") dan
 # MINIO_ENDPOINT tetap domain publik seperti di .env.production.example
 # (bukan nama service Docker "db"/"minio" — itu hanya berlaku dari DALAM
@@ -321,7 +321,7 @@ kuartal) setelahnya.** Backup yang belum pernah dicoba restore bukan
 backup:
 
 1. Siapkan VPS/mesin terpisah (bukan produksi) dengan
-   `docker compose -f deploy/docker-compose.prod.yml up -d db minio`
+   `docker compose --env-file .env -f deploy/docker-compose.prod.yml up -d db minio`
    memakai `.env` KOSONG/baru (bukan salinan data produksi).
 2. `rsync` salah satu folder backup dari `BACKUP_REMOTE_HOST` ke mesin uji.
 3. `./deploy/restore.sh <folder-backup> beasiswaota-db beasiswaota-minio`

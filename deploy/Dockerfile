@@ -20,6 +20,13 @@ ARG NODE_VERSION=20-bookworm-slim
 # ---------------------------------------------------------------------------
 FROM node:${NODE_VERSION} AS deps
 WORKDIR /app
+
+# argon2 dikompilasi dari source lewat node-gyp kalau tidak ada prebuilt
+# binary yang cocok untuk platform ini — butuh Python + toolchain C++.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
 RUN npm ci
