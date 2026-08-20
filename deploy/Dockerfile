@@ -37,6 +37,15 @@ RUN npm ci
 # ---------------------------------------------------------------------------
 FROM node:${NODE_VERSION} AS builder
 WORKDIR /app
+
+# Prisma engine perlu bisa deteksi versi OpenSSL yang benar (image ini
+# pakai OpenSSL 3.x) — tanpa paket "openssl" terpasang, prisma generate
+# salah tebak fallback ke openssl-1.1.x dan query engine yang ter-bundle
+# bisa tidak cocok dengan libssl yang sesungguhnya ada di runtime.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
@@ -67,6 +76,12 @@ WORKDIR /app
 ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0
+
+# Query engine Prisma yang ter-bundle di .next/standalone butuh libssl
+# saat runtime, sama seperti alasan openssl dipasang di stage "builder".
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid nodejs nextjs

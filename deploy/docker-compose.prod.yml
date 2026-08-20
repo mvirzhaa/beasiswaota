@@ -16,6 +16,7 @@ services:
       dockerfile: deploy/Dockerfile
       target: runner
     image: beasiswaota:latest
+    pull_policy: build
     container_name: beasiswaota-app
     restart: unless-stopped
     env_file:
@@ -39,6 +40,7 @@ services:
       dockerfile: deploy/Dockerfile
       target: builder
     image: beasiswaota:builder
+    pull_policy: build
     container_name: beasiswaota-migrate
     env_file:
       - ../.env
