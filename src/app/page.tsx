@@ -66,8 +66,8 @@ export default async function HalamanUtamaLandingPage() {
           <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-ink/80">
             <a href="#tentang" className="transition-colors hover:text-primary">Tentang Program</a>
             <a href="#daftar" className="transition-colors hover:text-primary">Pendaftaran</a>
-            <a href="#pilar" className="transition-colors hover:text-primary">4 Pilar Sistem</a>
             <a href="#pimpinan" className="transition-colors hover:text-primary">Pimpinan UIKA</a>
+            <a href="#pilar" className="transition-colors hover:text-primary">4 Pilar Sistem</a>
             <a href="#rekening" className="transition-colors hover:text-primary">Rekening Donasi</a>
           </nav>
 
@@ -253,7 +253,57 @@ export default async function HalamanUtamaLandingPage() {
         </div>
       </section>
 
-      {/* 4. Empat Pilar Tata Kelola Beasiswa */}
+      {/* 4. Amanah & Pimpinan UIKA Bogor */}
+      <section id="pimpinan" className="py-16 bg-surface-alt">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="overflow-hidden rounded-3xl border border-border bg-surface shadow-sm grid grid-cols-1 lg:grid-cols-12 items-center">
+            {/* Foto Pimpinan */}
+            <div className="lg:col-span-5 bg-surface-alt/80 p-6 flex flex-col items-center justify-center border-b lg:border-b-0 lg:border-r border-border">
+              <div className="relative overflow-hidden rounded-2xl shadow-md border border-border bg-white w-full max-w-md">
+                <Image
+                  src="/images/pimpinan-uika.jpg"
+                  alt="Pimpinan Universitas Ibn Khaldun Bogor 2024-2028"
+                  width={700}
+                  height={500}
+                  className="w-full h-auto object-cover"
+                />
+                <div className="bg-navy p-3 text-center text-xs text-white">
+                  <p className="font-heading font-bold text-accent">Rektor & Para Wakil Rektor</p>
+                  <p className="text-[11px] text-white/80">Universitas Ibn Khaldun Bogor Masa Bakti 2024–2028</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Pesan Amanah */}
+            <div className="p-6 sm:p-10 lg:col-span-7 flex flex-col justify-center">
+              <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-accent-dark uppercase">
+                <ScrollText className="h-4 w-4 text-primary" />
+                <span>Amanah & Komitmen Pimpinan</span>
+              </div>
+
+              <h2 className="mt-2 font-heading text-2xl sm:text-3xl font-bold text-ink leading-snug">
+                Pendidikan Berkualitas untuk Seluruh Umat
+              </h2>
+
+              <p className="mt-4 rounded-2xl border-l-4 border-primary bg-primary-light/40 p-5 text-xs sm:text-sm leading-relaxed text-ink/90">
+                Program Beasiswa Orangtua Asuh adalah wujud nyata kepedulian sivitas akademika dan
+                para munfiq untuk memastikan tidak ada mahasiswa berprestasi dan dhuafa di UIKA
+                yang terhenti cita-citanya karena keterbatasan finansial. Mari bersama menanam
+                benih amal jariyah yang tak terputus.
+              </p>
+
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-xs text-muted border-t border-border pt-4">
+                <span className="font-semibold text-primary">
+                  Dasar Hukum: SK Rektor No. 796/KEP/UIKA/2026
+                </span>
+                <span>Bogor, Jawa Barat</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Empat Pilar Tata Kelola Beasiswa */}
       <section id="pilar" className="py-16 bg-surface">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto">
@@ -339,56 +389,6 @@ export default async function HalamanUtamaLandingPage() {
               </div>
               <div className="mt-4 border-t border-border/60 pt-3 text-[11px] font-semibold text-navy">
                 Laporan Real-Time
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. Amanah & Pimpinan UIKA Bogor */}
-      <section id="pimpinan" className="py-16 bg-surface-alt">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="overflow-hidden rounded-3xl border border-border bg-surface shadow-sm grid grid-cols-1 lg:grid-cols-12 items-center">
-            {/* Foto Pimpinan */}
-            <div className="lg:col-span-5 bg-surface-alt/80 p-6 flex flex-col items-center justify-center border-b lg:border-b-0 lg:border-r border-border">
-              <div className="relative overflow-hidden rounded-2xl shadow-md border border-border bg-white w-full max-w-md">
-                <Image
-                  src="/images/pimpinan-uika.jpg"
-                  alt="Pimpinan Universitas Ibn Khaldun Bogor 2024-2028"
-                  width={700}
-                  height={500}
-                  className="w-full h-auto object-cover"
-                />
-                <div className="bg-navy p-3 text-center text-xs text-white">
-                  <p className="font-heading font-bold text-accent">Rektor & Para Wakil Rektor</p>
-                  <p className="text-[11px] text-white/80">Universitas Ibn Khaldun Bogor Masa Bakti 2024–2028</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Pesan Amanah */}
-            <div className="p-6 sm:p-10 lg:col-span-7 flex flex-col justify-center">
-              <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-accent-dark uppercase">
-                <ScrollText className="h-4 w-4 text-primary" />
-                <span>Amanah & Komitmen Pimpinan</span>
-              </div>
-
-              <h2 className="mt-2 font-heading text-2xl sm:text-3xl font-bold text-ink leading-snug">
-                Pendidikan Berkualitas untuk Seluruh Umat
-              </h2>
-
-              <p className="mt-4 rounded-2xl border-l-4 border-primary bg-primary-light/40 p-5 text-xs sm:text-sm leading-relaxed text-ink/90">
-                Program Beasiswa Orangtua Asuh adalah wujud nyata kepedulian sivitas akademika dan
-                para munfiq untuk memastikan tidak ada mahasiswa berprestasi dan dhuafa di UIKA
-                yang terhenti cita-citanya karena keterbatasan finansial. Mari bersama menanam
-                benih amal jariyah yang tak terputus.
-              </p>
-
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-xs text-muted border-t border-border pt-4">
-                <span className="font-semibold text-primary">
-                  Dasar Hukum: SK Rektor No. 796/KEP/UIKA/2026
-                </span>
-                <span>Bogor, Jawa Barat</span>
               </div>
             </div>
           </div>
