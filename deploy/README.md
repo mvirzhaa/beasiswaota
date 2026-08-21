@@ -358,48 +358,55 @@ dmesg -T | grep -i segfault
 cat /proc/cpuinfo | grep -m1 flags | tr ' ' '\n' | grep -E "^(avx2|bmi2)$"
 ```
 
-Kalau `dmesg` menunjukkan `next-server ... segfault at a0 ... in
-node[...]` DAN `cpuinfo` tidak menampilkan `avx2`/`bmi2` sama sekali —
-ini bukan bug aplikasi. Ditemukan saat deploy produksi: VM ini terpasang
-dengan tipe CPU virtual **"QEMU Virtual CPU version 2.5+"** (sangat
-lama/generik, tidak mendukung AVX2/BMI2).
+**Akar masalah sebenarnya (ditemukan lewat isolasi bertahap di VPS
+produksi): bug di package `argon2@0.45.1` sendiri, BUKAN CPU/Node/V8
+secara umum.** Kronologi penemuannya, supaya tidak perlu diulang dari
+nol kalau muncul lagi di lingkungan lain:
 
-**Sudah dicoba dan TIDAK berhasil menyelesaikan (jangan diulang):**
-- `NODE_OPTIONS=--jitless` (mematikan JIT V8 total) — crash tetap terjadi
-  persis di offset yang sama, dan malah memicu bug baru
-  (`WebAssembly is not defined`, karena `undici` — parser HTTP inti
-  Node — butuh WebAssembly yang ikut mati kalau jitless).
-- Downgrade ke Node 20.11.1 (LTS lama, dari tag mengambang
-  `20-bookworm-slim`) — crash tetap terjadi di offset yang nyaris sama
-  (`segfault at a0`) walau alamat instruksi persisnya beda (build
-  berbeda).
+1. `dmesg` awalnya menunjukkan `next-server ... segfault at a0 ... in
+   node[...]`, dan `/proc/cpuinfo` waktu itu memang tidak menampilkan
+   `avx2`/`bmi2` (VM ini terpasang dengan tipe CPU virtual "QEMU Virtual
+   CPU version 2.5+" — sangat lama/generik). Ini terlihat sangat
+   meyakinkan sebagai penyebabnya.
+2. Tim IT mengganti tipe CPU VM ke yang mendukung AVX2/BMI2 (perbaikan
+   yang tetap benar dan tetap perlu dilakukan — lihat di bawah) — **tapi
+   crash tetap terjadi persis sama** setelah itu.
+3. `NODE_OPTIONS=--jitless` (matikan JIT V8) dan downgrade ke Node
+   20.11.1 SAMA-SAMA tidak menyelesaikan — crash tetap di offset yang
+   nyaris sama.
+4. Isolasi langsung: server HTTP polos (`http.createServer`) dan
+   `fetch()` di image `node:20-bookworm-slim` biasa **tidak crash** di
+   VPS yang sama. Tapi memanggil `require('argon2').hash(...)` sendirian
+   (tanpa Next.js/Prisma sama sekali) **selalu crash** dengan tanda
+   tangan yang identik.
+5. Sebagai pembanding, Prisma (juga native binding lewat N-API) berhasil
+   connect+auth+query ke Postgres tanpa crash sama sekali di VPS yang
+   sama — jadi bukan soal "semua native N-API addon" bermasalah,
+   spesifik ke `argon2`.
+6. Downgrade `argon2` dari `^0.45.1` ke `0.31.2` (`npm install
+   argon2@0.31.2`, commit `d7f630e`) — **menyelesaikan crash-nya.**
+   `argon2.hash()` sukses, `app` jalan normal, `curl` dapat `200 OK`.
 
-**Kesimpulan:** crash konsisten di offset yang sama di DUA versi Node
-berbeda, dan tidak terpengaruh JIT dimatikan — ini kode pengecekan
-kemampuan CPU milik V8 sendiri yang jalan di awal startup (sebelum kode
-JavaScript apa pun dieksekusi, makanya `--jitless` tidak berpengaruh).
-Kemungkinan besar CPU virtual "QEMU Virtual CPU version 2.5+" memberi
-data CPUID yang tidak lengkap/tidak wajar, membuat V8 crash saat
-membacanya — bukan sekadar "AVX2 tidak ada", tapi datanya sendiri
-bermasalah. **Tidak ada workaround dari sisi kode/Node yang terbukti
-berhasil.** Jangan buang waktu mencoba versi Node lain atau flag V8
-lain — satu-satunya jalan adalah perbaikan di bawah.
+**Pelajaran:** kalau crash serupa muncul lagi, JANGAN langsung asumsikan
+itu soal CPU/AVX2 hanya karena `cpuinfo` kebetulan tidak lengkap saat
+itu — isolasi dulu satu per satu modul native yang dipakai (argon2,
+Prisma, dll) lewat `docker run --entrypoint node ... -e "require(...)"`
+sebelum menyimpulkan akar masalahnya di level infrastruktur.
 
-**Perbaikan yang benar (satu-satunya yang terbukti perlu):** minta
-pengelola VM (tim IT/penyedia VPS) mengganti tipe CPU virtual lewat
-panel hypervisor (Proxmox/VMware/dst) ke `host` (passthrough — VM
-langsung pakai instruksi CPU fisik) atau minimal model `Haswell` atau
-lebih baru (semua sudah dukung AVX2, standar sejak 2013). Perlu VM
-di-restart dari panel (bukan cuma reboot dari dalam OS) supaya berlaku.
+**Catatan sampingan:** `argon2@0.31.2` memakai toolchain build
+(`@mapbox/node-pre-gyp`) yang menarik versi `tar` lama dengan kerentanan
+`critical` (hanya dipakai saat instalasi/build, tidak di runtime
+produksi — lihat `npm audit`). Kalau ada waktu, cek apakah versi argon2
+yang lebih baru dari 0.31.2 (tapi lebih lama dari 0.45.1 yang bermasalah)
+juga menyelesaikan crash tanpa menarik toolchain lama ini.
 
-Setelah CPU VM diperbaiki, verifikasi dulu sebelum lanjut:
+**Perbaikan CPU (tetap dilakukan, dan tetap dianjurkan meski bukan akar
+masalah crash ini):** minta pengelola VM (tim IT/penyedia VPS) mengganti
+tipe CPU virtual lewat panel hypervisor (Proxmox/VMware/dst) ke `host`
+(passthrough) atau minimal model `Haswell` ke atas. Perlu VM di-restart
+dari panel (bukan cuma reboot dari dalam OS) supaya berlaku. Verifikasi:
 
 ```bash
 cat /proc/cpuinfo | grep -m1 flags | tr ' ' '\n' | grep -E "^(avx2|bmi2)$"
-# harus muncul "avx2" — baru lanjut ke bawah ini
-
-git pull
-docker compose --env-file .env -f deploy/docker-compose.prod.yml -p beasiswaota build app migrate
-docker compose --env-file .env -f deploy/docker-compose.prod.yml -p beasiswaota up -d app
-curl -I http://127.0.0.1:3000   # harus dapat respons HTTP asli, bukan "Empty reply"
+# harus muncul "avx2"
 ```
