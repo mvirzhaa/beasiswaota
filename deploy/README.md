@@ -247,32 +247,48 @@ systemctl enable --now beasiswaota-cron-laporan-reminder.timer
 
 ---
 
-## 8. Email: SPF, DKIM, DMARC untuk beasiswaota@uika-bogor.ac.id
+## 8. Email lewat Gmail SMTP (App Password)
 
-Ini diatur di DNS zone `uika-bogor.ac.id`, dikoordinasikan dengan admin
-domain UIKA (biasanya bukan Anda sendiri yang pegang akses DNS utama):
+Aplikasi kirim email lewat SMTP Gmail langsung memakai akun
+`beasiswaota@uika-bogor.ac.id` (bukan Resend/domain pengirim terpisah) —
+dipilih karena akun ini sudah ada dan aktif, jadi tidak perlu proses
+verifikasi domain pengirim tambahan.
 
-- **SPF** (TXT di `uika-bogor.ac.id`): tambahkan `include:` penyedia
-  pengirim email Resend ke record SPF yang sudah ada — JANGAN buat record
-  SPF kedua, gabungkan ke satu TXT SPF yang sama. Nilai include: yang tepat
-  ada di dashboard Resend saat menambahkan domain pengirim.
-- **DKIM**: tambahkan domain `uika-bogor.ac.id` (atau subdomain khusus
-  pengirim kalau tim IT UIKA lebih suka begitu) di dashboard Resend, lalu
-  tambahkan record CNAME/TXT DKIM yang diberikan Resend ke DNS.
-- **DMARC** (TXT `_dmarc.uika-bogor.ac.id`): mulai dari kebijakan longgar
-  dulu untuk mengamati, baru diperketat:
-  `v=DMARC1; p=none; rua=mailto:beasiswaota@uika-bogor.ac.id`
-  Setelah yakin SPF/DKIM semua email dari domain ini lolos, naikkan
-  `p=none` -> `p=quarantine` -> `p=reject`.
+1. Login ke akun `beasiswaota@uika-bogor.ac.id`.
+2. Aktifkan verifikasi 2 langkah (2FA) kalau belum aktif — App Password
+   TIDAK BISA dibuat tanpa 2FA aktif.
+3. Buka `myaccount.google.com/apppasswords`, buat App Password baru
+   (nama bebas, mis. "beasiswaota-app"). Google akan menampilkan
+   password 16 karakter — itu nilai `SMTP_APP_PASSWORD`, BUKAN password
+   login akun Gmail biasa.
+4. Isi di `.env`:
+   ```
+   SMTP_USER=beasiswaota@uika-bogor.ac.id
+   SMTP_APP_PASSWORD=<app-password-16-karakter-tanpa-spasi>
+   ```
+5. Restart `app` (`docker compose ... up -d app`) supaya `.env` terbaca.
 
-Verifikasi status di dashboard Resend sebelum mengandalkan pengiriman
-produksi (reminder, notifikasi akun) — kalau DNS ini belum beres, email
-tetap "terkirim" dari sisi aplikasi (`kirimEmail()` sukses ke API Resend)
-tapi bisa masuk spam atau ditolak penerima.
+Karena email benar-benar dikirim lewat server Gmail (bukan server pihak
+ketiga yang mengklaim jadi domain ini), SPF/DKIM sudah otomatis selaras
+selama `beasiswaota@uika-bogor.ac.id` memang mailbox Google Workspace
+domain `uika-bogor.ac.id` yang sesungguhnya — tidak perlu tambah record
+DNS manual seperti kalau pakai penyedia pihak ketiga (Resend, dst).
+
+Uji kirim: pakai fitur yang memicu email (mis. "Daftarkan mahasiswa" di
+`/admin/akun`, atau tunggu cron reminder jalan) dan cek email benar-benar
+sampai, tidak masuk folder spam.
 
 ---
 
-## 9. Verifikasi webhook Midtrans
+## 9. Verifikasi webhook Midtrans (opsional — TIDAK dipakai saat ini)
+
+Program ini saat ini **hanya memakai transfer bank manual + verifikasi
+admin** (rekening resmi tercantum di halaman pembayaran), bukan Midtrans
+Snap — tombol "Bayar via VA" disembunyikan otomatis selama
+`MIDTRANS_SERVER_KEY`/`MIDTRANS_CLIENT_KEY` di `.env` kosong. Kode
+integrasinya tetap ada di repo (tidak dihapus) kalau suatu saat program
+memutuskan mengaktifkan payment gateway lagi — langkah di bawah ini baru
+relevan pada saat itu:
 
 1. Isi `MIDTRANS_SERVER_KEY`/`MIDTRANS_CLIENT_KEY` produksi di `.env`,
    `MIDTRANS_IS_PRODUCTION=true`.

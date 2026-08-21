@@ -14,8 +14,12 @@ sistem yang menangani uang dan data pribadi.
 - [ ] `APP_URL=https://beasiswaota.uika-bogor.ac.id` (bukan `http://`, bukan
       IP, bukan `localhost`).
 - [ ] `MAIL_FROM=beasiswaota@uika-bogor.ac.id` (akun asli, bukan dummy).
-- [ ] `MIDTRANS_IS_PRODUCTION=true` dan server/client key adalah key
-      **produksi** Midtrans, bukan sandbox.
+- [ ] `SMTP_USER`/`SMTP_APP_PASSWORD` terisi App Password Gmail asli
+      (bukan password login akun biasa) — lihat `deploy/README.md` bagian 8.
+- [ ] Midtrans **tidak dipakai saat ini** (program pakai transfer bank
+      manual) — pastikan `MIDTRANS_SERVER_KEY`/`MIDTRANS_CLIENT_KEY`
+      memang sengaja dibiarkan kosong di `.env`, dan tombol "Bayar via VA"
+      di halaman donatur tidak muncul.
 - [ ] `MINIO_ENDPOINT=beasiswaota.uika-bogor.ac.id`,
       `MINIO_PORT=443`, `MINIO_USE_SSL=true` — bukan `minio`/`localhost`.
 - [ ] File `.env` berizin `600`, dimiliki user aplikasi, dan **tidak**
@@ -75,15 +79,16 @@ sistem yang menangani uang dan data pribadi.
 
 ## Email
 
-- [ ] SPF, DKIM, DMARC untuk domain pengirim sudah dikonfigurasi (lihat
-      `deploy/README.md` bagian 8) dan diverifikasi lolos di dashboard
-      Resend (status domain: verified, bukan pending).
+- [ ] App Password Gmail sudah dibuat dari akun `beasiswaota@uika-bogor.ac.id`
+      sendiri (lihat `deploy/README.md` bagian 8) dan terisi di `.env`.
 - [ ] Kirim email uji sungguhan (reminder atau notifikasi akun) ke inbox
       Gmail/Outlook nyata — cek TIDAK masuk folder spam.
-- [ ] Header email uji menunjukkan `SPF: PASS` dan `DKIM: PASS` (cek lewat
-      "Show original"/"View source" di klien email).
 
-## Webhook payment gateway
+## Payment gateway (tidak dipakai — lewati bagian ini)
+
+Program memakai transfer bank manual + verifikasi admin, bukan Midtrans.
+Bagian ini baru relevan kalau program mengaktifkan Midtrans lagi di masa
+depan (lihat `deploy/README.md` bagian 9):
 
 - [ ] Payment Notification URL di dashboard Midtrans produksi mengarah ke
       `https://beasiswaota.uika-bogor.ac.id/api/webhook/payment` (domain

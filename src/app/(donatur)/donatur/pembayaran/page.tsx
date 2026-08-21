@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { auth } from "@/lib/auth";
+import { env } from "@/lib/env";
 import { formatRupiah } from "@/lib/uang";
 import { ambilJadwalBayarOrtuAsuh } from "@/server/queries/komitmen";
 import {
@@ -62,6 +63,10 @@ function sisaHari(jatuhTempo: Date): { teks: string; lewat: boolean } {
 export default async function HalamanPembayaranDonatur() {
   const session = await auth();
   const userId = session!.user.id;
+  // Midtrans belum diaktifkan program — program masih pakai transfer bank
+  // manual + verifikasi admin. Sembunyikan tombol bayar online otomatis
+  // selama kredensial belum diisi, daripada tombol tampil tapi gagal.
+  const midtransAktif = Boolean(env.MIDTRANS_SERVER_KEY && env.MIDTRANS_CLIENT_KEY);
 
   const [jadwal, jadwalTerbuka, riwayat] = await Promise.all([
     ambilJadwalBayarOrtuAsuh(userId),
@@ -161,7 +166,9 @@ export default async function HalamanPembayaranDonatur() {
                         </Lencana>
                       </td>
                       <td className="py-3.5 pr-2 text-right">
-                        {bisaBayar && <TombolBayarVA jadwalBayarId={j.id} />}
+                        {bisaBayar && midtransAktif && (
+                          <TombolBayarVA jadwalBayarId={j.id} />
+                        )}
                       </td>
                     </tr>
                   );
@@ -355,7 +362,7 @@ export default async function HalamanPembayaranDonatur() {
                       <History className="mx-auto h-8 w-8 text-muted/40" />
                       <p className="mt-2 font-medium text-ink">Belum Ada Riwayat Transaksi</p>
                       <p className="mt-0.5 text-xs text-muted">
-                        Riwayat pembayaran Anda akan tercatat di sini setelah bukti diunggah atau pembayaran VA selesai.
+                        Riwayat pembayaran Anda akan tercatat di sini setelah bukti transfer diunggah dan diverifikasi admin.
                       </p>
                     </td>
                   </tr>
