@@ -6,6 +6,11 @@ import type { JWT } from "next-auth/jwt";
 // middleware.ts yang jalan di Edge Runtime. Provider Credentials yang
 // sesungguhnya didaftarkan di src/lib/auth.ts (Node runtime).
 export const authConfig = {
+  // Wajib true untuk self-hosted di belakang reverse proxy (Nginx di VPS
+  // ini) — tanpa ini Auth.js menolak Host header yang diteruskan proxy
+  // (UntrustedHost). Nginx sudah meneruskan Host asli apa adanya
+  // (lihat deploy/nginx/proxy_params_beasiswaota), jadi aman dipercaya.
+  trustHost: true,
   pages: {
     signIn: "/login",
   },
