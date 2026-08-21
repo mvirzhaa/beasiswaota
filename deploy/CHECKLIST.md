@@ -14,8 +14,8 @@ sistem yang menangani uang dan data pribadi.
 - [ ] `APP_URL=https://beasiswaota.uika-bogor.ac.id` (bukan `http://`, bukan
       IP, bukan `localhost`).
 - [ ] `MAIL_FROM=beasiswaota@uika-bogor.ac.id` (akun asli, bukan dummy).
-- [ ] `SMTP_USER`/`SMTP_APP_PASSWORD` terisi App Password Gmail asli
-      (bukan password login akun biasa) — lihat `deploy/README.md` bagian 8.
+- [ ] `RESEND_API_KEY` terisi key produksi asli (bukan placeholder
+      `re_ganti_ini`/`re_isi_kunci_produksi`).
 - [ ] Midtrans **tidak dipakai saat ini** (program pakai transfer bank
       manual) — pastikan `MIDTRANS_SERVER_KEY`/`MIDTRANS_CLIENT_KEY`
       memang sengaja dibiarkan kosong di `.env`, dan tombol "Bayar via VA"
@@ -79,10 +79,13 @@ sistem yang menangani uang dan data pribadi.
 
 ## Email
 
-- [ ] App Password Gmail sudah dibuat dari akun `beasiswaota@uika-bogor.ac.id`
-      sendiri (lihat `deploy/README.md` bagian 8) dan terisi di `.env`.
+- [ ] SPF, DKIM, DMARC untuk domain pengirim sudah dikonfigurasi (lihat
+      `deploy/README.md` bagian 8) dan diverifikasi lolos di dashboard
+      Resend (status domain: verified, bukan pending).
 - [ ] Kirim email uji sungguhan (reminder atau notifikasi akun) ke inbox
       Gmail/Outlook nyata — cek TIDAK masuk folder spam.
+- [ ] Header email uji menunjukkan `SPF: PASS` dan `DKIM: PASS` (cek lewat
+      "Show original"/"View source" di klien email).
 
 ## Payment gateway (tidak dipakai — lewati bagian ini)
 

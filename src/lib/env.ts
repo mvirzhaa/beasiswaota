@@ -26,11 +26,7 @@ const envSchema = z.object({
   MINIO_ROOT_PASSWORD: z.string().min(1),
   MINIO_BUCKET: z.string().min(1),
 
-  // Kirim email lewat Gmail SMTP (App Password) memakai akun MAIL_FROM
-  // sendiri — tidak perlu verifikasi domain terpisah seperti Resend
-  // selama MAIL_FROM memang mailbox Google Workspace domain ini.
-  SMTP_USER: z.string().optional(),
-  SMTP_APP_PASSWORD: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
   MAIL_FROM: z.email(),
 
   CRON_SECRET: z.string().min(16, "CRON_SECRET minimal 16 karakter"),
