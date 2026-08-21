@@ -317,22 +317,46 @@ relevan pada saat itu:
 
 ## 10. Backup
 
+Backup harian dikirim ke **Google Drive** (akun `beasiswaota@uika-bogor.ac.id`
+yang sudah ada) lewat `rclone` — dipilih karena tidak ada server kedua
+yang tersedia untuk tujuan rsync+SSH biasa. Beda dari App Password Gmail
+(bagian 8), `rclone` otorisasi lewat alur OAuth browser biasa, jadi TIDAK
+kena batasan kebijakan Workspace yang mematikan Verifikasi 2 Langkah.
+
 Lihat komentar lengkap di `deploy/backup.sh` dan `deploy/restore.sh`.
-Ringkas:
+
+**Setup awal:**
 
 ```bash
 mkdir -p /etc/beasiswaota
 cp deploy/backup.env.example /etc/beasiswaota/backup.env
-nano /etc/beasiswaota/backup.env   # isi passphrase GPG, host remote, dst
+nano /etc/beasiswaota/backup.env   # isi passphrase GPG, dst
 chmod 600 /etc/beasiswaota/backup.env
 
-# Perlu: mc (MinIO Client), gpg, rsync sudah terpasang, dan SSH key
-# passwordless ke BACKUP_REMOTE_HOST sudah disiapkan.
-apt install -y gpg rsync
+apt install -y gpg rclone
 curl https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc
 chmod +x /usr/local/bin/mc
 mc alias set beasiswaota http://127.0.0.1:9000 <MINIO_ROOT_USER> <MINIO_ROOT_PASSWORD>
 ```
+
+**Otorisasi rclone ke Google Drive** (interaktif, sekali saja):
+
+```bash
+rclone config
+```
+
+Ikuti wizard-nya: `n` (New remote) → nama `gdrive` (harus sama persis
+dengan `RCLONE_REMOTE` di `backup.env`) → pilih `drive` (Google Drive)
+dari daftar → client_id/client_secret kosongkan saja (Enter, pakai punya
+rclone) → scope pilih `1` (akses penuh) → root_folder_id kosongkan →
+service_account kosongkan → `Edit advanced config?` pilih `n` → `Use
+auto config?` — **karena VPS tidak punya browser**, pilih `n`, rclone
+akan kasih URL untuk dibuka di browser laptop Anda (login sebagai
+`beasiswaota@uika-bogor.ac.id`), lalu tempel kode verifikasi yang
+didapat kembali ke terminal VPS.
+
+Uji koneksinya: `rclone lsd gdrive:` (harus tidak error, walau daftar
+foldernya kosong).
 
 Jadwalkan harian lewat cron sistem (bukan systemd timer aplikasi, supaya
 independen kalau ada masalah di sisi app):
@@ -351,8 +375,9 @@ backup:
 1. Siapkan VPS/mesin terpisah (bukan produksi) dengan
    `docker compose --env-file .env -f deploy/docker-compose.prod.yml -p beasiswaota up -d db minio`
    memakai `.env` KOSONG/baru (bukan salinan data produksi).
-2. `rsync` salah satu folder backup dari `BACKUP_REMOTE_HOST` ke mesin uji.
-3. `./deploy/restore.sh <folder-backup> beasiswaota-db beasiswaota-minio`
+2. Unduh salah satu folder backup dari Google Drive ke mesin uji:
+   `rclone copy gdrive:beasiswaota-backup/<tanggal> /tmp/pulihkan/<tanggal>`
+3. `./deploy/restore.sh /tmp/pulihkan/<tanggal> beasiswaota-db beasiswaota-minio`
 4. Nyalakan app mengarah ke db/minio uji ini, login, cek beberapa berkas
    privat bisa dibuka dan datanya masuk akal.
 5. Catat waktu yang dibutuhkan (RTO) — ini yang dilaporkan ke pengelola

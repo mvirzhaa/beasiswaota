@@ -6,11 +6,17 @@
 #      dengan container Postgres+MinIO kosong, BUKAN di server produksi,
 #      supaya latihan restore tidak berisiko menimpa data hidup.
 #
+# Backup tersimpan di Google Drive (lewat rclone, lihat deploy/backup.sh)
+# — unduh dulu folder tanggal yang mau dipulihkan ke lokal sebelum
+# menjalankan skrip ini, mis.:
+#   rclone copy gdrive:beasiswaota-backup/2026-08-20_020000 \
+#     /tmp/pulihkan/2026-08-20_020000
+#
 # Pemakaian:
-#   ./restore.sh <path-folder-backup-hasil-rsync> <nama-container-db> <nama-container-minio>
+#   ./restore.sh <path-folder-backup-lokal> <nama-container-db> <nama-container-minio>
 #
 # Contoh:
-#   ./restore.sh /home/backup-user/beasiswaota/2026-08-20_020000 beasiswaota-db beasiswaota-minio
+#   ./restore.sh /tmp/pulihkan/2026-08-20_020000 beasiswaota-db beasiswaota-minio
 
 set -euo pipefail
 

@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Backup harian: pg_dump terenkripsi (GPG symmetric) + mirror bucket MinIO,
-# dikirim ke lokasi DI LUAR VPS aplikasi ini lewat rsync+SSH.
+# dikirim ke Google Drive (lokasi DI LUAR VPS ini) lewat rclone.
 #
 # WAJIB dikonfigurasi sebelum dipakai (lihat deploy/README.md):
 #   - /etc/beasiswaota/backup.env berisi BACKUP_GPG_PASSPHRASE,
-#     BACKUP_REMOTE_HOST, BACKUP_REMOTE_PATH, dan kredensial DB/MinIO
-#   - SSH key (bukan password) sudah bisa login passwordless ke
-#     BACKUP_REMOTE_HOST
+#     RCLONE_REMOTE, RCLONE_REMOTE_PATH, dan kredensial DB/MinIO
+#   - `rclone config` sudah dijalankan sekali (otorisasi OAuth ke Google
+#     Drive), menghasilkan remote dengan nama yang sama dengan
+#     RCLONE_REMOTE di bawah
 #   - `mc` (MinIO Client) sudah terpasang dan alias "beasiswaota" sudah
 #     dikonfigurasi: mc alias set beasiswaota http://127.0.0.1:9000 <user> <pass>
 #
@@ -27,8 +28,8 @@ fi
 source "$ENV_FILE"
 
 : "${BACKUP_GPG_PASSPHRASE:?BACKUP_GPG_PASSPHRASE wajib diisi}"
-: "${BACKUP_REMOTE_HOST:?BACKUP_REMOTE_HOST wajib diisi}"
-: "${BACKUP_REMOTE_PATH:?BACKUP_REMOTE_PATH wajib diisi}"
+: "${RCLONE_REMOTE:?RCLONE_REMOTE wajib diisi (nama remote hasil rclone config)}"
+: "${RCLONE_REMOTE_PATH:?RCLONE_REMOTE_PATH wajib diisi (folder tujuan di Google Drive)}"
 : "${POSTGRES_USER:?POSTGRES_USER wajib diisi}"
 : "${POSTGRES_DB:?POSTGRES_DB wajib diisi}"
 : "${RETENSI_HARI:=14}"
@@ -61,15 +62,19 @@ log "Mirror bucket MinIO..."
 mkdir -p "$STAGING/minio"
 mc mirror --quiet beasiswaota/"${MINIO_BUCKET:-beasiswaota-berkas}" "$STAGING/minio"
 
-# 4. Kirim ke lokasi DI LUAR VPS ini lewat rsync+SSH (butuh SSH key,
-#    bukan password, sudah di-setup sebelumnya).
-log "Kirim ke $BACKUP_REMOTE_HOST:$BACKUP_REMOTE_PATH..."
-rsync -az --mkpath "$STAGING" "$BACKUP_REMOTE_HOST:$BACKUP_REMOTE_PATH/"
+# 4. Kirim ke Google Drive (DI LUAR VPS ini) lewat rclone. Dump database
+#    sudah terenkripsi GPG sebelum diunggah — isi bucket MinIO TIDAK
+#    dienkripsi ulang di sini (mengandalkan enkripsi at-rest Google Drive
+#    + akses akun terbatas), jadi jaga akun Google penyimpan backup ini
+#    seketat mungkin (2FA, jangan dibagi).
+log "Kirim ke $RCLONE_REMOTE:$RCLONE_REMOTE_PATH/$TANGGAL..."
+rclone copy "$STAGING" "$RCLONE_REMOTE:$RCLONE_REMOTE_PATH/$TANGGAL" --transfers 4
 
 # 5. Bersihkan staging lokal (data sensitif tidak perlu numpuk di VPS
 #    aplikasi) dan backup remote yang lebih tua dari RETENSI_HARI.
 log "Bersihkan staging lokal..."
 rm -rf "$STAGING"
 find /var/backups/beasiswaota -maxdepth 1 -type d -mtime "+${RETENSI_HARI}" -exec rm -rf {} \;
+rclone delete --min-age "${RETENSI_HARI}d" "$RCLONE_REMOTE:$RCLONE_REMOTE_PATH" --rmdirs 2>/dev/null || true
 
-log "Selesai. Retensi remote (lebih dari $RETENSI_HARI hari) dibersihkan manual/cron terpisah di sisi $BACKUP_REMOTE_HOST."
+log "Selesai. Backup tersimpan di $RCLONE_REMOTE:$RCLONE_REMOTE_PATH/$TANGGAL"

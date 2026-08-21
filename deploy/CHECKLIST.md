@@ -72,8 +72,9 @@ sistem yang menangani uang dan data pribadi.
             dicoba dibuka dan cocok isinya.
       - [ ] Waktu pemulihan (RTO) dicatat dan dilaporkan ke pengelola
             program.
-- [ ] `BACKUP_REMOTE_HOST` benar-benar mesin **di luar** VPS aplikasi ini
-      (bukan folder lain di VPS yang sama).
+- [ ] Backup benar-benar tersimpan di Google Drive (**di luar** VPS
+      aplikasi ini) — verifikasi lewat `rclone lsd gdrive:` atau cek
+      langsung di drive.google.com, bukan cuma percaya log lokal.
 - [ ] `BACKUP_GPG_PASSPHRASE` tersimpan di password manager terpisah, bukan
       hanya di `/etc/beasiswaota/backup.env`.
 
