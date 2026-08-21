@@ -102,7 +102,6 @@ describe.skipIf(!dbReady)("relasi & pesan binaan — integrasi database sungguha
         nama: "Donatur A Uji Relasi",
         tipe: "INDIVIDU",
         noHp: "080000003333",
-        noHpAlternatif: "080000003334",
       },
     });
     id.ortuAsuhA = ortuAsuhA.id;
@@ -113,7 +112,6 @@ describe.skipIf(!dbReady)("relasi & pesan binaan — integrasi database sungguha
         nama: "Donatur B Uji Relasi",
         tipe: "INDIVIDU",
         noHp: "080000004444",
-        noHpAlternatif: "080000004445",
       },
     });
     id.ortuAsuhB = ortuAsuhB.id;

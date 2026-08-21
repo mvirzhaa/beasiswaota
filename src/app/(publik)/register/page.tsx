@@ -223,8 +223,11 @@ function FormOrtuAsuh() {
         <span className="text-xs font-semibold text-ink">Kategori Donatur</span>
         <select
           name="tipe"
+          required
+          defaultValue=""
           className="rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm text-ink transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
         >
+          <option value="" disabled>Pilih Kategori</option>
           <option value="INDIVIDU">Individu / Masyarakat Umum</option>
           <option value="DOSEN">Dosen UIKA Bogor</option>
           <option value="TENAGA_KEPENDIDIKAN">Tenaga Kependidikan UIKA</option>
@@ -235,12 +238,9 @@ function FormOrtuAsuh() {
 
       <Input name="instansi" label="Nama Lembaga / Instansi (Opsional)" required={false} placeholder="Jika mewakili instansi" />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Input name="noHp" label="Nomor WhatsApp" placeholder="08xxxxxxxxxx" />
-        <Input name="noHpAlternatif" label="Nomor HP Alternatif" placeholder="08xxxxxxxxxx" />
-      </div>
+      <Input name="noHp" label="Nomor WhatsApp" placeholder="08xxxxxxxxxx" />
 
-      <Input name="alamat" label="Alamat / Kota (Opsional)" required={false} placeholder="Kota domisili" />
+      <Input name="alamat" label="Kota" placeholder="Kota domisili" />
       <Input
         name="atasNamaMunfiq"
         label="Atas Nama Munfiq / Hamba Allah (Opsional)"

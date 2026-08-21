@@ -37,8 +37,7 @@ export const registerOrtuAsuhSchema = z.object({
   tipe: tipeOrtuAsuhSchema,
   instansi: z.string().optional(),
   noHp: z.string().min(8, "Nomor HP tidak valid"),
-  noHpAlternatif: z.string().min(8, "Nomor HP alternatif tidak valid"),
-  alamat: z.string().optional(),
+  alamat: z.string().min(1, "Kota wajib diisi"),
   atasNamaMunfiq: z.string().optional(),
 });
 

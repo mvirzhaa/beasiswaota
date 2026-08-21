@@ -345,7 +345,6 @@ model OrtuAsuh {
   instansi       String?
   nip            String? // diisi bila dosen/tendik, dipakai untuk potong gaji
   noHp           String       @map("no_hp")
-  noHpAlternatif String       @map("no_hp_alternatif")
   alamat         String?
   // "Atas nama munfiq" dari form: donasi bisa diatasnamakan orang lain
   // (mis. orangtua yang sudah wafat). Ini yang tampil di laporan penyaluran.

@@ -91,7 +91,6 @@ export async function registerOrtuAsuh(
               tipe: data.tipe,
               instansi: data.instansi,
               noHp: data.noHp,
-              noHpAlternatif: data.noHpAlternatif,
               alamat: data.alamat,
               atasNamaMunfiq: data.atasNamaMunfiq,
             },

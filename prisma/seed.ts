@@ -91,7 +91,6 @@ async function main() {
       nama: "H. Abdullah",
       tipe: "INDIVIDU" as const,
       noHp: "081300000001",
-      noHpAlternatif: "081300000011",
     },
     {
       email: "ortuasuh2@uika-bogor.ac.id",
@@ -99,7 +98,6 @@ async function main() {
       tipe: "DOSEN" as const,
       nip: "198501012010012001",
       noHp: "081300000002",
-      noHpAlternatif: "081300000022",
     },
   ];
 
@@ -118,7 +116,6 @@ async function main() {
             tipe: oa.tipe,
             nip: "nip" in oa ? oa.nip : undefined,
             noHp: oa.noHp,
-            noHpAlternatif: oa.noHpAlternatif,
           },
         },
       },

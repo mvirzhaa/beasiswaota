@@ -99,7 +99,6 @@ describe.skipIf(!dbReady)("jalankanAlokasi — integrasi database sungguhan", ()
         nama: "Donatur Uji Konkurensi",
         tipe: "INDIVIDU",
         noHp: "080000000001",
-        noHpAlternatif: "080000000002",
       },
     });
     ids.ortuAsuh = ortuAsuh.id;
