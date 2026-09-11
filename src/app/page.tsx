@@ -3,7 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import {
-  GraduationCap,
   HeartHandshake,
   ShieldCheck,
   TrendingUp,
@@ -184,7 +183,7 @@ export default async function HalamanUtamaLandingPage() {
         </div>
       </section>
 
-      {/* 3. DUA CARD BESAR: INFO CALON MAHASISWA & PENDAFTARAN ORANG TUA ASUH */}
+      {/* 3. CARD PENDAFTARAN ORANG TUA ASUH */}
       <section id="daftar" className="py-14 sm:py-18 bg-surface border-b border-border/80">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto">
@@ -201,37 +200,8 @@ export default async function HalamanUtamaLandingPage() {
             </p>
           </div>
 
-          <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
-            {/* Card 1: Info Calon Mahasiswa Penerima Beasiswa */}
-            <div className="group flex flex-col justify-between rounded-2xl border-2 border-border bg-surface p-8 sm:p-10 shadow-xs transition-all duration-200 hover:border-primary hover:shadow-lg">
-              <div>
-                <div className="flex items-center justify-between">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-white shadow-md transition-transform group-hover:scale-105">
-                    <GraduationCap className="h-8 w-8" />
-                  </div>
-                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-                    Bantuan UKT
-                  </span>
-                </div>
-
-                <h3 className="mt-6 font-heading text-2xl font-bold text-ink group-hover:text-primary transition-colors">
-                  Calon Penerima Beasiswa
-                </h3>
-                <p className="text-xs font-semibold text-accent-dark uppercase tracking-wider mt-1">
-                  Untuk Mahasiswa Aktif UIKA Bogor
-                </p>
-              </div>
-
-              <div className="mt-8 pt-4">
-                <p className="text-xs text-muted leading-relaxed">
-                  Mahasiswa tidak mendaftar mandiri. Data calon penerima beasiswa dimasukkan
-                  langsung oleh admin pengelola program berdasarkan usulan fakultas/prodi.
-                  Akun dan kata sandi awal akan dikirim ke email mahasiswa yang terdaftar.
-                </p>
-              </div>
-            </div>
-
-            {/* Card 2: Pendaftaran Orang Tua Asuh */}
+          <div className="mt-10 mx-auto max-w-md">
+            {/* Card: Pendaftaran Orang Tua Asuh */}
             <div className="group flex flex-col justify-between rounded-2xl border-2 border-border bg-surface p-8 sm:p-10 shadow-xs transition-all duration-200 hover:border-accent hover:shadow-lg">
               <div>
                 <div className="flex items-center justify-between">
