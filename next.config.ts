@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   // build mandiri berisi hanya file yang benar-benar dipakai saat runtime,
   // tanpa perlu node_modules penuh di image produksi.
   output: "standalone",
+  serverExternalPackages: ["argon2"],
 };
 
 export default nextConfig;

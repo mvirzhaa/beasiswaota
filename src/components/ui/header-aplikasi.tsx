@@ -24,11 +24,11 @@ const LABEL_ROLE: Record<string, string> = {
 
 export async function HeaderAplikasi({
   navLinks,
-  navGroup,
+  navGroups,
   beranda,
 }: {
   navLinks: NavLinkAplikasi[];
-  navGroup?: NavGroupAplikasi;
+  navGroups?: NavGroupAplikasi[];
   beranda: string;
 }) {
   const session = await auth();
@@ -36,45 +36,66 @@ export async function HeaderAplikasi({
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur-md shadow-xs">
       <div className="h-1 bg-gradient-to-r from-primary via-[#116e63] to-accent" />
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-2 sm:px-6">
-        <Link href={beranda} className="group flex items-center gap-3">
-          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center transition-transform duration-200 group-hover:scale-105">
-            <Image
-              src="/images/logo-uika.png"
-              alt="Logo Resmi UIKA Bogor"
-              width={40}
-              height={40}
-              className="h-10 w-10 object-contain drop-shadow-xs"
-              priority
-            />
-          </div>
-          <div>
-            <span className="block font-heading text-lg font-bold leading-tight text-primary">
-              UIKA Bogor
-            </span>
-            <span className="block text-xs font-medium text-muted">Beasiswa Orangtua Asuh</span>
-          </div>
-        </Link>
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="flex items-center justify-between gap-4 py-2">
+          <Link href={beranda} className="group flex items-center gap-3">
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center transition-transform duration-200 group-hover:scale-105">
+              <Image
+                src="/images/logo-uika.png"
+                alt="Logo Resmi UIKA Bogor"
+                width={40}
+                height={40}
+                className="h-10 w-10 object-contain drop-shadow-xs"
+                priority
+              />
+            </div>
+            <div>
+              <span className="block font-heading text-lg font-bold leading-tight text-primary">
+                UIKA Bogor
+              </span>
+              <span className="block text-xs font-medium text-muted">Beasiswa Orangtua Asuh</span>
+            </div>
+          </Link>
 
-        <nav className="flex flex-wrap items-center gap-1 text-sm font-medium">
+          <div className="flex items-center gap-3 text-sm">
+            <div className="hidden items-center gap-2 sm:flex">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-light text-primary">
+                <User className="h-3.5 w-3.5" />
+              </span>
+              <div className="flex flex-col text-right leading-tight">
+                <span className="max-w-[140px] truncate text-xs font-medium text-ink md:max-w-[200px]">
+                  {session?.user?.email}
+                </span>
+                {session?.user && (
+                  <span className="text-[11px] font-semibold text-accent-dark">
+                    {LABEL_ROLE[session.user.role] ?? session.user.role}
+                  </span>
+                )}
+              </div>
+            </div>
+            <TombolKeluar />
+          </div>
+        </div>
+
+        <nav className="flex items-center gap-1 overflow-x-auto border-t border-border/70 py-1.5 text-sm font-medium">
           {navLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-ink/80 transition-all duration-150 hover:bg-primary-light/60 hover:text-primary"
+              className="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-ink/80 transition-all duration-150 hover:bg-primary-light/60 hover:text-primary"
             >
               {l.ikon && <l.ikon className="h-4 w-4 text-primary/70" strokeWidth={1.75} />}
               <span>{l.label}</span>
             </Link>
           ))}
-          {navGroup && (
-            <details className="group relative">
+          {navGroups?.map((grup) => (
+            <details key={grup.label} className="group relative shrink-0">
               <summary className="flex cursor-pointer items-center gap-1 rounded-lg px-3 py-1.5 text-ink/80 list-none transition-all duration-150 hover:bg-primary-light/60 hover:text-primary">
-                <span>{navGroup.label}</span>
+                <span>{grup.label}</span>
                 <ChevronDown className="h-3.5 w-3.5 opacity-60 transition-transform duration-200 group-open:rotate-180" />
               </summary>
-              <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-surface p-1.5 shadow-[0_10px_25px_rgba(0,0,0,0.08)]">
-                {navGroup.items.map((l) => (
+              <div className="absolute left-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-surface p-1.5 shadow-[0_10px_25px_rgba(0,0,0,0.08)]">
+                {grup.items.map((l) => (
                   <Link
                     key={l.href}
                     href={l.href}
@@ -86,27 +107,8 @@ export async function HeaderAplikasi({
                 ))}
               </div>
             </details>
-          )}
+          ))}
         </nav>
-
-        <div className="flex items-center gap-3 text-sm">
-          <div className="hidden items-center gap-2 sm:flex">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-light text-primary">
-              <User className="h-3.5 w-3.5" />
-            </span>
-            <div className="flex flex-col text-right leading-tight">
-              <span className="max-w-[140px] truncate text-xs font-medium text-ink md:max-w-[200px]">
-                {session?.user?.email}
-              </span>
-              {session?.user && (
-                <span className="text-[11px] font-semibold text-accent-dark">
-                  {LABEL_ROLE[session.user.role] ?? session.user.role}
-                </span>
-              )}
-            </div>
-          </div>
-          <TombolKeluar />
-        </div>
       </div>
     </header>
   );

@@ -1,15 +1,10 @@
 "use client";
 
-import { Suspense, useActionState, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useActionState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { GraduationCap, HeartHandshake } from "lucide-react";
-import {
-  registerMahasiswa,
-  registerOrtuAsuh,
-  type HasilRegistrasi,
-} from "./actions";
+import { HeartHandshake } from "lucide-react";
+import { registerOrtuAsuh, type HasilRegistrasi } from "./actions";
 import { FooterProgram } from "@/components/ui/footer-program";
 import { Tombol } from "@/components/ui/tombol";
 
@@ -19,29 +14,11 @@ function formToObject(formData: FormData): Record<string, string> {
   return Object.fromEntries(formData.entries()) as Record<string, string>;
 }
 
-async function actionMahasiswa(_prev: HasilRegistrasi, formData: FormData) {
-  return registerMahasiswa(formToObject(formData));
-}
-
 async function actionOrtuAsuh(_prev: HasilRegistrasi, formData: FormData) {
   return registerOrtuAsuh(formToObject(formData));
 }
 
 export default function HalamanRegister() {
-  return (
-    <Suspense fallback={null}>
-      <KontenRegister />
-    </Suspense>
-  );
-}
-
-function KontenRegister() {
-  const searchParams = useSearchParams();
-  const defaultPeran = searchParams.get("peran") === "ORTU_ASUH" || searchParams.get("role") === "ORTU_ASUH"
-    ? "ORTU_ASUH"
-    : "MAHASISWA";
-  const [peran, setPeran] = useState<"MAHASISWA" | "ORTU_ASUH">(defaultPeran);
-
   return (
     <main className="flex min-h-screen flex-col bg-gradient-to-br from-primary-light via-surface-alt to-accent/10">
       <div className="flex flex-1 items-center justify-center p-4 sm:p-8">
@@ -64,43 +41,24 @@ function KontenRegister() {
           </div>
 
           <div className="mt-6">
-            <h1 className="font-heading text-2xl font-bold text-ink">
-              Pendaftaran Akun Baru
-            </h1>
-            <p className="mt-1 text-xs text-muted">
-              Pilih jenis akun sesuai dengan peran Anda di lingkungan Universitas Ibn Khaldun Bogor.
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/20 text-accent-dark">
+                <HeartHandshake className="h-4 w-4" />
+              </span>
+              <h1 className="font-heading text-2xl font-bold text-ink">
+                Daftar Sebagai Orang Tua Asuh
+              </h1>
+            </div>
+            <p className="mt-2 text-xs text-muted">
+              Pendaftaran ini khusus untuk donatur (orang tua asuh). Pendaftaran mahasiswa
+              calon penerima beasiswa dilakukan oleh admin pengelola program — mahasiswa tidak
+              mendaftar sendiri.
             </p>
           </div>
 
-          {/* Tab Pemilih Peran */}
-          <div className="mt-6 flex rounded-xl bg-surface-alt p-1 border border-border">
-            <button
-              type="button"
-              onClick={() => setPeran("MAHASISWA")}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-xs font-bold transition-all ${
-                peran === "MAHASISWA"
-                  ? "bg-primary text-white shadow-xs"
-                  : "text-muted hover:text-ink"
-              }`}
-            >
-              <GraduationCap className="h-4 w-4" />
-              <span>Mahasiswa Pemohon</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setPeran("ORTU_ASUH")}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-xs font-bold transition-all ${
-                peran === "ORTU_ASUH"
-                  ? "bg-primary text-white shadow-xs"
-                  : "text-muted hover:text-ink"
-              }`}
-            >
-              <HeartHandshake className="h-4 w-4" />
-              <span>Orang Tua Asuh (Donatur)</span>
-            </button>
+          <div className="mt-6">
+            <FormOrtuAsuh />
           </div>
-
-          <div className="mt-6">{peran === "MAHASISWA" ? <FormMahasiswa /> : <FormOrtuAsuh />}</div>
 
           <div className="mt-6 flex flex-col gap-2 border-t border-border pt-4 text-center text-xs text-ink">
             <div>
@@ -119,72 +77,6 @@ function KontenRegister() {
       </div>
       <FooterProgram />
     </main>
-  );
-}
-
-function FormMahasiswa() {
-  const [state, formAction, pending] = useActionState(
-    actionMahasiswa,
-    STATE_AWAL,
-  );
-
-  if (state.sukses) {
-    return (
-      <div className="rounded-2xl border border-green-200 bg-green-50 p-5 text-center text-sm text-green-800">
-        <p className="font-bold">Pendaftaran Berhasil!</p>
-        <p className="mt-1 text-xs">{state.pesan}</p>
-        <div className="mt-4">
-          <Link href="/login">
-            <Tombol variant="primer" ukuran="sm">
-              Menuju Halaman Masuk
-            </Tombol>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <form action={formAction} className="flex flex-col gap-3.5">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Input name="email" label="Email UIKA / Aktif" type="email" placeholder="nama@uika-bogor.ac.id" />
-        <Input name="password" label="Kata Sandi" type="password" placeholder="••••••••" />
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Input name="nim" label="Nomor Induk Mahasiswa (NIM)" placeholder="Contoh: 2111050..." />
-        <Input name="nama" label="Nama Lengkap" placeholder="Sesuai KTP / KTM" />
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Input name="fakultas" label="Fakultas" placeholder="Contoh: Teknik & Sains" />
-        <Input name="prodi" label="Program Studi" placeholder="Contoh: Teknik Informatika" />
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Input name="angkatan" label="Tahun Angkatan" type="number" placeholder="2024" />
-        <Input name="semesterBerjalan" label="Semester Berjalan" type="number" placeholder="1 s.d. 8" />
-      </div>
-
-      <Input name="noHp" label="Nomor WhatsApp / HP Aktif" placeholder="08xxxxxxxxxx" />
-      <Input name="alamat" label="Alamat Domisili (Opsional)" required={false} placeholder="Alamat tinggal di Bogor / asal" />
-
-      {state.pesan && !state.sukses && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700" role="alert">
-          {state.pesan}
-        </div>
-      )}
-
-      <Tombol
-        type="submit"
-        disabled={pending}
-        variant="primer"
-        ukuran="lg"
-        className="mt-2 w-full font-bold shadow-md"
-      >
-        <span>{pending ? "Mendaftarkan Akun..." : "Daftar Sebagai Mahasiswa"}</span>
-      </Tombol>
-    </form>
   );
 }
 

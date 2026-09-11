@@ -43,9 +43,10 @@ export default async function HalamanAkunAdmin() {
       <section className="mt-10 border-t border-border pt-6">
         <h2 className="font-heading text-lg font-bold text-ink">Daftarkan mahasiswa baru</h2>
         <p className="mt-1 text-sm text-muted">
-          Untuk camaba yang didaftarkan langsung oleh admin (mis. belum punya akses mandiri).
-          NIM boleh diisi sementara dan diperbarui admin setelah NIM resmi terbit. Password
-          sementara dibuat sistem dan dikirim ke email mahasiswa.
+          Mahasiswa tidak bisa mendaftar mandiri — satu-satunya jalur masuk calon penerima
+          beasiswa adalah lewat form ini. NIM boleh diisi sementara dan diperbarui admin
+          setelah NIM resmi terbit. Password sementara dibuat sistem dan dikirim ke email
+          mahasiswa.
         </p>
         <FormDaftarkanMahasiswa />
       </section>

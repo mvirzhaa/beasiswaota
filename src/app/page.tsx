@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   LogIn,
   UserPlus,
+  FileText,
 } from "lucide-react";
 import { Tombol } from "@/components/ui/tombol";
 import { FooterProgram } from "@/components/ui/footer-program";
@@ -69,6 +70,10 @@ export default async function HalamanUtamaLandingPage() {
             <a href="#pimpinan" className="transition-colors hover:text-primary">Pimpinan UIKA</a>
             <a href="#pilar" className="transition-colors hover:text-primary">4 Pilar Sistem</a>
             <a href="#rekening" className="transition-colors hover:text-primary">Rekening Donasi</a>
+            <Link href="/brosur" className="transition-colors text-primary font-bold hover:text-primary-dark flex items-center gap-1">
+              <FileText className="h-3.5 w-3.5" />
+              <span>Brosur</span>
+            </Link>
           </nav>
 
           <div className="flex items-center gap-2.5">
@@ -122,10 +127,16 @@ export default async function HalamanUtamaLandingPage() {
                     <span>Daftar Akun Baru</span>
                   </Tombol>
                 </a>
+                <Link href="/brosur">
+                  <Tombol variant="garis" ukuran="lg" className="border-white/40 bg-white/10 text-white hover:bg-white/20">
+                    <FileText className="h-5 w-5" />
+                    <span>Lihat Brosur & PDF</span>
+                  </Tombol>
+                </Link>
                 <Link href="/login">
                   <Tombol variant="garis" ukuran="lg" className="border-white/40 bg-white/10 text-white hover:bg-white/20">
                     <LogIn className="h-5 w-5" />
-                    <span>Masuk ke Akun</span>
+                    <span>Masuk</span>
                   </Tombol>
                 </Link>
               </div>
@@ -173,24 +184,25 @@ export default async function HalamanUtamaLandingPage() {
         </div>
       </section>
 
-      {/* 3. DUA CARD BESAR PENDAFTARAN (MAHASISWA & ORANG TUA ASUH) */}
+      {/* 3. DUA CARD BESAR: INFO CALON MAHASISWA & PENDAFTARAN ORANG TUA ASUH */}
       <section id="daftar" className="py-14 sm:py-18 bg-surface border-b border-border/80">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-light px-3.5 py-1 text-xs font-bold text-primary uppercase">
               <UserPlus className="h-3.5 w-3.5" />
-              <span>Pendaftaran Terbuka</span>
+              <span>Pendaftaran Donatur Terbuka</span>
             </span>
             <h2 className="mt-3 font-heading text-2xl sm:text-4xl font-bold text-ink">
-              Pilih Jalur Pendaftaran
+              Bergabung Dalam Program
             </h2>
             <p className="mt-2 text-xs sm:text-sm text-muted leading-relaxed">
-              Silakan pilih kategori pendaftaran sesuai peran Anda di lingkungan Universitas Ibn Khaldun Bogor.
+              Pendaftaran mandiri hanya untuk orang tua asuh (donatur). Calon penerima beasiswa
+              didata langsung oleh admin pengelola program.
             </p>
           </div>
 
           <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
-            {/* Card 1: Pendaftaran Mahasiswa */}
+            {/* Card 1: Info Calon Mahasiswa Penerima Beasiswa */}
             <div className="group flex flex-col justify-between rounded-2xl border-2 border-border bg-surface p-8 sm:p-10 shadow-xs transition-all duration-200 hover:border-primary hover:shadow-lg">
               <div>
                 <div className="flex items-center justify-between">
@@ -203,7 +215,7 @@ export default async function HalamanUtamaLandingPage() {
                 </div>
 
                 <h3 className="mt-6 font-heading text-2xl font-bold text-ink group-hover:text-primary transition-colors">
-                  Daftar Sebagai Mahasiswa
+                  Calon Penerima Beasiswa
                 </h3>
                 <p className="text-xs font-semibold text-accent-dark uppercase tracking-wider mt-1">
                   Untuk Mahasiswa Aktif UIKA Bogor
@@ -211,12 +223,11 @@ export default async function HalamanUtamaLandingPage() {
               </div>
 
               <div className="mt-8 pt-4">
-                <Link href="/register?peran=MAHASISWA" className="block">
-                  <Tombol variant="primer" ukuran="lg" className="w-full font-bold justify-center text-sm py-3.5 shadow-md">
-                    <span>Daftar Akun Mahasiswa</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Tombol>
-                </Link>
+                <p className="text-xs text-muted leading-relaxed">
+                  Mahasiswa tidak mendaftar mandiri. Data calon penerima beasiswa dimasukkan
+                  langsung oleh admin pengelola program berdasarkan usulan fakultas/prodi.
+                  Akun dan kata sandi awal akan dikirim ke email mahasiswa yang terdaftar.
+                </p>
               </div>
             </div>
 
