@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { GraduationCap, Search, ArrowRight, UserCheck } from "lucide-react";
-import { ambilDaftarMahasiswaAdmin } from "@/server/queries/mahasiswa";
+import { ambilDaftarMahasiswaAdmin, ambilPeriodeUntukAdminMahasiswa } from "@/server/queries/mahasiswa";
 import { Lencana } from "@/components/ui/lencana";
 import { FormBuatMahasiswa } from "./form-buat-mahasiswa";
+import { ModalImporMonitoring } from "./modal-impor-monitoring";
 
 const NADA_STATUS_AKADEMIK: Record<string, "sukses" | "peringatan" | "bahaya" | "info" | "netral"> = {
   AKTIF: "sukses",
@@ -17,7 +18,10 @@ export default async function HalamanMahasiswaAdmin({
   searchParams: Promise<{ cari?: string }>;
 }) {
   const params = await searchParams;
-  const mahasiswaList = await ambilDaftarMahasiswaAdmin({ cari: params.cari });
+  const [mahasiswaList, periodeList] = await Promise.all([
+    ambilDaftarMahasiswaAdmin({ cari: params.cari }),
+    ambilPeriodeUntukAdminMahasiswa(),
+  ]);
 
   return (
     <main className="mx-auto max-w-[1550px] w-full px-5 py-6 sm:px-8 sm:py-7">
@@ -68,6 +72,7 @@ export default async function HalamanMahasiswaAdmin({
           <span className="hidden text-xs text-muted lg:inline">
             Total <strong>{mahasiswaList.length}</strong> mahasiswa
           </span>
+          <ModalImporMonitoring periodeList={periodeList} />
           <FormBuatMahasiswa />
         </div>
       </div>

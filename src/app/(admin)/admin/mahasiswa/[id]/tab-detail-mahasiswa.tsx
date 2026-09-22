@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { ClipboardList, Wallet, HandCoins } from "lucide-react";
+import { ClipboardList, Wallet, HandCoins, LineChart } from "lucide-react";
 
 interface TabDetailMahasiswaProps {
   laporanNode: ReactNode;
   tagihanNode: ReactNode;
   bantuanNode: ReactNode;
+  monitoringNode: ReactNode;
   jumlahTagihan: number;
   jumlahBantuan: number;
 }
@@ -15,16 +16,23 @@ export function TabDetailMahasiswa({
   laporanNode,
   tagihanNode,
   bantuanNode,
+  monitoringNode,
   jumlahTagihan,
   jumlahBantuan,
 }: TabDetailMahasiswaProps) {
-  const [tabAktif, setTabAktif] = useState<"laporan" | "tagihan" | "bantuan">("laporan");
+  const [tabAktif, setTabAktif] = useState<"laporan" | "tagihan" | "bantuan" | "monitoring">("laporan");
 
   const tabs = [
     {
       id: "laporan" as const,
       label: "Laporan Perkembangan",
       ikon: ClipboardList,
+      badge: null,
+    },
+    {
+      id: "monitoring" as const,
+      label: "Monitoring Akademik",
+      ikon: LineChart,
       badge: null,
     },
     {
@@ -80,6 +88,7 @@ export function TabDetailMahasiswa({
       {/* Tab Contents */}
       <div>
         {tabAktif === "laporan" && <div>{laporanNode}</div>}
+        {tabAktif === "monitoring" && <div>{monitoringNode}</div>}
         {tabAktif === "tagihan" && <div>{tagihanNode}</div>}
         {tabAktif === "bantuan" && <div>{bantuanNode}</div>}
       </div>

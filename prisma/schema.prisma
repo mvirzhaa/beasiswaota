@@ -213,14 +213,15 @@ model Periode {
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
 
-  pengajuan   Pengajuan[]
-  tagihan     Tagihan[]
-  jadwalBayar JadwalBayar[]
-  alokasi     Alokasi[]
-  ledger      DanaLedger[]
-  relasiAsuh  RelasiAsuh[]
-  monitoring  MonitoringAkademik[]
-  laporan     LaporanPerkembangan[]
+  pengajuan       Pengajuan[]
+  tagihan         Tagihan[]
+  jadwalBayar     JadwalBayar[]
+  alokasi         Alokasi[]
+  ledger          DanaLedger[]
+  relasiAsuh      RelasiAsuh[]
+  monitoring      MonitoringAkademik[]
+  laporan         LaporanPerkembangan[]
+  pengeluaranLain PengeluaranLain[]
 
   @@index([status])
   @@map("periode")
@@ -518,22 +519,46 @@ model AlokasiSumber {
 }
 
 model DanaLedger {
-  id           String     @id @default(cuid())
-  periodeId    String     @map("periode_id")
-  tipe         TipeLedger
-  nominal      BigInt
-  saldoSetelah BigInt     @map("saldo_setelah") // running balance untuk audit
-  transaksiId  String?    @map("transaksi_id")
-  alokasiId    String?    @map("alokasi_id")
-  keterangan   String
-  createdAt    DateTime   @default(now()) @map("created_at")
+  id                String     @id @default(cuid())
+  periodeId         String     @map("periode_id")
+  tipe              TipeLedger
+  nominal           BigInt
+  saldoSetelah      BigInt     @map("saldo_setelah") // running balance untuk audit
+  transaksiId       String?    @map("transaksi_id")
+  alokasiId         String?    @map("alokasi_id")
+  pengeluaranLainId String?    @map("pengeluaran_lain_id")
+  keterangan        String
+  createdAt         DateTime   @default(now()) @map("created_at")
 
-  periode   Periode    @relation(fields: [periodeId], references: [id])
-  transaksi Transaksi? @relation(fields: [transaksiId], references: [id])
-  alokasi   Alokasi?   @relation(fields: [alokasiId], references: [id])
+  periode         Periode          @relation(fields: [periodeId], references: [id])
+  transaksi       Transaksi?       @relation(fields: [transaksiId], references: [id])
+  alokasi         Alokasi?         @relation(fields: [alokasiId], references: [id])
+  pengeluaranLain PengeluaranLain? @relation(fields: [pengeluaranLainId], references: [id])
 
   @@index([periodeId, createdAt])
   @@map("dana_ledger")
+}
+
+// ----------------------------------------------------------------------------
+// DEBIT dari pool yang BUKAN penyaluran ke tagihan mahasiswa (aturan keras #2:
+// ini bukan Alokasi, jadi sengaja dipisah tabelnya, bukan dipaksakan lewat
+// Alokasi/AlokasiSumber). Dipakai untuk dana yang benar-benar terpakai di
+// luar sistem, mis. biaya operasional atau refund ke donatur — sesuai
+// keputusan produk, langsung tercatat begitu admin submit (tanpa approval
+// kedua), tapi tetap masuk AuditLog dan DanaLedger supaya tertelusuri.
+model PengeluaranLain {
+  id            String   @id @default(cuid())
+  periodeId     String   @map("periode_id")
+  nominal       BigInt
+  keterangan    String
+  dicatatOlehId String   @map("dicatat_oleh_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  periode Periode      @relation(fields: [periodeId], references: [id])
+  ledger  DanaLedger[]
+
+  @@index([periodeId, createdAt])
+  @@map("pengeluaran_lain")
 }
 
 // ============================================================================

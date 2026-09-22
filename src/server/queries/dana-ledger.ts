@@ -29,6 +29,7 @@ export async function ambilMutasiDanaTerbaru(limit = 30): Promise<BarisMutasiDan
           tagihan: { select: { komponen: true, mahasiswa: { select: { nama: true } } } },
         },
       },
+      pengeluaranLain: { select: { keterangan: true } },
     },
   });
 
@@ -36,12 +37,14 @@ export async function ambilMutasiDanaTerbaru(limit = 30): Promise<BarisMutasiDan
     const pihak =
       b.tipe === "KREDIT"
         ? (b.transaksi?.ortuAsuh.atasNamaMunfiq || b.transaksi?.ortuAsuh.nama || "Donatur")
-        : (b.alokasi?.tagihan.mahasiswa.nama ?? "Mahasiswa");
+        : (b.alokasi?.tagihan.mahasiswa.nama ?? (b.pengeluaranLain ? "Di luar sistem" : "Mahasiswa"));
 
     const keterangan =
       b.tipe === "KREDIT"
         ? "Dana masuk terverifikasi"
-        : `Alokasi ${b.alokasi?.tagihan.komponen ?? "tagihan UKT"}`;
+        : b.alokasi
+          ? `Alokasi ${b.alokasi.tagihan.komponen}`
+          : (b.pengeluaranLain?.keterangan ?? "Pengeluaran di luar sistem");
 
     return {
       id: b.id,

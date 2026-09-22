@@ -6,6 +6,8 @@ import { prisma } from "@/lib/db";
 import { catatAudit } from "@/lib/audit";
 import { ambilMetaPermintaan } from "@/lib/request-meta";
 import { jalankanAlokasi, setujuiBatch, type RencanaAlokasi } from "@/lib/alokasi/engine";
+import { catatPengeluaranLainInti } from "@/server/actions/catat-pengeluaran-lain-inti";
+import { catatPengeluaranLainSchema } from "@/lib/pengeluaran-lain/schema";
 import type { HasilAksi } from "@/types/aksi";
 
 // JANGAN tulis ulang logika di src/lib/alokasi/engine.ts (lihat CLAUDE.md).
@@ -152,4 +154,43 @@ export async function setujuiBatchAlokasi(batchId: string): Promise<HasilAksi> {
 
   revalidatePath(`/admin/keuangan/alokasi/${batchId}`);
   return { sukses: true, pesan: "Batch disetujui, tagihan dan ledger diperbarui." };
+}
+
+// Dana yang terpakai DI LUAR sistem alokasi (mis. biaya operasional, refund
+// donatur) — bukan penyaluran ke tagihan mahasiswa, jadi sengaja tidak lewat
+// jalankanAlokasi()/setujuiBatch() (CLAUDE.md aturan keras #2). Sesuai
+// keputusan produk, langsung tercatat begitu admin submit tanpa approval
+// kedua, tapi tetap wajib AuditLog + DanaLedger (aturan keras #6).
+export async function catatPengeluaranLain(formData: FormData): Promise<HasilAksi> {
+  const admin = await sesiAdmin();
+
+  const parsed = catatPengeluaranLainSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) {
+    return { sukses: false, pesan: parsed.error.issues[0]?.message ?? "Input tidak valid." };
+  }
+
+  const periode = await prisma.periode.findUnique({ where: { id: parsed.data.periodeId } });
+  if (!periode) {
+    return { sukses: false, pesan: "Periode tidak ditemukan." };
+  }
+  if (periode.status === "SELESAI") {
+    return { sukses: false, pesan: "Periode ini sudah terkunci, tidak bisa dicatat pengeluaran baru." };
+  }
+
+  const { ipAddress, userAgent } = await ambilMetaPermintaan();
+  const hasil = await catatPengeluaranLainInti(prisma, {
+    periodeId: parsed.data.periodeId,
+    nominal: parsed.data.nominal,
+    keterangan: parsed.data.keterangan,
+    dicatatOlehId: admin.id,
+    ipAddress,
+    userAgent,
+  });
+
+  if (!hasil.sukses) {
+    return { sukses: false, pesan: hasil.pesan };
+  }
+
+  revalidatePath("/admin/keuangan/alokasi/simulasi");
+  return { sukses: true, pesan: "Pengeluaran tercatat dan saldo pool diperbarui." };
 }
