@@ -1,43 +1,9 @@
 import { prisma } from "@/lib/db";
 import type { UserSesi } from "@/lib/rbac-core";
-import { ambilOrtuAsuhIdUser } from "./komitmen";
 
-/** Jadwal bayar milik donatur yang masih bisa diunggahkan bukti transfernya. */
-export async function ambilJadwalBayarTerbukaOrtuAsuh(userId: string) {
-  const ortuAsuhId = await ambilOrtuAsuhIdUser(userId);
-  return prisma.jadwalBayar.findMany({
-    where: {
-      komitmen: { ortuAsuhId },
-      status: { in: ["BELUM_JATUH_TEMPO", "JATUH_TEMPO", "TERLAMBAT"] },
-    },
-    include: { periode: { select: { kode: true } } },
-    orderBy: { jatuhTempo: "asc" },
-  });
-}
-
-/** Riwayat transaksi milik donatur yang sedang login — untuk /donatur/pembayaran. */
-export async function ambilRiwayatTransaksiOrtuAsuh(userId: string) {
-  const ortuAsuhId = await ambilOrtuAsuhIdUser(userId);
-  return prisma.transaksi.findMany({
-    where: { ortuAsuhId },
-    include: {
-      jadwalBayar: { include: { periode: { select: { kode: true } } } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-}
-
-/** Satu jadwal bayar milik donatur yang sedang login — cek kepemilikan sebelum unggah bukti. */
-export async function ambilJadwalBayarMilikOrtuAsuh(jadwalBayarId: string, userId: string) {
-  const ortuAsuhId = await ambilOrtuAsuhIdUser(userId);
-  const jadwal = await prisma.jadwalBayar.findUnique({
-    where: { id: jadwalBayarId },
-    include: { komitmen: true },
-  });
-  if (!jadwal || jadwal.komitmen.ortuAsuhId !== ortuAsuhId) {
-    return null;
-  }
-  return jadwal;
+/** Jumlah transaksi menunggu verifikasi — dipakai badge sidebar. */
+export async function ambilJumlahTransaksiMenunggu(): Promise<number> {
+  return prisma.transaksi.count({ where: { status: "MENUNGGU_VERIFIKASI" } });
 }
 
 /** Daftar transaksi untuk panel admin, dengan filter status opsional. */
@@ -70,27 +36,21 @@ export interface AksesBuktiTransaksi {
 }
 
 /**
- * Titik IDOR yang setara dengan cekAksesBerkas (CLAUDE.md aturan keras #7):
- * hanya ADMIN dan donatur pemilik transaksi yang boleh melihat bukti
- * transfernya.
+ * Titik IDOR yang setara dengan cekAksesBerkas (CLAUDE.md aturan keras #7).
+ * Donatur tidak punya akun/login — satu-satunya yang pernah punya sesi di
+ * sistem ini adalah ADMIN, jadi cukup cek role di sini.
  */
 export async function cekAksesBuktiTransaksi(
   transaksiId: string,
   user: UserSesi,
 ): Promise<AksesBuktiTransaksi | null> {
+  if (user.role !== "ADMIN") return null;
+
   const transaksi = await prisma.transaksi.findUnique({
     where: { id: transaksiId },
-    select: {
-      id: true,
-      buktiObjectKey: true,
-      ortuAsuh: { select: { userId: true } },
-    },
+    select: { id: true, buktiObjectKey: true },
   });
-
   if (!transaksi) return null;
-
-  const pemilik = user.role === "ADMIN" || transaksi.ortuAsuh.userId === user.id;
-  if (!pemilik) return null;
 
   return { transaksi: { id: transaksi.id, buktiObjectKey: transaksi.buktiObjectKey } };
 }

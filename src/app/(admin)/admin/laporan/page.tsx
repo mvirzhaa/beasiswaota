@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ambilDaftarLaporanAdmin } from "@/server/queries/laporan-perkembangan";
 import { Lencana } from "@/components/ui/lencana";
 import { Tombol } from "@/components/ui/tombol";
-import { ClipboardList, Filter, ArrowRight } from "lucide-react";
+import { ClipboardList, ArrowRight, CheckCircle2 } from "lucide-react";
 
 type StatusFilter = "DRAFT" | "DIKIRIM" | "PERLU_REVISI" | "DIVERIFIKASI";
 const DAFTAR_STATUS: StatusFilter[] = ["DRAFT", "DIKIRIM", "PERLU_REVISI", "DIVERIFIKASI"];
@@ -34,7 +34,7 @@ export default async function HalamanLaporanAdmin({
   const daftar = await ambilDaftarLaporanAdmin({ status });
 
   return (
-    <main className="mx-auto mt-6 mb-12 max-w-6xl px-4 sm:px-6">
+    <main className="mx-auto max-w-[1550px] w-full px-5 py-6 sm:px-8 sm:py-7">
       {/* Header Halaman */}
       <div className="flex flex-col gap-1 border-b border-border pb-5">
         <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-accent-dark uppercase">
@@ -44,76 +44,72 @@ export default async function HalamanLaporanAdmin({
         <h1 className="font-heading text-2xl font-bold text-ink sm:text-3xl">
           Review Laporan Perkembangan Mahasiswa
         </h1>
-        <p className="text-sm text-muted">
+        <p className="mt-0.5 text-xs text-muted sm:text-sm">
           Pemeriksaan laporan capaian IPK dan berkas scan KHS per semester sebelum diverifikasi.
         </p>
       </div>
 
-      {/* Filter Status */}
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-4 sm:p-5 shadow-xs">
-        <form className="flex flex-wrap items-center gap-3 text-xs">
-          <span className="font-semibold text-ink flex items-center gap-1.5">
-            <Filter className="h-3.5 w-3.5 text-primary" />
-            <span>Status Laporan:</span>
-          </span>
-          <select
-            name="status"
-            defaultValue={status}
-            className="rounded-xl border border-border bg-surface-alt px-3 py-1.5 text-xs text-ink font-medium transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-          >
-            {DAFTAR_STATUS.map((s) => (
-              <option key={s} value={s}>
-                {LABEL_STATUS_LAPORAN[s] ?? s}
-              </option>
-            ))}
-          </select>
-          <Tombol type="submit" variant="primer" ukuran="sm">
-            Terapkan Filter
-          </Tombol>
-        </form>
+      {/* Filter Tabs Toolbar */}
+      <div className="mt-6 flex flex-wrap items-center gap-2 border-b border-border pb-4">
+        {DAFTAR_STATUS.map((s) => {
+          const aktif = status === s;
+          return (
+            <Link
+              key={s}
+              href={`/admin/laporan?status=${s}`}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
+                aktif
+                  ? "bg-primary text-white shadow-xs"
+                  : "bg-surface text-muted border border-border hover:bg-surface-alt hover:text-ink"
+              }`}
+            >
+              <span>{LABEL_STATUS_LAPORAN[s]}</span>
+            </Link>
+          );
+        })}
       </div>
 
       {/* Tabel Laporan */}
-      <div className="mt-6 rounded-2xl border border-border bg-surface p-6 shadow-xs">
-        <div className="flex items-center justify-between border-b border-border pb-4">
+      <div className="mt-4 rounded-2xl border border-border bg-surface shadow-2xs overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border px-5 py-3.5 bg-surface">
           <div>
-            <h2 className="font-heading text-lg font-bold text-ink">Daftar Laporan Perkembangan</h2>
-            <p className="text-xs text-muted">Ditemukan {daftar.length} berkas laporan</p>
+            <h2 className="font-heading text-sm font-bold text-ink">Daftar Laporan Perkembangan</h2>
+            <p className="text-[11px] text-muted">Menampilkan {daftar.length} berkas ({LABEL_STATUS_LAPORAN[status]})</p>
           </div>
         </div>
 
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-border/80 text-xs font-semibold uppercase tracking-wider text-muted">
-                <th className="pb-3 pl-2">Mahasiswa</th>
-                <th className="pb-3">Periode</th>
-                <th className="pb-3">Batas Kirim</th>
-                <th className="pb-3">Status</th>
-                <th className="pb-3 pr-2 text-right">Aksi</th>
+        <div className="max-h-[600px] overflow-y-auto overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="sticky top-0 z-10 bg-surface-alt/90 backdrop-blur-xs">
+              <tr className="border-b border-border text-[11px] font-bold uppercase tracking-wider text-muted">
+                <th className="py-3 pl-5 pr-4">Mahasiswa</th>
+                <th className="py-3 px-4">Periode</th>
+                <th className="py-3 px-4">Batas Kirim</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 pl-4 pr-5 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
               {daftar.map((l) => (
-                <tr key={l.id} className="transition-colors hover:bg-surface-alt/40">
-                  <td className="py-3.5 pl-2">
+                <tr key={l.id} className="transition-colors hover:bg-surface-alt/50">
+                  <td className="py-3 pl-5 pr-4">
                     <p className="font-bold text-ink">{l.mahasiswa.nama}</p>
-                    <p className="text-xs text-muted font-mono">{l.mahasiswa.nim}</p>
+                    <p className="text-[11px] text-muted font-mono">{l.mahasiswa.nim}</p>
                   </td>
-                  <td className="py-3.5 font-medium text-ink">{l.periode.kode}</td>
-                  <td className="py-3.5 text-xs text-muted font-mono">
+                  <td className="py-3 px-4 font-semibold text-ink">{l.periode.kode}</td>
+                  <td className="py-3 px-4 text-muted font-mono">
                     {l.batasKirim.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
                   </td>
-                  <td className="py-3.5">
+                  <td className="py-3 px-4">
                     <Lencana nada={NADA_STATUS_LAPORAN[l.status] ?? "netral"}>
                       {LABEL_STATUS_LAPORAN[l.status] ?? l.status}
                     </Lencana>
                   </td>
-                  <td className="py-3.5 pr-2 text-right">
+                  <td className="py-3 pl-4 pr-5 text-right">
                     <Link href={`/admin/laporan/${l.id}`}>
-                      <Tombol variant="garis" ukuran="sm" className="font-semibold">
-                        <span>Review Laporan</span>
-                        <ArrowRight className="h-3.5 w-3.5" />
+                      <Tombol variant="garis" ukuran="sm" className="font-semibold text-xs">
+                        <span>Review</span>
+                        <ArrowRight className="h-3 w-3" />
                       </Tombol>
                     </Link>
                   </td>
@@ -121,8 +117,10 @@ export default async function HalamanLaporanAdmin({
               ))}
               {daftar.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-xs text-muted">
-                    Tidak ada laporan pada status ini.
+                  <td colSpan={5} className="py-12 text-center text-muted">
+                    <CheckCircle2 className="mx-auto h-8 w-8 text-muted/40 mb-2" />
+                    <p className="font-semibold text-ink">Tidak ada laporan pada status ini</p>
+                    <p className="text-[11px] text-muted">Semua berkas laporan telah ditinjau.</p>
                   </td>
                 </tr>
               )}

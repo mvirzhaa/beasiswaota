@@ -1,9 +1,8 @@
 import type { Role } from "@prisma/client";
 
-// Peta route group -> role yang diizinkan. Dipakai middleware.ts.
+// Peta route group -> role yang diizinkan. Dipakai src/proxy.ts (middleware
+// Edge Next.js 16). Hanya /admin karena mahasiswa/donatur tidak punya akun.
 export const PETA_ROLE_ROUTE: Array<{ prefix: string; role: Role }> = [
-  { prefix: "/mahasiswa", role: "MAHASISWA" },
-  { prefix: "/donatur", role: "ORTU_ASUH" },
   { prefix: "/admin", role: "ADMIN" },
 ];
 

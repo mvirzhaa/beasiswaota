@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import type { HasilAksi } from "@/types/aksi";
+import { Tombol } from "@/components/ui/tombol";
 import { setFlagNamaPenuh } from "./actions";
 
 const STATE_AWAL: HasilAksi = { sukses: false, pesan: "" };
@@ -13,23 +14,26 @@ export function FormFlagNamaPenuh({ aktifSaatIni }: { aktifSaatIni: boolean }) {
   );
 
   return (
-    <form action={formAction} className="mt-3 flex flex-col gap-2">
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" name="aktif" defaultChecked={aktifSaatIni} />
-        Tampilkan nama penuh mahasiswa
+    <form action={formAction} className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-border/80 bg-surface-alt/30 p-3.5">
+      <label className="flex items-center gap-3 text-xs sm:text-sm font-semibold text-ink cursor-pointer select-none">
+        <input
+          type="checkbox"
+          name="aktif"
+          defaultChecked={aktifSaatIni}
+          className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary"
+        />
+        <span>Tampilkan nama penuh mahasiswa (bukan inisial)</span>
       </label>
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-fit rounded-lg border border-border px-3 py-1 text-sm disabled:opacity-50"
-      >
-        {pending ? "Menyimpan..." : "Simpan"}
-      </button>
-      {state.pesan && (
-        <span className={`text-sm ${state.sukses ? "text-green-700" : "text-red-600"}`}>
-          {state.pesan}
-        </span>
-      )}
+      <div className="flex items-center gap-3 shrink-0">
+        <Tombol type="submit" disabled={pending} variant="primer" ukuran="sm" className="w-fit font-semibold">
+          {pending ? "Menyimpan..." : "Simpan Pengaturan"}
+        </Tombol>
+        {state.pesan && (
+          <span className={`text-xs font-medium ${state.sukses ? "text-green-700" : "text-red-600"}`}>
+            {state.pesan}
+          </span>
+        )}
+      </div>
     </form>
   );
 }

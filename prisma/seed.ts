@@ -8,15 +8,21 @@ import {
   AMBANG_RISIKO_DEFAULT,
   KUNCI_PENGATURAN_AMBANG_RISIKO,
 } from "../src/lib/monitoring/risiko.schema";
+import {
+  DEFAULT_PENGATURAN_LANDING,
+  KUNCI_PENGATURAN_LANDING,
+} from "../src/server/queries/pengaturan-landing";
 
 const prisma = new PrismaClient();
 
-// Password default untuk semua akun seed, HANYA untuk pengembangan lokal.
+// Password default untuk akun admin seed, HANYA untuk pengembangan lokal.
 const PASSWORD_SEED = "password123";
 
 async function main() {
   const passwordHash = await argon2.hash(PASSWORD_SEED);
 
+  // Hanya admin yang punya akun/login (lihat CLAUDE.md). Mahasiswa dan
+  // orangtua asuh murni data — tidak ada User untuk mereka.
   const admin = await prisma.user.upsert({
     where: { email: "admin@uika-bogor.ac.id" },
     update: {},
@@ -30,7 +36,6 @@ async function main() {
 
   const dataMahasiswa = [
     {
-      email: "mahasiswa1@uika-bogor.ac.id",
       nim: "1200001",
       nama: "Ahmad Fauzi",
       fakultas: "Fakultas Teknik",
@@ -40,7 +45,6 @@ async function main() {
       noHp: "081200000001",
     },
     {
-      email: "mahasiswa2@uika-bogor.ac.id",
       nim: "1200002",
       nama: "Siti Nurhaliza",
       fakultas: "Fakultas Ekonomi",
@@ -50,7 +54,6 @@ async function main() {
       noHp: "081200000002",
     },
     {
-      email: "mahasiswa3@uika-bogor.ac.id",
       nim: "1200003",
       nama: "Budi Santoso",
       fakultas: "Fakultas Pertanian",
@@ -62,26 +65,10 @@ async function main() {
   ];
 
   for (const mhs of dataMahasiswa) {
-    await prisma.user.upsert({
-      where: { email: mhs.email },
+    await prisma.mahasiswa.upsert({
+      where: { nim: mhs.nim },
       update: {},
-      create: {
-        email: mhs.email,
-        passwordHash,
-        role: "MAHASISWA",
-        status: "AKTIF",
-        mahasiswa: {
-          create: {
-            nim: mhs.nim,
-            nama: mhs.nama,
-            fakultas: mhs.fakultas,
-            prodi: mhs.prodi,
-            angkatan: mhs.angkatan,
-            semesterBerjalan: mhs.semesterBerjalan,
-            noHp: mhs.noHp,
-          },
-        },
-      },
+      create: mhs,
     });
   }
 
@@ -102,22 +89,15 @@ async function main() {
   ];
 
   for (const oa of dataOrtuAsuh) {
-    await prisma.user.upsert({
-      where: { email: oa.email },
-      update: {},
-      create: {
+    const sudahAda = await prisma.ortuAsuh.findFirst({ where: { email: oa.email } });
+    if (sudahAda) continue;
+    await prisma.ortuAsuh.create({
+      data: {
         email: oa.email,
-        passwordHash,
-        role: "ORTU_ASUH",
-        status: "AKTIF",
-        ortuAsuh: {
-          create: {
-            nama: oa.nama,
-            tipe: oa.tipe,
-            nip: "nip" in oa ? oa.nip : undefined,
-            noHp: oa.noHp,
-          },
-        },
+        nama: oa.nama,
+        tipe: oa.tipe,
+        nip: "nip" in oa ? oa.nip : undefined,
+        noHp: oa.noHp,
       },
     });
   }
@@ -154,13 +134,22 @@ async function main() {
     },
   });
 
+  await prisma.pengaturan.upsert({
+    where: { kunci: KUNCI_PENGATURAN_LANDING },
+    update: {},
+    create: {
+      kunci: KUNCI_PENGATURAN_LANDING,
+      nilai: DEFAULT_PENGATURAN_LANDING,
+    },
+  });
+
   console.log("Seed selesai:");
   console.log(`  Admin      : ${admin.email}`);
-  console.log(`  Mahasiswa  : ${dataMahasiswa.length} akun`);
-  console.log(`  Ortu asuh  : ${dataOrtuAsuh.length} akun`);
+  console.log(`  Mahasiswa  : ${dataMahasiswa.length} data (tanpa akun login)`);
+  console.log(`  Ortu asuh  : ${dataOrtuAsuh.length} data (tanpa akun login)`);
   console.log(`  Periode    : ${periode.kode} (${periode.status})`);
   console.log(`  Pengaturan : ${KUNCI_PENGATURAN_BOBOT_SKORING} (bobot skoring default)`);
-  console.log(`  Password semua akun seed: ${PASSWORD_SEED}`);
+  console.log(`  Password admin: ${PASSWORD_SEED}`);
 }
 
 main()

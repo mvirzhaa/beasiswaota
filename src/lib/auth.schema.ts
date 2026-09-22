@@ -3,56 +3,11 @@ import { z } from "zod";
 export const loginSchema = z.object({
   email: z.email("Email tidak valid"),
   password: z.string().min(1, "Kata sandi wajib diisi"),
-});
-
-const passwordSchema = z
-  .string()
-  .min(8, "Kata sandi minimal 8 karakter");
-
-export const registerMahasiswaSchema = z.object({
-  email: z.email("Email tidak valid"),
-  password: passwordSchema,
-  nim: z.string().min(1, "NIM wajib diisi"),
-  nama: z.string().min(1, "Nama wajib diisi"),
-  fakultas: z.string().min(1, "Fakultas wajib diisi"),
-  prodi: z.string().min(1, "Program studi wajib diisi"),
-  angkatan: z.coerce.number().int().min(2000).max(2100),
-  semesterBerjalan: z.coerce.number().int().min(1).max(14),
-  noHp: z.string().min(8, "Nomor HP tidak valid"),
-  alamat: z.string().optional(),
-});
-
-export const tipeOrtuAsuhSchema = z.enum([
-  "INDIVIDU",
-  "DOSEN",
-  "TENAGA_KEPENDIDIKAN",
-  "ALUMNI",
-  "INSTANSI",
-]);
-
-export const registerOrtuAsuhSchema = z.object({
-  email: z.email("Email tidak valid"),
-  password: passwordSchema,
-  nama: z.string().min(1, "Nama wajib diisi"),
-  tipe: tipeOrtuAsuhSchema,
-  instansi: z.string().optional(),
-  noHp: z.string().min(8, "Nomor HP tidak valid"),
-  alamat: z.string().min(1, "Kota wajib diisi"),
-  atasNamaMunfiq: z.string().optional(),
-});
-
-// Admin mendaftarkan mahasiswa (mis. camaba) langsung — semua field sama
-// dengan pendaftaran mandiri KECUALI password, karena sistem yang
-// membuatkan password sementara dan mengirimkannya lewat email.
-export const daftarkanMahasiswaAdminSchema = registerMahasiswaSchema.omit({
-  password: true,
-});
-
-export const tolakAkunSchema = z.object({
-  alasan: z.string().min(5, "Alasan wajib diisi (minimal 5 karakter)"),
+  // Ditentukan oleh server action pemanggil (bukan dari input form),
+  // memisahkan jalur login publik (/login) dari jalur rahasia admin.
+  // Default "publik" = paling ketat: role ADMIN otomatis ditolak kalau
+  // field ini entah bagaimana tidak terkirim.
+  mode: z.enum(["publik", "admin"]).default("publik"),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
-export type RegisterMahasiswaInput = z.infer<typeof registerMahasiswaSchema>;
-export type RegisterOrtuAsuhInput = z.infer<typeof registerOrtuAsuhSchema>;
-export type DaftarkanMahasiswaAdminInput = z.infer<typeof daftarkanMahasiswaAdminSchema>;

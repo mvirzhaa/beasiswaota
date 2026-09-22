@@ -24,9 +24,9 @@ datasource db {
 // ENUM
 // ============================================================================
 
+// Hanya admin yang pernah punya akun/login di sistem ini (lihat CLAUDE.md).
+// Mahasiswa dan orangtua asuh murni data yang dikelola admin, bukan pengguna.
 enum Role {
-  MAHASISWA
-  ORTU_ASUH
   ADMIN
 }
 
@@ -78,6 +78,11 @@ enum TipeOrtuAsuh {
   TENAGA_KEPENDIDIKAN
   ALUMNI
   INSTANSI
+}
+
+enum KategoriDonatur {
+  PERORANGAN
+  LEMBAGA
 }
 
 enum SkemaBantuan {
@@ -164,12 +169,6 @@ enum StatusLaporan {
   DIVERIFIKASI
 }
 
-enum StatusPesan {
-  MENUNGGU_MODERASI
-  DITERUSKAN
-  DITOLAK
-}
-
 enum TingkatRisiko {
   AMAN
   PERHATIAN // IPK turun atau di bawah ambang
@@ -191,11 +190,8 @@ model User {
   createdAt       DateTime   @default(now()) @map("created_at")
   updatedAt       DateTime   @updatedAt @map("updated_at")
 
-  mahasiswa   Mahasiswa?
-  ortuAsuh    OrtuAsuh?
-  auditLogs   AuditLog[]
-  notifikasi  Notifikasi[]
-  pesanDikirim PesanBinaan[] @relation("PesanDikirim")
+  auditLogs  AuditLog[]
+  notifikasi Notifikasi[]
 
   @@index([role, status])
   @@map("users")
@@ -234,9 +230,11 @@ model Periode {
 // SISI MAHASISWA
 // ============================================================================
 
+// Mahasiswa TIDAK punya akun/login — murni data yang diinput & dikelola
+// admin (lihat CLAUDE.md). noHp/alamat dipertahankan sebagai info kontak
+// untuk keperluan admin, bukan untuk otentikasi.
 model Mahasiswa {
   id               String   @id @default(cuid())
-  userId           String   @unique @map("user_id")
   nim              String   @unique
   nama             String
   fakultas         String
@@ -250,12 +248,13 @@ model Mahasiswa {
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
-  user       User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pengajuan  Pengajuan[]
-  tagihan    Tagihan[]
-  relasiAsuh RelasiAsuh[]
-  monitoring MonitoringAkademik[]
-  laporan    LaporanPerkembangan[]
+  pengajuan      Pengajuan[]
+  tagihan        Tagihan[]
+  relasiAsuh     RelasiAsuh[]
+  monitoring     MonitoringAkademik[]
+  laporan        LaporanPerkembangan[]
+  komitmenTarget Komitmen[]
+  notifikasi     Notifikasi[]
 
   @@index([fakultas, prodi])
   @@index([statusAkademik])
@@ -263,22 +262,22 @@ model Mahasiswa {
 }
 
 model Pengajuan {
-  id              String          @id @default(cuid())
-  mahasiswaId     String          @map("mahasiswa_id")
-  periodeId       String          @map("periode_id")
-  nominalKebutuhan BigInt         @map("nominal_kebutuhan")
-  penghasilanOrtu BigInt          @map("penghasilan_ortu")
-  jmlTanggungan   Int             @map("jml_tanggungan")
-  statusOrtu      String          @map("status_ortu") // LENGKAP|YATIM|PIATU|YATIM_PIATU
-  alasan          String          @db.Text
-  skor            Decimal?        @db.Decimal(6, 2)
-  skorDetail      Json?           @map("skor_detail") // rincian bobot tiap kriteria
-  status          StatusPengajuan @default(DRAFT)
-  catatanVerifikator String?      @map("catatan_verifikator") @db.Text
-  verifiedById    String?         @map("verified_by_id")
-  verifiedAt      DateTime?       @map("verified_at")
-  createdAt       DateTime        @default(now()) @map("created_at")
-  updatedAt       DateTime        @updatedAt @map("updated_at")
+  id                 String          @id @default(cuid())
+  mahasiswaId        String          @map("mahasiswa_id")
+  periodeId          String          @map("periode_id")
+  nominalKebutuhan   BigInt          @map("nominal_kebutuhan")
+  penghasilanOrtu    BigInt          @map("penghasilan_ortu")
+  jmlTanggungan      Int             @map("jml_tanggungan")
+  statusOrtu         String          @map("status_ortu") // LENGKAP|YATIM|PIATU|YATIM_PIATU
+  alasan             String          @db.Text
+  skor               Decimal?        @db.Decimal(6, 2)
+  skorDetail         Json?           @map("skor_detail") // rincian bobot tiap kriteria
+  status             StatusPengajuan @default(DRAFT)
+  catatanVerifikator String?         @map("catatan_verifikator") @db.Text
+  verifiedById       String?         @map("verified_by_id")
+  verifiedAt         DateTime?       @map("verified_at")
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
 
   mahasiswa Mahasiswa         @relation(fields: [mahasiswaId], references: [id], onDelete: Cascade)
   periode   Periode           @relation(fields: [periodeId], references: [id])
@@ -337,26 +336,40 @@ model Tagihan {
 // SISI ORANGTUA ASUH
 // ============================================================================
 
+// Orangtua asuh TIDAK punya akun/login — mendaftar sekali lewat form publik
+// (lihat CLAUDE.md) dan mengakses laporannya lewat kodeAkses (dicantumkan di
+// notifikasi WA), bukan email+password.
 model OrtuAsuh {
-  id             String       @id @default(cuid())
-  userId         String       @unique @map("user_id")
+  id             String          @id @default(cuid())
   nama           String
   tipe           TipeOrtuAsuh
   instansi       String?
   nip            String? // diisi bila dosen/tendik, dipakai untuk potong gaji
-  noHp           String       @map("no_hp")
+  noHp           String          @map("no_hp")
+  email          String? // opsional, kanal pelengkap (bukan untuk login)
   alamat         String?
   // "Atas nama munfiq" dari form: donasi bisa diatasnamakan orang lain
   // (mis. orangtua yang sudah wafat). Ini yang tampil di laporan penyaluran.
-  atasNamaMunfiq String?      @map("atas_nama_munfiq")
-  anonim         Boolean      @default(false) // sembunyikan identitas dari mahasiswa
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
+  atasNamaMunfiq String?         @map("atas_nama_munfiq")
+  anonim         Boolean         @default(false) // sembunyikan identitas dari mahasiswa
+  // Cabang form pendaftaran donatur v2: Perorangan/Lembaga, lalu untuk
+  // Perorangan apakah Internal (civitas UIKA, boleh potong gaji) atau Eksternal.
+  kategori       KategoriDonatur @default(PERORANGAN) @map("kategori")
+  internal       Boolean?        @map("internal") // null untuk LEMBAGA
+  // Checklist "Atas Nama" vs "Paguyuban" di form: kalau paguyuban true,
+  // namaPaguyuban diisi (atasNamaMunfiq dipakai untuk cabang "Atas Nama").
+  paguyuban      Boolean         @default(false) @map("paguyuban")
+  namaPaguyuban  String?         @map("nama_paguyuban")
+  // Kode akses permanen ke /laporan/{kodeAkses} (publik, tanpa login) —
+  // dicantumkan di setiap notifikasi WA/email untuk donatur ini.
+  kodeAkses      String          @unique @default(cuid()) @map("kode_akses")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
 
-  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   komitmen   Komitmen[]
   transaksi  Transaksi[]
   relasiAsuh RelasiAsuh[]
+  notifikasi Notifikasi[]
 
   @@index([tipe])
   @@map("ortu_asuh")
@@ -375,18 +388,27 @@ model Komitmen {
   // Mesin alokasi mempertimbangkannya, tapi tidak menahan dana bila
   // tidak ada kandidat cocok. Ini mencegah dana mengendap.
   preferensi        Json?               @map("preferensi") // { fakultas?, prodi?, gender?, asalDaerah? }
+  // Earmark: kalau diisi, dana komitmen ini HANYA untuk mahasiswa ini
+  // (lihat src/lib/alokasi/engine.ts - dipartisi terpisah dari pool umum).
+  // Null = pool umum (perilaku default, tidak berubah).
+  targetMahasiswaId String?             @map("target_mahasiswa_id")
+  // Tanggal (1-31) donatur ingin diingatkan lewat WA tiap bulan.
+  // Hanya relevan untuk tipe BERULANG.
+  tanggalPengingat  Int?                @map("tanggal_pengingat")
   tglMulai          DateTime            @map("tgl_mulai")
   status            StatusKomitmen      @default(MENUNGGU_KONFIRMASI)
   catatan           String?             @db.Text
   createdAt         DateTime            @default(now()) @map("created_at")
   updatedAt         DateTime            @updatedAt @map("updated_at")
 
-  ortuAsuh    OrtuAsuh      @relation(fields: [ortuAsuhId], references: [id])
-  jadwalBayar JadwalBayar[]
-  transaksi   Transaksi[]
+  ortuAsuh        OrtuAsuh      @relation(fields: [ortuAsuhId], references: [id])
+  targetMahasiswa Mahasiswa?    @relation(fields: [targetMahasiswaId], references: [id])
+  jadwalBayar     JadwalBayar[]
+  transaksi       Transaksi[]
 
   @@index([status])
   @@index([ortuAsuhId, status])
+  @@index([targetMahasiswaId])
   @@map("komitmen")
 }
 
@@ -414,22 +436,22 @@ model JadwalBayar {
 }
 
 model Transaksi {
-  id            String              @id @default(cuid())
-  ortuAsuhId    String              @map("ortu_asuh_id")
+  id             String              @id @default(cuid())
+  ortuAsuhId     String              @map("ortu_asuh_id")
   // Nullable: donasi spontan tanpa komitmen formal tetap masuk pool.
-  komitmenId    String?             @map("komitmen_id")
-  jadwalBayarId String?             @map("jadwal_bayar_id")
-  nominal       BigInt
-  metode        MekanismePenyaluran
-  refEksternal  String?             @unique @map("ref_eksternal") // order_id gateway / no. batch payroll
-  buktiObjectKey String?            @map("bukti_object_key") // storage privat
-  status        StatusTransaksi     @default(MENUNGGU_VERIFIKASI)
-  tglBayar      DateTime            @map("tgl_bayar") // dipakai sebagai urutan FIFO
-  verifiedById  String?             @map("verified_by_id")
-  verifiedAt    DateTime?           @map("verified_at")
-  catatanTolak  String?             @map("catatan_tolak")
-  createdAt     DateTime            @default(now()) @map("created_at")
-  updatedAt     DateTime            @updatedAt @map("updated_at")
+  komitmenId     String?             @map("komitmen_id")
+  jadwalBayarId  String?             @map("jadwal_bayar_id")
+  nominal        BigInt
+  metode         MekanismePenyaluran
+  refEksternal   String?             @unique @map("ref_eksternal") // order_id gateway / no. batch payroll
+  buktiObjectKey String?             @map("bukti_object_key") // storage privat
+  status         StatusTransaksi     @default(MENUNGGU_VERIFIKASI)
+  tglBayar       DateTime            @map("tgl_bayar") // dipakai sebagai urutan FIFO
+  verifiedById   String?             @map("verified_by_id")
+  verifiedAt     DateTime?           @map("verified_at")
+  catatanTolak   String?             @map("catatan_tolak")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
 
   ortuAsuh    OrtuAsuh        @relation(fields: [ortuAsuhId], references: [id])
   komitmen    Komitmen?       @relation(fields: [komitmenId], references: [id])
@@ -448,20 +470,20 @@ model Transaksi {
 // ============================================================================
 
 model Alokasi {
-  id             String        @id @default(cuid())
-  periodeId      String        @map("periode_id")
-  tagihanId      String        @map("tagihan_id")
-  nominal        BigInt
-  status         StatusAlokasi @default(DRAFT)
-  metode         MetodeAlokasi @default(OTOMATIS)
-  batchId        String?       @map("batch_id") // menandai satu kali run mesin alokasi
-  alasanPrioritas Json?        @map("alasan_prioritas") // snapshot skor & ranking saat dialokasikan
-  dibuatOlehId   String?       @map("dibuat_oleh_id")
-  disetujuiOlehId String?      @map("disetujui_oleh_id")
-  disetujuiAt    DateTime?     @map("disetujui_at")
-  tglSalur       DateTime?     @map("tgl_salur")
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt @map("updated_at")
+  id              String        @id @default(cuid())
+  periodeId       String        @map("periode_id")
+  tagihanId       String        @map("tagihan_id")
+  nominal         BigInt
+  status          StatusAlokasi @default(DRAFT)
+  metode          MetodeAlokasi @default(OTOMATIS)
+  batchId         String?       @map("batch_id") // menandai satu kali run mesin alokasi
+  alasanPrioritas Json?         @map("alasan_prioritas") // snapshot skor & ranking saat dialokasikan
+  dibuatOlehId    String?       @map("dibuat_oleh_id")
+  disetujuiOlehId String?       @map("disetujui_oleh_id")
+  disetujuiAt     DateTime?     @map("disetujui_at")
+  tglSalur        DateTime?     @map("tgl_salur")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
 
   periode Periode         @relation(fields: [periodeId], references: [id])
   tagihan Tagihan         @relation(fields: [tagihanId], references: [id])
@@ -524,6 +546,10 @@ model DanaLedger {
 // belasan mahasiswa dan relasi asuhnya jadi tidak berarti.
 // ============================================================================
 
+// Relasi pembinaan murni tugas pemantauan yang ditugaskan admin — tidak ada
+// lagi syarat "persetujuan mahasiswa" (mahasiswa tak punya akun untuk
+// menyetujui) dan tidak ada lagi pesan langsung donatur<->mahasiswa
+// (lihat CLAUDE.md; model PesanBinaan sudah dihapus).
 model RelasiAsuh {
   id               String           @id @default(cuid())
   ortuAsuhId       String           @map("ortu_asuh_id")
@@ -532,20 +558,15 @@ model RelasiAsuh {
   tglMulai         DateTime         @map("tgl_mulai")
   tglSelesai       DateTime?        @map("tgl_selesai")
   status           StatusRelasiAsuh @default(AKTIF)
-  // Mahasiswa harus menyetujui datanya dipantau donatur.
-  // Selama false, donatur hanya melihat data agregat tanpa identitas.
-  persetujuanMahasiswa Boolean      @default(false) @map("persetujuan_mahasiswa")
-  persetujuanAt    DateTime?        @map("persetujuan_at")
   ditugaskanOlehId String           @map("ditugaskan_oleh_id")
   alasanBerakhir   String?          @map("alasan_berakhir")
   catatan          String?          @db.Text
   createdAt        DateTime         @default(now()) @map("created_at")
   updatedAt        DateTime         @updatedAt @map("updated_at")
 
-  ortuAsuh     OrtuAsuh      @relation(fields: [ortuAsuhId], references: [id])
-  mahasiswa    Mahasiswa     @relation(fields: [mahasiswaId], references: [id])
-  periodeMulai Periode       @relation(fields: [periodeMulaiId], references: [id])
-  pesan        PesanBinaan[]
+  ortuAsuh     OrtuAsuh  @relation(fields: [ortuAsuhId], references: [id])
+  mahasiswa    Mahasiswa @relation(fields: [mahasiswaId], references: [id])
+  periodeMulai Periode   @relation(fields: [periodeMulaiId], references: [id])
 
   @@unique([ortuAsuhId, mahasiswaId, periodeMulaiId])
   @@index([ortuAsuhId, status])
@@ -554,21 +575,21 @@ model RelasiAsuh {
 }
 
 model MonitoringAkademik {
-  id             String        @id @default(cuid())
-  mahasiswaId    String        @map("mahasiswa_id")
-  periodeId      String        @map("periode_id")
-  ipSemester     Decimal?      @map("ip_semester") @db.Decimal(3, 2)
-  ipk            Decimal?      @db.Decimal(3, 2)
-  sksSemester    Int?          @map("sks_semester")
-  sksKumulatif   Int?          @map("sks_kumulatif")
-  statusAkademik String        @map("status_akademik") // AKTIF|CUTI|LULUS|DO
-  persenKehadiran Decimal?     @map("persen_kehadiran") @db.Decimal(5, 2)
-  risiko         TingkatRisiko @default(AMAN)
-  catatanRisiko  String?       @map("catatan_risiko") @db.Text
-  sumberData     String        @default("MANUAL") @map("sumber_data") // SIAKAD|MANUAL
-  syncedAt       DateTime      @default(now()) @map("synced_at")
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt @map("updated_at")
+  id              String        @id @default(cuid())
+  mahasiswaId     String        @map("mahasiswa_id")
+  periodeId       String        @map("periode_id")
+  ipSemester      Decimal?      @map("ip_semester") @db.Decimal(3, 2)
+  ipk             Decimal?      @db.Decimal(3, 2)
+  sksSemester     Int?          @map("sks_semester")
+  sksKumulatif    Int?          @map("sks_kumulatif")
+  statusAkademik  String        @map("status_akademik") // AKTIF|CUTI|LULUS|DO
+  persenKehadiran Decimal?      @map("persen_kehadiran") @db.Decimal(5, 2)
+  risiko          TingkatRisiko @default(AMAN)
+  catatanRisiko   String?       @map("catatan_risiko") @db.Text
+  sumberData      String        @default("MANUAL") @map("sumber_data") // SIAKAD|MANUAL
+  syncedAt        DateTime      @default(now()) @map("synced_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
 
   mahasiswa Mahasiswa @relation(fields: [mahasiswaId], references: [id], onDelete: Cascade)
   periode   Periode   @relation(fields: [periodeId], references: [id])
@@ -579,23 +600,23 @@ model MonitoringAkademik {
 }
 
 model LaporanPerkembangan {
-  id            String        @id @default(cuid())
-  mahasiswaId   String        @map("mahasiswa_id")
-  periodeId     String        @map("periode_id")
-  isi           String        @db.Text
-  lampiranKey   String?       @map("lampiran_key") // scan KHS di bucket privat
-  status        StatusLaporan @default(DRAFT)
+  id                 String        @id @default(cuid())
+  mahasiswaId        String        @map("mahasiswa_id")
+  periodeId          String        @map("periode_id")
+  isi                String        @db.Text
+  lampiranKey        String?       @map("lampiran_key") // scan KHS di bucket privat
+  status             StatusLaporan @default(DRAFT)
   // Laporan ini syarat perpanjangan beasiswa periode berikutnya
-  batasKirim    DateTime      @map("batas_kirim")
-  dikirimAt     DateTime?     @map("dikirim_at")
-  reviewedById  String?       @map("reviewed_by_id")
-  reviewedAt    DateTime?     @map("reviewed_at")
-  catatanReview String?       @map("catatan_review") @db.Text
+  batasKirim         DateTime      @map("batas_kirim")
+  dikirimAt          DateTime?     @map("dikirim_at")
+  reviewedById       String?       @map("reviewed_by_id")
+  reviewedAt         DateTime?     @map("reviewed_at")
+  catatanReview      String?       @map("catatan_review") @db.Text
   // Boleh dibaca donatur pembina? Default true karena ini memang
   // laporan pertanggungjawaban, tapi mahasiswa bisa menariknya.
-  bolehDibacaPembina Boolean  @default(true) @map("boleh_dibaca_pembina")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
+  bolehDibacaPembina Boolean       @default(true) @map("boleh_dibaca_pembina")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
 
   mahasiswa Mahasiswa @relation(fields: [mahasiswaId], references: [id], onDelete: Cascade)
   periode   Periode   @relation(fields: [periodeId], references: [id])
@@ -603,28 +624,6 @@ model LaporanPerkembangan {
   @@unique([mahasiswaId, periodeId])
   @@index([periodeId, status])
   @@map("laporan_perkembangan")
-}
-
-// Pesan antara donatur dan mahasiswa binaan, DIMODERASI admin.
-// Tidak ada pertukaran kontak langsung. Ini melindungi mahasiswa dari
-// tekanan relasi kuasa yang timbul karena ia bergantung secara finansial.
-model PesanBinaan {
-  id           String      @id @default(cuid())
-  relasiAsuhId String      @map("relasi_asuh_id")
-  pengirimId   String      @map("pengirim_id")
-  isi          String      @db.Text
-  status       StatusPesan @default(MENUNGGU_MODERASI)
-  moderatorId  String?     @map("moderator_id")
-  moderatedAt  DateTime?   @map("moderated_at")
-  alasanTolak  String?     @map("alasan_tolak")
-  dibacaAt     DateTime?   @map("dibaca_at")
-  createdAt    DateTime    @default(now()) @map("created_at")
-
-  relasiAsuh RelasiAsuh @relation(fields: [relasiAsuhId], references: [id], onDelete: Cascade)
-  pengirim   User       @relation("PesanDikirim", fields: [pengirimId], references: [id])
-
-  @@index([relasiAsuhId, status])
-  @@map("pesan_binaan")
 }
 
 // ============================================================================
@@ -650,20 +649,31 @@ model AuditLog {
   @@map("audit_log")
 }
 
+// Untuk admin (userId terisi), ini inbox in-app sungguhan (dibacaAt berarti).
+// Untuk mahasiswa/donatur (mahasiswaId/ortuAsuhId terisi, userId null),
+// baris ini murni LOG pengiriman WA/email — mereka tak pernah login untuk
+// "membaca" notifikasi in-app, jadi dibacaAt akan selalu null dan itu wajar.
+// Tepat satu dari userId/ortuAsuhId/mahasiswaId yang terisi per baris.
 model Notifikasi {
-  id        String    @id @default(cuid())
-  userId    String    @map("user_id")
-  kanal     String // EMAIL|WA|INAPP
-  judul     String
-  isi       String    @db.Text
-  tautan    String?
-  dibacaAt  DateTime? @map("dibaca_at")
-  terkirimAt DateTime? @map("terkirim_at")
-  createdAt DateTime  @default(now()) @map("created_at")
+  id          String    @id @default(cuid())
+  userId      String?   @map("user_id")
+  ortuAsuhId  String?   @map("ortu_asuh_id")
+  mahasiswaId String?   @map("mahasiswa_id")
+  kanal       String // EMAIL|WA|INAPP
+  judul       String
+  isi         String    @db.Text
+  tautan      String?
+  dibacaAt    DateTime? @map("dibaca_at")
+  terkirimAt  DateTime? @map("terkirim_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ortuAsuh  OrtuAsuh?  @relation(fields: [ortuAsuhId], references: [id], onDelete: Cascade)
+  mahasiswa Mahasiswa? @relation(fields: [mahasiswaId], references: [id], onDelete: Cascade)
 
   @@index([userId, dibacaAt])
+  @@index([ortuAsuhId, createdAt])
+  @@index([mahasiswaId, createdAt])
   @@map("notifikasi")
 }
 

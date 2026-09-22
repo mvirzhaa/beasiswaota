@@ -16,7 +16,13 @@ export default auth((req) => {
   const keputusan = tentukanAksesRute(pathname, sesi);
 
   if (keputusan === "LOGIN") {
-    const url = new URL("/login", req.nextUrl.origin);
+    // matcher di bawah cuma /admin/:path*, jadi keputusan LOGIN di sini
+    // selalu untuk rute admin — arahkan ke path rahasia admin (lihat
+    // ADMIN_LOGIN_PATH di src/lib/env.ts), bukan /login publik. Baca
+    // langsung dari process.env (bukan import env.ts) supaya file edge
+    // ini tidak ikut memvalidasi seluruh env schema Node-only.
+    const pathLoginAdmin = process.env.ADMIN_LOGIN_PATH || "login";
+    const url = new URL(`/${pathLoginAdmin}`, req.nextUrl.origin);
     url.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(url);
   }
@@ -29,5 +35,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/mahasiswa/:path*", "/donatur/:path*", "/admin/:path*"],
+  matcher: ["/admin/:path*"],
 };

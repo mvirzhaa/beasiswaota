@@ -1,0 +1,9 @@
+[Unit]
+Description=Jadwal harian: cek tanggal pengingat WA komitmen berkelanjutan
+
+[Timer]
+OnCalendar=*-*-* 08:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

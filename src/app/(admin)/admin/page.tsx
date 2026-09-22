@@ -1,205 +1,320 @@
 import Link from "next/link";
 import {
-  FileText,
   Receipt,
-  HandCoins,
   Shuffle,
-  Wallet,
   Users,
-  Activity,
   ClipboardList,
-  MessageCircle,
-  UserCog,
-  Settings,
-  ShieldCheck,
+  GraduationCap,
+  HeartHandshake,
   ArrowRight,
-  } from "lucide-react";
+  ArrowUpRight,
+  Scale,
+  TrendingUp,
+  Building2,
+} from "lucide-react";
 import { auth } from "@/lib/auth";
+import { formatRupiah } from "@/lib/uang";
+import { ambilStatistikKeuangan } from "@/server/queries/statistik-keuangan";
+import { ambilRingkasanDashboardAdmin } from "@/server/queries/dashboard-admin";
 
-const KELOMPOK = [
+const MODUL_MAHASISWA = [
   {
-    judul: "Operasional Beasiswa",
-    keterangan: "Pengelolaan berkas pengajuan, penerimaan donasi, dan penyaluran bantuan",
-    warna: "text-primary",
-    tautan: [
-      {
-        href: "/admin/pengajuan",
-        judul: "Verifikasi Pengajuan",
-        deskripsi: "Verifikasi kelayakan berkas, hitung skor ekonomi, dan setujui penerima beasiswa.",
-        ikon: FileText,
-        badge: "Pendaftaran",
-      },
-      {
-        href: "/admin/transaksi",
-        judul: "Verifikasi Transaksi",
-        deskripsi: "Tinjau bukti setoran rekening BSI 7367215121 dan konfirmasi dana masuk.",
-        ikon: Receipt,
-        badge: "Finansial",
-      },
-      {
-        href: "/admin/komitmen",
-        judul: "Komitmen Donatur",
-        deskripsi: "Konfirmasi dan kelola jadwal komitmen donasi rutin dari orang tua asuh.",
-        ikon: HandCoins,
-        badge: "Donasi",
-      },
-      {
-        href: "/admin/alokasi/simulasi",
-        judul: "Mesin Alokasi Dana",
-        deskripsi: "Simulasikan dan eksekusi algoritma pemotongan tagihan UKT mahasiswa.",
-        ikon: Shuffle,
-        badge: "Algoritma",
-      },
-      {
-        href: "/admin/potong-gaji",
-        judul: "Potong Gaji Karyawan",
-        deskripsi: "Ekspor daftar dan impor realisasi potongan gaji pegawai/dosen UIKA.",
-        ikon: Wallet,
-        badge: "Payroll",
-      },
-    ],
+    href: "/admin/mahasiswa",
+    judul: "Kelola Mahasiswa",
+    deskripsi: "Pendaftaran, data akademik, dan rekam jejak beasiswa mahasiswa.",
+    ikon: GraduationCap,
+    badge: "Penerima",
   },
   {
-    judul: "Pembinaan & Pemantauan",
-    keterangan: "Monitoring prestasi akademik mahasiswa dan pendampingan orang tua asuh",
-    warna: "text-accent-dark",
-    tautan: [
-      {
-        href: "/admin/pembinaan",
-        judul: "Penugasan Pembinaan",
-        deskripsi: "Pasangkan relasi asuh antara donatur dan mahasiswa penerima bantuan.",
-        ikon: Users,
-        badge: "Relasi",
-      },
-      {
-        href: "/admin/monitoring",
-        judul: "Monitoring Risiko Akademik",
-        deskripsi: "Pantau capaian IPK, peringatan dini risiko putus studi, dan status semester.",
-        ikon: Activity,
-        badge: "Risiko",
-      },
-      {
-        href: "/admin/laporan",
-        judul: "Review Laporan Studi",
-        deskripsi: "Validasi laporan berkala capaian perkuliahan dan scan KHS mahasiswa.",
-        ikon: ClipboardList,
-        badge: "Akademik",
-      },
-      {
-        href: "/admin/pesan",
-        judul: "Moderasi Pesan",
-        deskripsi: "Tinjau dan loloskan pesan silaturahmi antara donatur dan mahasiswa binaan.",
-        ikon: MessageCircle,
-        badge: "Komunikasi",
-      },
-    ],
+    href: "/admin/orangtua-asuh",
+    judul: "Kelola Orang Tua Asuh",
+    deskripsi: "Data donatur yang otomatis terdata begitu mengisi form pendaftaran publik.",
+    ikon: HeartHandshake,
+    badge: "Donatur",
   },
   {
-    judul: "Manajemen Sistem",
-    keterangan: "Konfigurasi parameter sistem, audit trail, dan akun pengguna",
-    warna: "text-navy",
-    tautan: [
-      {
-        href: "/admin/akun",
-        judul: "Kelola Akun Pengguna",
-        deskripsi: "Aktivasi akun donatur baru, daftarkan data mahasiswa penerima langsung.",
-        ikon: UserCog,
-        badge: "Pengguna",
-      },
-      {
-        href: "/admin/pengaturan",
-        judul: "Pengaturan Sistem",
-        deskripsi: "Konfigurasi batas waktu pelaporan, flag fitur, dan parameter beasiswa.",
-        ikon: Settings,
-        badge: "Konfigurasi",
-      },
-    ],
+    href: "/admin/pembinaan",
+    judul: "Penugasan Pembinaan",
+    deskripsi: "Pasangkan relasi asuh moral & mentoring antara donatur dan mahasiswa.",
+    ikon: Users,
+    badge: "Relasi",
+  },
+  {
+    href: "/admin/laporan",
+    judul: "Review Laporan Studi",
+    deskripsi: "Validasi laporan semesteran capaian IPK dan berkas scan KHS.",
+    ikon: ClipboardList,
+    badge: "Akademik",
   },
 ];
 
 export default async function DashboardAdmin() {
   const session = await auth();
+  const [statistik, ringkasan] = await Promise.all([
+    ambilStatistikKeuangan(),
+    ambilRingkasanDashboardAdmin(),
+  ]);
+
+  const tugas = [
+    {
+      warna: "#dc2626",
+      judul: "Transaksi menunggu verifikasi",
+      sub: "Bukti transfer BSI belum dikonfirmasi",
+      jumlah: ringkasan.transaksiMenunggu,
+      href: "/admin/keuangan/transaksi",
+      prioritas: "Tinggi",
+    },
+    {
+      warna: "#d97706",
+      judul: "Komitmen donatur menunggu konfirmasi",
+      sub: "Pendaftaran baru dari orang tua asuh",
+      jumlah: ringkasan.komitmenMenunggu,
+      href: "/admin/keuangan/komitmen",
+      prioritas: "Sedang",
+    },
+    {
+      warna: "#059669",
+      judul: "Batch alokasi siap disetujui",
+      sub: "Menunggu approval (maker-checker)",
+      jumlah: ringkasan.batchSiapDisetujui,
+      href: "/admin/keuangan/alokasi/simulasi",
+      prioritas: "Penyaluran",
+    },
+  ];
 
   return (
-    <main className="mx-auto mt-6 mb-16 max-w-6xl px-4 sm:px-6">
-      {/* 1. Executive Hero Banner */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-dark via-primary to-[#0e584f] text-white shadow-xl">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-accent/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
-
-        <div className="relative z-10 p-6 sm:p-10">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-xs font-semibold tracking-wider text-accent uppercase backdrop-blur-xs">
-            <ShieldCheck className="h-4 w-4" />
-            <span>Pusat Kendali Pengelola Beasiswa UIKA Bogor</span>
+    <main className="mx-auto max-w-[1550px] w-full px-5 py-6 sm:px-8 sm:py-7">
+      {/* Page Header */}
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-5">
+        <div>
+          <div className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-accent-dark">
+            <TrendingUp className="h-3.5 w-3.5" />
+            <span>Pusat Kendali Operasional</span>
           </div>
-
-          <h1 className="mt-4 font-heading text-2xl font-bold tracking-tight text-white sm:text-4xl">
-            Dashboard Administrasi & Operasional
+          <h1 className="font-heading text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+            Selamat datang, {session?.user?.email?.split("@")[0] ?? "Admin"}
           </h1>
-
-          <p className="mt-2 text-sm sm:text-base text-white/90 leading-relaxed max-w-2xl">
-            Kelola verifikasi berkas pengajuan, monitoring realisasi donasi rekening BSI, eksekusi alokasi UKT mahasiswa, dan pengawasan mutu akademik secara akuntabel.
+          <p className="mt-0.5 text-xs text-muted sm:text-sm">
+            Ringkasan terpadu pendaftaran mahasiswa, pembinaan asuh, dan arus dana beasiswa.
           </p>
-
-          <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-white/80 border-t border-white/15 pt-4">
-            <span className="font-medium">Administrator Bertugas:</span>
-            <span className="rounded-md bg-white/10 px-2 py-0.5 font-mono text-accent">
-              {session?.user?.email ?? "Administrator"}
-            </span>
-          </div>
         </div>
-      </section>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Link
+            href="/admin/keuangan/transaksi"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-ink shadow-2xs hover:bg-surface-alt transition-colors"
+          >
+            <Receipt className="h-3.5 w-3.5 text-primary" />
+            <span>Verifikasi Mutasi</span>
+            {ringkasan.transaksiMenunggu > 0 && (
+              <span className="rounded-full bg-red-100 px-1.5 py-0.2 text-[10px] font-bold text-red-700">
+                {ringkasan.transaksiMenunggu}
+              </span>
+            )}
+          </Link>
+          <Link
+            href="/admin/mahasiswa"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-primary-dark transition-colors"
+          >
+            <GraduationCap className="h-3.5 w-3.5" />
+            <span>Kelola Mahasiswa</span>
+          </Link>
+        </div>
+      </div>
 
-      {/* 2. Modul Operasional Terkelompok */}
-      <div className="mt-12 flex flex-col gap-12">
-        {KELOMPOK.map((k) => (
-          <section key={k.judul}>
-            <div className="flex flex-wrap items-end justify-between border-b border-border pb-4">
-              <div>
-                <h2 className="font-heading text-xl font-bold text-ink">{k.judul}</h2>
-                <p className="mt-0.5 text-xs text-muted">{k.keterangan}</p>
+      {/* 4 Stat Cards Row */}
+      <div className="mb-6 grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+        <KartuStat
+          ikon={GraduationCap}
+          warnaIkon="bg-primary-light text-primary-dark"
+          label="Mahasiswa Penerima Aktif"
+          nilai={String(ringkasan.mahasiswaAktif)}
+          keterangan="Terdaftar dalam program OTA"
+        />
+        <KartuStat
+          ikon={HeartHandshake}
+          warnaIkon="bg-amber-50 text-amber-600"
+          label="Orang Tua Asuh Terdaftar"
+          nilai={String(ringkasan.ortuAsuhTerdaftar)}
+          keterangan="Otomatis dari form pendaftaran publik"
+        />
+        <KartuStat
+          ikon={ArrowUpRight}
+          warnaIkon="bg-emerald-50 text-emerald-600"
+          label="Total Pemasukan Donasi"
+          nilai={formatRupiah(statistik.totalPemasukan)}
+          keterangan="Akumulasi dana masuk terverifikasi"
+        />
+        <KartuStat
+          ikon={Scale}
+          warnaIkon="bg-teal-50 text-teal-700"
+          label="Surplus Dana Bersih"
+          nilai={formatRupiah(statistik.surplus)}
+          keterangan="Pemasukan minus pengeluaran UKT"
+        />
+      </div>
+
+      {/* Bento Grid 2 Columns */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        {/* Left Column (7 cols): Workflow Actions & Fast Navigation */}
+        <div className="space-y-6 lg:col-span-7 xl:col-span-8">
+          {/* Panel: Perlu Tindakan Segera */}
+          <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
+            <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-ping" />
+                <h2 className="font-heading text-base font-bold text-ink">Perlu Tindakan Segera</h2>
               </div>
-              <span className="text-xs font-semibold text-muted">{k.tautan.length} Modul</span>
+              <span className="rounded-md bg-surface-alt px-2 py-0.5 text-[11px] font-semibold text-muted">
+                Antrean Tugas
+              </span>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {k.tautan.map((t) => {
-                const Icon = t.ikon;
+            <div className="divide-y divide-border/60">
+              {tugas.map((t) => (
+                <Link
+                  key={t.judul}
+                  href={t.href}
+                  className="group flex items-center justify-between gap-3 py-3 px-2 rounded-xl transition-all hover:bg-surface-alt/70"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: t.warna }} />
+                    <div className="min-w-0">
+                      <div className="truncate text-xs sm:text-[13px] font-semibold text-ink group-hover:text-primary transition-colors">
+                        {t.judul}
+                      </div>
+                      <div className="truncate text-[11px] text-muted">{t.sub}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                        t.jumlah > 0
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-surface-alt text-muted"
+                      }`}
+                    >
+                      {t.jumlah}
+                    </span>
+                    <ArrowRight className="h-3.5 w-3.5 text-muted group-hover:translate-x-0.5 group-hover:text-primary transition-all" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Panel: Navigasi Modul Mahasiswa & Pembinaan */}
+          <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
+            <div className="mb-3.5 flex items-center justify-between">
+              <h2 className="font-heading text-sm font-bold uppercase tracking-wider text-muted">
+                Mahasiswa & Donatur
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {MODUL_MAHASISWA.map((m) => {
+                const Icon = m.ikon;
                 return (
                   <Link
-                    key={t.href}
-                    href={t.href}
-                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-surface p-6 shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-primary hover:shadow-md"
+                    key={m.href}
+                    href={m.href}
+                    className="group flex flex-col justify-between rounded-xl border border-border bg-surface p-3.5 transition-all hover:border-primary/50 hover:shadow-xs hover:bg-surface-alt/40"
                   >
                     <div>
-                      <div className="flex items-center justify-between">
-                        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-light text-primary transition-colors group-hover:bg-primary group-hover:text-white shadow-xs">
-                          <Icon className="h-6 w-6" strokeWidth={1.75} />
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-light text-primary group-hover:scale-105 transition-transform">
+                          <Icon className="h-4 w-4" strokeWidth={2} />
                         </span>
-                        <span className="rounded-full bg-surface-alt px-2.5 py-0.5 text-[11px] font-semibold text-muted">
-                          {t.badge}
+                        <span className="rounded bg-surface-alt px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted">
+                          {m.badge}
                         </span>
                       </div>
-
-                      <h3 className="mt-4 font-heading text-lg font-bold text-ink transition-colors group-hover:text-primary">
-                        {t.judul}
-                      </h3>
-                      <p className="mt-1.5 text-xs leading-relaxed text-muted">
-                        {t.deskripsi}
+                      <div className="text-xs font-bold text-ink group-hover:text-primary transition-colors">
+                        {m.judul}
+                      </div>
+                      <p className="mt-1 text-[11px] leading-snug text-muted line-clamp-2">
+                        {m.deskripsi}
                       </p>
-                    </div>
-
-                    <div className="mt-5 pt-4 border-t border-border/60 flex items-center justify-between text-xs font-bold text-primary">
-                      <span>Akses Modul</span>
-                      <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                     </div>
                   </Link>
                 );
               })}
             </div>
-          </section>
-        ))}
+          </div>
+
+        </div>
+
+        {/* Right Column (5 cols): Metrics & Quick Controls */}
+        <div className="space-y-6 lg:col-span-5 xl:col-span-4">
+          {/* Panel: Info Rekening Penampung & Arus Kas */}
+          <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
+            <div className="mb-3 flex items-center gap-2 border-b border-border pb-3">
+              <Building2 className="h-4 w-4 text-primary" />
+              <h2 className="font-heading text-base font-bold text-ink">Rekening Donasi Pusat</h2>
+            </div>
+            <div className="rounded-xl border border-border bg-surface-alt/70 p-3.5 text-xs">
+              <div className="text-[11px] font-medium text-muted">Bank Syariah Indonesia (BSI)</div>
+              <div className="mt-0.5 font-mono text-base font-bold text-ink tracking-wider">
+                7367215121
+              </div>
+              <div className="mt-1 text-[11px] text-muted">a.n. Orang Tua Asuh UIKA Bogor</div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs">
+              <div className="rounded-xl border border-border bg-surface p-2.5">
+                <div className="text-[10.5px] text-muted">Batch Alokasi</div>
+                <div className="mt-0.5 font-heading text-sm font-bold text-ink">
+                  {ringkasan.batchSiapDisetujui} Siap
+                </div>
+              </div>
+              <div className="rounded-xl border border-border bg-surface p-2.5">
+                <div className="text-[10.5px] text-muted">Komitmen Masuk</div>
+                <div className="mt-0.5 font-heading text-sm font-bold text-ink">
+                  {ringkasan.komitmenMenunggu} Menunggu
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-3.5 border-t border-border pt-3">
+              <Link
+                href="/admin/keuangan"
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-primary/30 bg-primary-light/50 py-2 text-xs font-bold text-primary-dark transition-colors hover:bg-primary-light"
+              >
+                <Shuffle className="h-3.5 w-3.5" />
+                <span>Buka Pemasukan & Pengeluaran</span>
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
+  );
+}
+
+function KartuStat({
+  ikon: Ikon,
+  warnaIkon,
+  label,
+  nilai,
+  keterangan,
+}: {
+  ikon: typeof GraduationCap;
+  warnaIkon: string;
+  label: string;
+  nilai: string;
+  keterangan?: string;
+}) {
+  return (
+    <div className="flex flex-col justify-between rounded-2xl border border-border bg-surface p-4 shadow-2xs transition-all hover:border-primary/40">
+      <div className="flex items-center justify-between gap-3">
+        <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${warnaIkon}`}>
+          <Ikon className="h-4.5 w-4.5" strokeWidth={2} />
+        </span>
+        <span className="text-[11px] font-medium text-muted line-clamp-1">{label}</span>
+      </div>
+      <div className="mt-3">
+        <div className="truncate font-heading text-2xl font-bold text-ink">{nilai}</div>
+        {keterangan && <div className="mt-0.5 text-[11px] text-muted truncate">{keterangan}</div>}
+      </div>
+    </div>
   );
 }

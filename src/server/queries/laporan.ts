@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/db";
 import { laporanPenyaluran } from "@/lib/alokasi/engine";
-import { ambilOrtuAsuhIdUser } from "./komitmen";
 
 export const KUNCI_PENGATURAN_NAMA_PENUH = "laporan.tampilkanNamaPenuh";
 
@@ -21,8 +20,7 @@ export async function ambilFlagNamaPenuh(): Promise<boolean> {
  * nama penuh via flag Pengaturan. Default engine.ts sudah menyamarkan jadi
  * inisial — kalau flag aktif, nama asli ditimpa di sini, di luar engine.ts.
  */
-export async function ambilLaporanPenyaluranOrtuAsuh(userId: string, periodeId?: string) {
-  const ortuAsuhId = await ambilOrtuAsuhIdUser(userId);
+export async function ambilLaporanPenyaluranOrtuAsuh(ortuAsuhId: string, periodeId?: string) {
   const baris = await laporanPenyaluran(prisma, ortuAsuhId, periodeId);
 
   const tampilkanNamaPenuh = await ambilFlagNamaPenuh();

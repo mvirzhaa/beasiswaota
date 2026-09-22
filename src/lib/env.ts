@@ -16,6 +16,16 @@ const envSchema = z.object({
 
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET minimal 32 karakter"),
 
+  // Path login khusus admin, sengaja tidak ditautkan di UI publik manapun
+  // (lihat src/app/[secretSlug]/page.tsx). Hanya string acak ini, bukan
+  // kontrol akses sesungguhnya — RBAC tetap yang menjaga /admin/*.
+  ADMIN_LOGIN_PATH: z
+    .string()
+    .regex(
+      /^[a-z0-9-]{8,64}$/,
+      "ADMIN_LOGIN_PATH hanya huruf kecil/angka/strip, 8-64 karakter",
+    ),
+
   MINIO_ENDPOINT: z.string().min(1),
   MINIO_PORT: z.coerce.number().int().positive(),
   MINIO_USE_SSL: z
@@ -25,9 +35,19 @@ const envSchema = z.object({
   MINIO_ROOT_USER: z.string().min(1),
   MINIO_ROOT_PASSWORD: z.string().min(1),
   MINIO_BUCKET: z.string().min(1),
+  // Bucket TERPISAH dari MINIO_BUCKET — ini publik (kebalikan aturan keras
+  // #7, yang berlaku untuk berkas pengajuan, bukan aset landing page).
+  MINIO_BUCKET_PUBLIK: z.string().min(1),
 
   RESEND_API_KEY: z.string().optional(),
   MAIL_FROM: z.email(),
+
+  // --- WhatsApp (pengingat komitmen berkelanjutan, opsional) ---
+  // Belum ada provider WA resmi yang dipakai UIKA saat berkas ini ditulis.
+  // Kalau kosong, kirimWa() no-op aman (lihat src/lib/notifikasi/wa.ts),
+  // sama seperti pola RESEND_API_KEY di atas.
+  WA_API_URL: z.url().optional(),
+  WA_API_TOKEN: z.string().optional(),
 
   CRON_SECRET: z.string().min(16, "CRON_SECRET minimal 16 karakter"),
 

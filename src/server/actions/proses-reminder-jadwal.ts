@@ -47,7 +47,11 @@ export async function prosesReminderJadwalBayar(db: PrismaClient): Promise<Hasil
     include: {
       periode: { select: { kode: true } },
       komitmen: {
-        select: { ortuAsuh: { select: { userId: true, nama: true, atasNamaMunfiq: true } } },
+        select: {
+          ortuAsuh: {
+            select: { id: true, nama: true, atasNamaMunfiq: true, email: true, kodeAkses: true },
+          },
+        },
       },
     },
   });
@@ -58,28 +62,27 @@ export async function prosesReminderJadwalBayar(db: PrismaClient): Promise<Hasil
     if (hariMenuju !== 7 && hariMenuju !== 1) continue;
     if (jadwal.remindedAt && tanggalSama(jadwal.remindedAt, sekarang)) continue;
 
+    const ortuAsuh = jadwal.komitmen.ortuAsuh;
+    const tautan = `/laporan/${ortuAsuh.kodeAkses}`;
+
     await db.$transaction(async (tx) => {
       await tx.jadwalBayar.update({ where: { id: jadwal.id }, data: { remindedAt: sekarang } });
       await tx.notifikasi.create({
         data: {
-          userId: jadwal.komitmen.ortuAsuh.userId,
-          kanal: "INAPP",
+          ortuAsuhId: ortuAsuh.id,
+          kanal: "EMAIL",
           judul: `Pengingat jatuh tempo H-${hariMenuju}`,
           isi: `Komitmen Anda untuk periode ${jadwal.periode.kode} jatuh tempo dalam ${hariMenuju} hari.`,
-          tautan: "/donatur/pembayaran",
+          tautan,
         },
       });
     });
 
-    const pengguna = await db.user.findUnique({
-      where: { id: jadwal.komitmen.ortuAsuh.userId },
-      select: { email: true },
-    });
-    if (pengguna) {
+    if (ortuAsuh.email) {
       await kirimEmail(
-        pengguna.email,
+        ortuAsuh.email,
         templateReminderJadwalBayar({
-          namaDonatur: jadwal.komitmen.ortuAsuh.atasNamaMunfiq || jadwal.komitmen.ortuAsuh.nama,
+          namaDonatur: ortuAsuh.atasNamaMunfiq || ortuAsuh.nama,
           periodeKode: jadwal.periode.kode,
           nominal: jadwal.nominal,
           jatuhTempo: jadwal.jatuhTempo,
@@ -130,7 +133,7 @@ export async function prosesReminderJadwalBayar(db: PrismaClient): Promise<Hasil
             kanal: "INAPP",
             judul: "Komitmen menunggak",
             isi: `Komitmen donatur ${namaDonatur} menunggak lebih dari ${HARI_MENUNGGAK} hari. Mahasiswa penerima tidak kehilangan status penerima — kekurangan ditutup dari pool.`,
-            tautan: "/admin/komitmen?status=MENUNGGAK",
+            tautan: "/admin/keuangan/komitmen?status=MENUNGGAK",
           },
         });
       }

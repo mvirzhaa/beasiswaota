@@ -14,44 +14,57 @@ import {
   PhoneCall,
   MessageCircle,
   CheckCircle2,
-  LogIn,
   UserPlus,
   FileText,
+  LayoutDashboard,
 } from "lucide-react";
 import { Tombol } from "@/components/ui/tombol";
 import { FooterProgram } from "@/components/ui/footer-program";
+import { ambilPengaturanLanding } from "@/server/queries/pengaturan-landing";
+import { keFormatWaMe } from "@/lib/telepon";
 
-const TUJUAN_PER_ROLE: Record<string, string> = {
-  MAHASISWA: "/mahasiswa",
-  ORTU_ASUH: "/donatur",
-  ADMIN: "/admin",
-};
+const PESAN_WA_KONFIRMASI = encodeURIComponent(
+  "Assalamu'alaikum Warahmatullahi Wabarakatuh, saya ingin konfirmasi transfer donasi Program Beasiswa Orang Tua Asuh UIKA Bogor.",
+);
 
 export default async function HalamanUtamaLandingPage() {
-  const session = await auth();
-
-  // Jika sudah login, langsung arahkan ke dashboard masing-masing tanpa menampilkan landing page
-  if (session?.user?.role) {
-    const targetUrl = TUJUAN_PER_ROLE[session.user.role];
-    if (targetUrl) {
-      redirect(targetUrl);
-    }
-  }
+  const [session, landing] = await Promise.all([auth(), ambilPengaturanLanding()]);
+  const isAdmin = session?.user?.role === "ADMIN";
+  const logo = landing.gambar.logo || "/images/logo-uika.png";
+  const kontak1 = landing.kontak[0];
+  const kontak2 = landing.kontak[1];
 
   return (
     <div className="flex min-h-screen flex-col bg-surface-alt font-sans text-ink">
+      {/* Banner Khusus Jika Sedang Login Admin (Mode Pratinjau Publik) */}
+      {isAdmin && (
+        <div className="sticky top-0 z-[60] bg-navy px-4 py-2 text-center text-xs font-medium text-white shadow-sm flex flex-wrap items-center justify-center gap-2 sm:gap-4">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Mode Publik: Anda sedang terhubung sebagai <strong>Admin Pengelola</strong>.</span>
+          </span>
+          <Link
+            href="/admin"
+            className="rounded-md bg-white/15 px-2.5 py-0.5 text-xs font-semibold text-accent transition-colors hover:bg-white/25 hover:text-white"
+          >
+            Buka Dashboard Admin &rarr;
+          </Link>
+        </div>
+      )}
+
       {/* 1. Header / Navbar Publik */}
-      <header className="sticky top-0 z-50 border-b border-border bg-surface/95 backdrop-blur-md shadow-xs">
+      <header className={`sticky ${isAdmin ? "top-[36px]" : "top-0"} z-50 border-b border-border bg-surface/95 backdrop-blur-md shadow-xs transition-all`}>
         <div className="h-1 bg-gradient-to-r from-primary via-[#116e63] to-accent" />
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2.5 sm:px-6">
           <Link href="/" className="group flex items-center gap-3">
             <div className="relative flex h-10 w-10 shrink-0 items-center justify-center transition-transform duration-200 group-hover:scale-105">
               <Image
-                src="/images/logo-uika.png"
+                src={logo}
                 alt="Logo Resmi UIKA Bogor"
                 width={40}
                 height={40}
                 className="h-10 w-10 object-contain drop-shadow-xs"
+                unoptimized={Boolean(landing.gambar.logo)}
                 priority
               />
             </div>
@@ -75,20 +88,16 @@ export default async function HalamanUtamaLandingPage() {
             </Link>
           </nav>
 
-          <div className="flex items-center gap-2.5">
-            <Link href="/login">
-              <Tombol variant="garis" ukuran="sm" className="font-semibold">
-                <LogIn className="h-4 w-4" />
-                <span>Masuk</span>
-              </Tombol>
-            </Link>
-            <Link href="/register">
-              <Tombol variant="primer" ukuran="sm" className="font-bold shadow-xs">
-                <UserPlus className="h-4 w-4" />
-                <span>Daftar</span>
-              </Tombol>
-            </Link>
-          </div>
+          {isAdmin && (
+            <div className="flex items-center gap-2.5">
+              <Link href="/admin">
+                <Tombol variant="primer" ukuran="sm" className="font-bold shadow-xs flex items-center gap-1.5">
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span>Dashboard Admin</span>
+                </Tombol>
+              </Link>
+            </div>
+          )}
         </div>
       </header>
 
@@ -102,40 +111,35 @@ export default async function HalamanUtamaLandingPage() {
             <div className="lg:col-span-7">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-xs font-semibold tracking-wider text-accent uppercase backdrop-blur-xs">
                 <Image
-                  src="/images/logo-uika.png"
+                  src={logo}
                   alt="Logo UIKA"
                   width={18}
                   height={18}
                   className="h-4.5 w-4.5 object-contain"
+                  unoptimized={Boolean(landing.gambar.logo)}
                 />
                 <span>Program Resmi Universitas Ibn Khaldun Bogor</span>
               </div>
 
               <h1 className="mt-4 font-heading text-3xl font-bold tracking-tight text-white sm:text-5xl lg:leading-tight">
-                Menjembatani Asa, Mewujudkan Sarjana
+                {landing.hero.judul}
               </h1>
 
               <p className="mt-4 text-sm sm:text-base text-white/90 leading-relaxed max-w-xl">
-                Program Beasiswa Orangtua Asuh UIKA Bogor menghimpun kedermawanan para donatur untuk membantu biaya Uang Kuliah Tunggal (UKT) mahasiswa berprestasi dan dhuafa, memastikan tidak ada generasi bangsa yang terhenti studinya.
+                {landing.hero.deskripsi}
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3.5">
                 <a href="#daftar">
                   <Tombol variant="aksen" ukuran="lg" className="font-bold shadow-lg text-ink">
                     <UserPlus className="h-5 w-5" />
-                    <span>Daftar Akun Baru</span>
+                    <span>Daftar Jadi Donatur</span>
                   </Tombol>
                 </a>
                 <Link href="/brosur">
                   <Tombol variant="garis" ukuran="lg" className="border-white/40 bg-white/10 text-white hover:bg-white/20">
                     <FileText className="h-5 w-5" />
                     <span>Lihat Brosur & PDF</span>
-                  </Tombol>
-                </Link>
-                <Link href="/login">
-                  <Tombol variant="garis" ukuran="lg" className="border-white/40 bg-white/10 text-white hover:bg-white/20">
-                    <LogIn className="h-5 w-5" />
-                    <span>Masuk</span>
                   </Tombol>
                 </Link>
               </div>
@@ -160,11 +164,12 @@ export default async function HalamanUtamaLandingPage() {
             <div className="lg:col-span-5">
               <div className="relative mx-auto max-w-md overflow-hidden rounded-3xl border-2 border-white/20 shadow-2xl transition-transform duration-300 hover:scale-[1.02]">
                 <Image
-                  src="/images/beasiswa-keluarga-1.jpg"
+                  src={landing.gambar.heroFoto || "/images/beasiswa-keluarga-1.jpg"}
                   alt="Orang Tua Asuh Mendukung Mimpi Meraih Masa Depan"
                   width={700}
                   height={500}
                   className="h-80 sm:h-96 w-full object-cover"
+                  unoptimized={Boolean(landing.gambar.heroFoto)}
                   priority
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -242,11 +247,12 @@ export default async function HalamanUtamaLandingPage() {
             <div className="lg:col-span-5 bg-surface-alt/80 p-6 flex flex-col items-center justify-center border-b lg:border-b-0 lg:border-r border-border">
               <div className="relative overflow-hidden rounded-2xl shadow-md border border-border bg-white w-full max-w-md">
                 <Image
-                  src="/images/pimpinan-uika.jpg"
+                  src={landing.gambar.pimpinanFoto || "/images/pimpinan-uika.jpg"}
                   alt="Pimpinan Universitas Ibn Khaldun Bogor 2024-2028"
                   width={700}
                   height={500}
                   className="w-full h-auto object-cover"
+                  unoptimized={Boolean(landing.gambar.pimpinanFoto)}
                 />
                 <div className="bg-navy p-3 text-center text-xs text-white">
                   <p className="font-heading font-bold text-accent">Rektor & Para Wakil Rektor</p>
@@ -267,10 +273,7 @@ export default async function HalamanUtamaLandingPage() {
               </h2>
 
               <p className="mt-4 rounded-2xl border-l-4 border-primary bg-primary-light/40 p-5 text-xs sm:text-sm leading-relaxed text-ink/90">
-                Program Beasiswa Orangtua Asuh adalah wujud nyata kepedulian sivitas akademika dan
-                para munfiq untuk memastikan tidak ada mahasiswa berprestasi dan dhuafa di UIKA
-                yang terhenti cita-citanya karena keterbatasan finansial. Mari bersama menanam
-                benih amal jariyah yang tak terputus.
+                {landing.pimpinan.pesan}
               </p>
 
               <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-xs text-muted border-t border-border pt-4">
@@ -308,10 +311,10 @@ export default async function HalamanUtamaLandingPage() {
                   <HeartHandshake className="h-6 w-6" />
                 </span>
                 <h3 className="mt-4 font-heading text-base font-bold text-ink">
-                  Dana Terpadu (Pooling)
+                  {landing.pilar[0].judul}
                 </h3>
                 <p className="mt-2 text-xs text-muted leading-relaxed">
-                  Dana dari seluruh donatur dihimpun dalam satu pool per semester untuk menjamin pemerataan bantuan tanpa diskriminasi.
+                  {landing.pilar[0].deskripsi}
                 </p>
               </div>
               <div className="mt-4 border-t border-border/60 pt-3 text-[11px] font-semibold text-primary">
@@ -326,10 +329,10 @@ export default async function HalamanUtamaLandingPage() {
                   <ShieldCheck className="h-6 w-6" />
                 </span>
                 <h3 className="mt-4 font-heading text-base font-bold text-ink">
-                  Skoring Objektif
+                  {landing.pilar[1].judul}
                 </h3>
                 <p className="mt-2 text-xs text-muted leading-relaxed">
-                  Mesin alokasi menilai status yatim/piatu, penghasilan orang tua, tanggungan, dan IPK secara matematis dan transparan.
+                  {landing.pilar[1].deskripsi}
                 </p>
               </div>
               <div className="mt-4 border-t border-border/60 pt-3 text-[11px] font-semibold text-accent-dark">
@@ -344,10 +347,10 @@ export default async function HalamanUtamaLandingPage() {
                   <TrendingUp className="h-6 w-6" />
                 </span>
                 <h3 className="mt-4 font-heading text-base font-bold text-ink">
-                  Monitoring Akademik
+                  {landing.pilar[2].judul}
                 </h3>
                 <p className="mt-2 text-xs text-muted leading-relaxed">
-                  Perkembangan IPK dan laporan studi mahasiswa dipantau berkala sebagai syarat keberlanjutan beasiswa tiap semester.
+                  {landing.pilar[2].deskripsi}
                 </p>
               </div>
               <div className="mt-4 border-t border-border/60 pt-3 text-[11px] font-semibold text-primary">
@@ -362,10 +365,10 @@ export default async function HalamanUtamaLandingPage() {
                   <FileCheck2 className="h-6 w-6" />
                 </span>
                 <h3 className="mt-4 font-heading text-base font-bold text-ink">
-                  Akuntabilitas Transparan
+                  {landing.pilar[3].judul}
                 </h3>
                 <p className="mt-2 text-xs text-muted leading-relaxed">
-                  Setiap rupiah tercatat dalam ledger keuangan terverifikasi dan dapat dipantau laporannya langsung oleh para donatur.
+                  {landing.pilar[3].deskripsi}
                 </p>
               </div>
               <div className="mt-4 border-t border-border/60 pt-3 text-[11px] font-semibold text-navy">
@@ -384,11 +387,12 @@ export default async function HalamanUtamaLandingPage() {
             <div className="lg:col-span-6">
               <div className="overflow-hidden rounded-3xl border border-border shadow-xl">
                 <Image
-                  src="/images/beasiswa-keluarga-3.jpg"
+                  src={landing.gambar.ceritaFoto || "/images/beasiswa-keluarga-3.jpg"}
                   alt="Keluarga Bahagia Penerima Beasiswa UIKA"
                   width={700}
                   height={500}
                   className="w-full h-80 sm:h-96 object-cover"
+                  unoptimized={Boolean(landing.gambar.ceritaFoto)}
                 />
               </div>
             </div>
@@ -411,20 +415,21 @@ export default async function HalamanUtamaLandingPage() {
               {/* Card Nomor Rekening BSI */}
               <div className="mt-6 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary-dark via-primary to-[#0e584f] p-6 text-white shadow-md">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-white/80">Bank Syariah Indonesia (BSI)</span>
+                  <span className="text-xs font-semibold text-white/80">{landing.rekening.bank}</span>
                   <Image
-                    src="/images/logo-uika.png"
+                    src={logo}
                     alt="Logo UIKA"
                     width={24}
                     height={24}
                     className="h-6 w-6 object-contain"
+                    unoptimized={Boolean(landing.gambar.logo)}
                   />
                 </div>
                 <p className="mt-3 font-mono text-2xl sm:text-3xl font-bold tracking-wider text-accent">
-                  7367215121
+                  {landing.rekening.nomor}
                 </p>
                 <p className="mt-1 text-xs font-medium text-white/90">
-                  a.n. Orang Tua Asuh UIKA Bogor
+                  a.n. {landing.rekening.atasNama}
                 </p>
 
                 {/* Quick CTA di dalam card rekening */}
@@ -434,7 +439,7 @@ export default async function HalamanUtamaLandingPage() {
                   </span>
                   <div className="flex flex-wrap items-center gap-2">
                     <a
-                      href="https://wa.me/6281383155797?text=Assalamu%27alaikum%20Warahmatullahi%20Wabarakatuh%2C%20saya%20ingin%20konfirmasi%20transfer%20donasi%20Program%20Beasiswa%20Orang%20Tua%20Asuh%20UIKA%20Bogor."
+                      href={`https://wa.me/${keFormatWaMe(kontak1.nomor)}?text=${PESAN_WA_KONFIRMASI}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-500"
@@ -443,7 +448,7 @@ export default async function HalamanUtamaLandingPage() {
                       <span>WA Kontak 1</span>
                     </a>
                     <a
-                      href="https://wa.me/6281807146988?text=Assalamu%27alaikum%20Warahmatullahi%20Wabarakatuh%2C%20saya%20ingin%20konfirmasi%20transfer%20donasi%20Program%20Beasiswa%20Orang%20Tua%20Asuh%20UIKA%20Bogor."
+                      href={`https://wa.me/${keFormatWaMe(kontak2.nomor)}?text=${PESAN_WA_KONFIRMASI}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-500"
@@ -469,12 +474,12 @@ export default async function HalamanUtamaLandingPage() {
                   {/* Kontak 1: Nurseha Marasabessy */}
                   <div className="flex flex-col justify-between rounded-xl border border-border bg-surface-alt/40 p-3.5 transition-all hover:border-primary/50 hover:bg-surface">
                     <div>
-                      <p className="font-bold text-ink text-xs sm:text-sm">Nurseha Marasabessy, S.H.</p>
-                      <p className="font-mono text-xs text-primary font-semibold mt-0.5">0813-8315-5797</p>
+                      <p className="font-bold text-ink text-xs sm:text-sm">{kontak1.nama}</p>
+                      <p className="font-mono text-xs text-primary font-semibold mt-0.5">{kontak1.nomor}</p>
                     </div>
                     <div className="mt-3">
                       <a
-                        href="https://wa.me/6281383155797?text=Assalamu%27alaikum%20Warahmatullahi%20Wabarakatuh%2C%20saya%20ingin%20konfirmasi%20transfer%20donasi%20Program%20Beasiswa%20Orang%20Tua%20Asuh%20UIKA%20Bogor."
+                        href={`https://wa.me/${keFormatWaMe(kontak1.nomor)}?text=${PESAN_WA_KONFIRMASI}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-700 active:scale-[0.98]"
@@ -485,15 +490,15 @@ export default async function HalamanUtamaLandingPage() {
                     </div>
                   </div>
 
-                  {/* Kontak 2: Siti Nuraziyah */}
+                  {/* Kontak 2 */}
                   <div className="flex flex-col justify-between rounded-xl border border-border bg-surface-alt/40 p-3.5 transition-all hover:border-primary/50 hover:bg-surface">
                     <div>
-                      <p className="font-bold text-ink text-xs sm:text-sm">Siti Nuraziyah, S.Ak.</p>
-                      <p className="font-mono text-primary font-semibold text-xs mt-0.5">0818-0714-6988</p>
+                      <p className="font-bold text-ink text-xs sm:text-sm">{kontak2.nama}</p>
+                      <p className="font-mono text-primary font-semibold text-xs mt-0.5">{kontak2.nomor}</p>
                     </div>
                     <div className="mt-3">
                       <a
-                        href="https://wa.me/6281807146988?text=Assalamu%27alaikum%20Warahmatullahi%20Wabarakatuh%2C%20saya%20ingin%20konfirmasi%20transfer%20donasi%20Program%20Beasiswa%20Orang%20Tua%20Asuh%20UIKA%20Bogor."
+                        href={`https://wa.me/${keFormatWaMe(kontak2.nomor)}?text=${PESAN_WA_KONFIRMASI}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-700 active:scale-[0.98]"

@@ -1,27 +1,8 @@
 import { prisma } from "@/lib/db";
 
-async function ortuAsuhIdDariUser(userId: string): Promise<string> {
-  const ortuAsuh = await prisma.ortuAsuh.findUnique({
-    where: { userId },
-    select: { id: true },
-  });
-  if (!ortuAsuh) {
-    throw new Error("Profil orang tua asuh tidak ditemukan untuk user ini");
-  }
-  return ortuAsuh.id;
-}
-
-export async function ambilOrtuAsuhIdUser(userId: string): Promise<string> {
-  return ortuAsuhIdDariUser(userId);
-}
-
-/** Profil lengkap, dipakai untuk validasi syarat POTONG_GAJI (tipe + NIP). */
-export async function ambilOrtuAsuhDariUser(userId: string) {
-  const ortuAsuh = await prisma.ortuAsuh.findUnique({ where: { userId } });
-  if (!ortuAsuh) {
-    throw new Error("Profil orang tua asuh tidak ditemukan untuk user ini");
-  }
-  return ortuAsuh;
+/** Jumlah komitmen donatur yang masih perlu dikonfirmasi admin — dipakai badge sidebar. */
+export async function ambilJumlahKomitmenMenunggu(): Promise<number> {
+  return prisma.komitmen.count({ where: { status: "MENUNGGU_KONFIRMASI" } });
 }
 
 /** Periode yang masih boleh dipilih donatur — periode SELESAI terkunci, tidak boleh ada mutasi baru. */
@@ -32,18 +13,16 @@ export async function ambilPeriodeUntukKomitmen() {
   });
 }
 
-/** Komitmen milik donatur yang sedang login — scoping kepemilikan DI QUERY. */
-export async function ambilKomitmenOrtuAsuh(userId: string) {
-  const ortuAsuhId = await ortuAsuhIdDariUser(userId);
+/** Komitmen milik donatur — dipakai halaman publik /laporan/{kodeAkses}. */
+export async function ambilKomitmenOrtuAsuh(ortuAsuhId: string) {
   return prisma.komitmen.findMany({
     where: { ortuAsuhId },
     orderBy: { createdAt: "desc" },
   });
 }
 
-/** Jadwal bayar milik donatur yang sedang login, untuk halaman /donatur/pembayaran. */
-export async function ambilJadwalBayarOrtuAsuh(userId: string) {
-  const ortuAsuhId = await ortuAsuhIdDariUser(userId);
+/** Jadwal bayar milik donatur — dipakai halaman publik /laporan/{kodeAkses}. */
+export async function ambilJadwalBayarOrtuAsuh(ortuAsuhId: string) {
   return prisma.jadwalBayar.findMany({
     where: { komitmen: { ortuAsuhId } },
     include: {
@@ -52,16 +31,6 @@ export async function ambilJadwalBayarOrtuAsuh(userId: string) {
     },
     orderBy: { jatuhTempo: "asc" },
   });
-}
-
-/** Satu komitmen milik donatur yang sedang login — dipakai untuk cek kepemilikan sebelum mutasi. */
-export async function ambilKomitmenMilikOrtuAsuh(komitmenId: string, userId: string) {
-  const ortuAsuhId = await ortuAsuhIdDariUser(userId);
-  const komitmen = await prisma.komitmen.findUnique({ where: { id: komitmenId } });
-  if (!komitmen || komitmen.ortuAsuhId !== ortuAsuhId) {
-    return null;
-  }
-  return komitmen;
 }
 
 /** Daftar komitmen untuk panel admin, dengan filter status opsional. */

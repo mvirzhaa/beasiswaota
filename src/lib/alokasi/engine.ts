@@ -36,6 +36,13 @@ export interface TransaksiTersedia {
   sisaNominal: bigint;
   /** Dipakai untuk urutan FIFO — transaksi terverifikasi tertua dipakai dulu. */
   tglBayar: Date;
+  /**
+   * Earmark donatur (Komitmen.targetMahasiswaId): kalau diisi, dana ini HANYA
+   * boleh dipakai untuk mahasiswa itu. Opsional supaya tidak memaksa test
+   * lama untuk susunRencana() (fungsi murni ini sendiri tidak peduli field
+   * ini — partisi earmark terjadi di jalankanAlokasi(), bukan di sini).
+   */
+  targetMahasiswaId?: string | null;
 }
 
 export interface SusunRencanaInput {
@@ -251,18 +258,12 @@ export async function jalankanAlokasi(
       ambilKandidatBelumLunas(tx, opsi.periodeId),
     ]);
 
-    const saldoPool = transaksiTerverifikasi.reduce(
-      (acc, t) => acc + t.sisaNominal,
-      0n,
-    );
-
-    const rencana = susunRencana({
-      periodeId: opsi.periodeId,
-      saldoPool,
+    const rencana = susunRencanaDenganEarmark(
+      opsi.periodeId,
+      transaksiTerverifikasi,
       kandidat,
-      transaksiTersedia: transaksiTerverifikasi,
-      mode: opsi.mode,
-    });
+      opsi.mode,
+    );
 
     if (opsi.dryRun) {
       return { rencana, batchId: null };
@@ -319,7 +320,7 @@ async function ambilTransaksiTersediaFifo(
 ): Promise<TransaksiTersedia[]> {
   const kredit = await tx.danaLedger.findMany({
     where: { periodeId, tipe: "KREDIT", transaksiId: { not: null } },
-    include: { transaksi: true },
+    include: { transaksi: { include: { komitmen: true } } },
   });
 
   const hasil: TransaksiTersedia[] = [];
@@ -337,6 +338,7 @@ async function ambilTransaksiTersediaFifo(
         transaksiId: baris.transaksi.id,
         sisaNominal,
         tglBayar: baris.transaksi.tglBayar,
+        targetMahasiswaId: baris.transaksi.komitmen?.targetMahasiswaId ?? null,
       });
     }
   }
@@ -372,6 +374,98 @@ async function ambilKandidatBelumLunas(
       createdAt: t.createdAt,
     };
   });
+}
+
+// ============================================================================
+// Earmarking (Fase 2 — form pendaftaran donatur v2). Donatur boleh memilih
+// dananya HANYA untuk 1 mahasiswa tertentu (Komitmen.targetMahasiswaId),
+// bukan masuk pool umum. susunRencana() DI ATAS TIDAK TAHU APA-APA soal ini
+// dan tidak diubah satu baris pun — earmark ditegakkan di sini dengan cara
+// memanggil susunRencana() berkali-kali: sekali per mahasiswa yang punya
+// dana earmarked (kandidatnya dibatasi hanya tagihan mahasiswa itu), lalu
+// sekali lagi untuk pool umum (kandidatnya semua yang BELUM terpenuhi lewat
+// earmark). Hasilnya digabung jadi satu RencanaAlokasi supaya sisa alur
+// (satu batchId, satu halaman simulasi, satu setujuiBatch()) tidak berubah.
+// ============================================================================
+
+function susunRencanaDenganEarmark(
+  periodeId: string,
+  transaksiTerverifikasi: TransaksiTersedia[],
+  kandidat: KandidatAlokasi[],
+  mode?: ModeAlokasi,
+): RencanaAlokasi {
+  const kelompokEarmark = new Map<string, TransaksiTersedia[]>();
+  const kolamUmum: TransaksiTersedia[] = [];
+
+  for (const t of transaksiTerverifikasi) {
+    if (t.targetMahasiswaId) {
+      const kelompok = kelompokEarmark.get(t.targetMahasiswaId) ?? [];
+      kelompok.push(t);
+      kelompokEarmark.set(t.targetMahasiswaId, kelompok);
+    } else {
+      kolamUmum.push(t);
+    }
+  }
+
+  const bagianRencana: RencanaAlokasi[] = [];
+  const tagihanSudahDidanaiEarmark = new Set<string>();
+
+  // Urutkan mahasiswaId supaya urutan eksekusi antar kelompok earmark
+  // deterministik (Map mempertahankan urutan insersi, tapi insersi
+  // bergantung urutan baris DB — tetap disortir eksplisit untuk jaga-jaga).
+  const daftarMahasiswaEarmark = [...kelompokEarmark.keys()].sort();
+
+  for (const mahasiswaId of daftarMahasiswaEarmark) {
+    const transaksiKelompok = kelompokEarmark.get(mahasiswaId)!;
+    const kandidatKelompok = kandidat.filter((k) => k.mahasiswaId === mahasiswaId);
+    const saldoKelompok = transaksiKelompok.reduce((acc, t) => acc + t.sisaNominal, 0n);
+
+    const rencanaKelompok = susunRencana({
+      periodeId,
+      saldoPool: saldoKelompok,
+      kandidat: kandidatKelompok,
+      transaksiTersedia: transaksiKelompok,
+      mode,
+    });
+
+    rencanaKelompok.penerima.forEach((p) => tagihanSudahDidanaiEarmark.add(p.tagihanId));
+    bagianRencana.push(rencanaKelompok);
+  }
+
+  // Kandidat pool umum: semua tagihan yang belum lunas dari earmark manapun.
+  // Mode KUOTA_TUNTAS hanya melunasi penuh atau tidak sama sekali, jadi
+  // tagihan yang sudah "penerima" di suatu earmark cukup dikeluarkan —
+  // tidak ada sisaTagihan parsial yang perlu dikurangi.
+  const kandidatUmum = kandidat.filter((k) => !tagihanSudahDidanaiEarmark.has(k.tagihanId));
+  const saldoUmum = kolamUmum.reduce((acc, t) => acc + t.sisaNominal, 0n);
+
+  bagianRencana.push(
+    susunRencana({
+      periodeId,
+      saldoPool: saldoUmum,
+      kandidat: kandidatUmum,
+      transaksiTersedia: kolamUmum,
+      mode,
+    }),
+  );
+
+  return gabungRencana(periodeId, mode ?? "KUOTA_TUNTAS", bagianRencana);
+}
+
+function gabungRencana(
+  periodeId: string,
+  mode: ModeAlokasi,
+  bagian: RencanaAlokasi[],
+): RencanaAlokasi {
+  return {
+    periodeId,
+    mode,
+    saldoAwal: bagian.reduce((acc, b) => acc + b.saldoAwal, 0n),
+    saldoAkhir: bagian.reduce((acc, b) => acc + b.saldoAkhir, 0n),
+    totalDialokasikan: bagian.reduce((acc, b) => acc + b.totalDialokasikan, 0n),
+    penerima: bagian.flatMap((b) => b.penerima),
+    antrian: bagian.flatMap((b) => b.antrian),
+  };
 }
 
 export interface SetujuiBatchOpsi {

@@ -24,6 +24,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!user || !user.passwordHash) return null;
         if (!bolehLogin(user.status)) return null;
 
+        // Jalur publik (/login) menolak role ADMIN; jalur rahasia admin
+        // (lihat src/app/[secretSlug]/) menolak selain role ADMIN. Dicek
+        // sebelum verifikasi password supaya percobaan kredensial admin
+        // di halaman publik selalu gagal dengan pesan yang sama generiknya.
+        const cocokMode =
+          parsed.data.mode === "admin" ? user.role === "ADMIN" : user.role !== "ADMIN";
+        if (!cocokMode) return null;
+
         const cocok = await argon2.verify(user.passwordHash, parsed.data.password);
         if (!cocok) return null;
 

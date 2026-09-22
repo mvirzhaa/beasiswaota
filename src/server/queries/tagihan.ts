@@ -1,9 +1,7 @@
 import { prisma } from "@/lib/db";
-import { ambilMahasiswaIdUser } from "./pengajuan";
 
-/** Tagihan milik mahasiswa yang sedang login — scoping kepemilikan DI QUERY. */
-export async function ambilTagihanMahasiswa(userId: string) {
-  const mahasiswaId = await ambilMahasiswaIdUser(userId);
+/** Tagihan satu mahasiswa — dipakai halaman detail admin (/admin/mahasiswa/[id]). */
+export async function ambilTagihanMahasiswa(mahasiswaId: string) {
   return prisma.tagihan.findMany({
     where: { mahasiswaId },
     include: { periode: { select: { kode: true } } },
@@ -36,9 +34,7 @@ export interface BarisRiwayatBantuan {
  * tetap praktik aman untuk tidak pernah memilih kolom kontak di luar
  * kebutuhan tampilan).
  */
-export async function ambilRiwayatBantuanMahasiswa(userId: string): Promise<BarisRiwayatBantuan[]> {
-  const mahasiswaId = await ambilMahasiswaIdUser(userId);
-
+export async function ambilRiwayatBantuanMahasiswa(mahasiswaId: string): Promise<BarisRiwayatBantuan[]> {
   const sumber = await prisma.alokasiSumber.findMany({
     where: {
       alokasi: {

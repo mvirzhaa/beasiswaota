@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { parseRupiah } from "@/lib/uang";
 import { parseBarisRealisasiPotongGaji } from "@/lib/potong-gaji/xlsx-parse";
 import { bacaBarisXlsxRealisasi } from "@/lib/potong-gaji/xlsx-io";
 import { ambilJadwalBayarUntukPotonganGaji } from "@/server/queries/potong-gaji";
@@ -172,4 +174,67 @@ export async function komitImporPotonganGaji(nomorBatch: string, dataJson: strin
     sukses: berhasil > 0,
     pesan: `${berhasil} baris berhasil dicatat.${gagal.length > 0 ? " Gagal: " + gagal.join("; ") : ""}`,
   };
+}
+
+// ============================================================================
+// Input manual — satu baris realisasi tanpa lewat Excel, untuk kasus
+// pengecualian/susulan. Reuse validasi & kreditkanTransaksiBaru yang sama
+// persis dipakai jalur impor di atas, bukan logika baru.
+// ============================================================================
+
+const inputManualSchema = z.object({
+  jadwalBayarId: z.string().min(1, "Pilih jadwal potongan gaji"),
+  nominal: z.string().min(1, "Nominal wajib diisi"),
+  tanggal: z.string().min(1, "Tanggal realisasi wajib diisi"),
+});
+
+export async function catatPotonganGajiManual(formData: FormData): Promise<HasilAksi> {
+  const admin = await sesiAdmin();
+
+  const parsed = inputManualSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) {
+    return { sukses: false, pesan: parsed.error.issues[0]?.message ?? "Data tidak valid." };
+  }
+
+  let nominal: bigint;
+  try {
+    nominal = parseRupiah(parsed.data.nominal);
+  } catch {
+    return { sukses: false, pesan: "Nominal tidak valid." };
+  }
+  if (nominal <= 0n) {
+    return { sukses: false, pesan: "Nominal harus lebih besar dari nol." };
+  }
+
+  const jadwal = await ambilJadwalBayarUntukPotonganGaji(parsed.data.jadwalBayarId);
+  if (!jadwal) {
+    return { sukses: false, pesan: "Jadwal potongan gaji tidak ditemukan." };
+  }
+  if (jadwal.komitmen.mekanisme !== "POTONG_GAJI") {
+    return { sukses: false, pesan: "Komitmen ini bukan mekanisme POTONG_GAJI." };
+  }
+  if (jadwal.status === "TERBAYAR" || jadwal.status === "DIBATALKAN") {
+    return { sukses: false, pesan: "Jadwal ini sudah tidak menerima pembayaran baru." };
+  }
+
+  const hasil = await kreditkanTransaksiBaru(prisma, {
+    ortuAsuhId: jadwal.komitmen.ortuAsuhId,
+    komitmenId: jadwal.komitmen.id,
+    jadwalBayarId: jadwal.id,
+    nominal,
+    metode: "POTONG_GAJI",
+    refEksternal: `potong-gaji-manual-${jadwal.id}`,
+    tglBayar: new Date(parsed.data.tanggal),
+    periodeId: jadwal.periodeId,
+    keterangan: `Potong gaji (input manual) — ${jadwal.komitmen.ortuAsuh.nama}`,
+    aktorAuditId: admin.id,
+    aksiAudit: "transaksi.input_manual_potong_gaji",
+  });
+
+  if (!hasil.sukses) {
+    return { sukses: false, pesan: "Jadwal ini sudah pernah dicatat sebelumnya." };
+  }
+
+  revalidatePath("/admin/potong-gaji");
+  return { sukses: true, pesan: "Potongan gaji berhasil dicatat." };
 }

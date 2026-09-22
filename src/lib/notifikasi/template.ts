@@ -66,21 +66,19 @@ export function templateKomitmenMenunggak(input: {
   };
 }
 
-export function templateAkunDibuatAdmin(input: {
-  nama: string;
-  email: string;
-  password: string;
-  loginUrl: string;
+export function templateLaporanSemesterSiap(input: {
+  namaDonatur: string;
+  periodeKode: string;
+  url: string;
 }): EmailTerkomposisi {
   return {
-    subject: "Akun Beasiswa Orangtua Asuh Anda sudah dibuat",
+    subject: `Laporan penyaluran dana periode ${input.periodeKode} sudah tersedia`,
     html: BUNGKUS(`
-      <p>Yth. ${input.nama},</p>
-      <p>Admin telah membuatkan akun untuk Anda di Sistem Beasiswa Orangtua Asuh UIKA.</p>
-      <p>Email: <strong>${input.email}</strong><br/>
-      Kata sandi sementara: <strong>${input.password}</strong></p>
-      <p>Silakan masuk di <a href="${input.loginUrl}">${input.loginUrl}</a>. Simpan kata sandi
-      ini baik-baik dan hubungi admin bila ingin menggantinya.</p>
+      <p>Yth. ${input.namaDonatur},</p>
+      <p>Periode ${input.periodeKode} telah ditutup. Laporan penyaluran dana Anda untuk
+      periode ini sudah tersedia dan bisa dilihat di
+      <a href="${input.url}">${input.url}</a>.</p>
+      <p>Terima kasih atas kepedulian Anda terhadap mahasiswa penerima beasiswa.</p>
       <p>Beasiswa Orangtua Asuh — Universitas Ibn Khaldun Bogor</p>
     `),
   };

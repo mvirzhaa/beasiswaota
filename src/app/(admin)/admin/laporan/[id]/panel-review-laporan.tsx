@@ -2,6 +2,8 @@
 
 import { useActionState } from "react";
 import type { HasilAksi } from "@/types/aksi";
+import { Tombol } from "@/components/ui/tombol";
+import { CheckCircle2, RotateCcw } from "lucide-react";
 import { verifikasiLaporan, mintaRevisiLaporan } from "../actions";
 
 const STATE_AWAL: HasilAksi = { sukses: false, pesan: "" };
@@ -18,42 +20,44 @@ export function PanelReviewLaporan({ laporanId }: { laporanId: string }) {
   );
 
   return (
-    <section className="mt-6 flex flex-col gap-4 border-t pt-4">
-      <h2 className="font-heading text-lg font-bold text-ink">Keputusan</h2>
+    <div className="mt-5 rounded-2xl border border-border bg-surface p-6">
+      <h2 className="border-b border-border pb-3 font-heading text-base font-bold text-ink">Keputusan</h2>
 
-      <form action={actionVerif}>
-        <button
-          type="submit"
-          disabled={pendingVerif}
-          className="rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
-        >
-          {pendingVerif ? "Memproses..." : "Verifikasi"}
-        </button>
-        {stateVerif.pesan && (
-          <span className={`ml-2 text-sm ${stateVerif.sukses ? "text-green-700" : "text-red-600"}`}>
-            {stateVerif.pesan}
-          </span>
-        )}
-      </form>
+      <div className="mt-4 flex flex-col gap-5">
+        <form action={actionVerif} className="flex items-center gap-2.5">
+          <Tombol type="submit" disabled={pendingVerif} variant="primer">
+            <CheckCircle2 className="h-4 w-4" />
+            <span>{pendingVerif ? "Memproses..." : "Verifikasi"}</span>
+          </Tombol>
+          {stateVerif.pesan && (
+            <span className={`text-xs font-medium ${stateVerif.sukses ? "text-green-700" : "text-red-600"}`}>
+              {stateVerif.pesan}
+            </span>
+          )}
+        </form>
 
-      <form action={actionRevisi} className="flex flex-col gap-2">
-        <label className="flex flex-col gap-1 text-sm">
-          <span>Catatan revisi (wajib)</span>
-          <textarea name="catatan" rows={2} className="rounded-lg border border-border px-2 py-1" />
-        </label>
-        <button
-          type="submit"
-          disabled={pendingRevisi}
-          className="w-fit rounded border border-amber-600 px-4 py-2 text-sm text-amber-700 disabled:opacity-50"
-        >
-          {pendingRevisi ? "Memproses..." : "Minta revisi"}
-        </button>
-        {stateRevisi.pesan && (
-          <span className={stateRevisi.sukses ? "text-sm text-green-700" : "text-sm text-red-600"}>
-            {stateRevisi.pesan}
-          </span>
-        )}
-      </form>
-    </section>
+        <form action={actionRevisi} className="flex flex-col gap-2.5 border-t border-border pt-5">
+          <label className="flex flex-col gap-1.5 text-[13px]">
+            <span className="font-semibold text-ink">Catatan Revisi (wajib)</span>
+            <textarea
+              name="catatan"
+              rows={2}
+              className="rounded-[10px] border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </label>
+          <div className="flex items-center gap-2.5">
+            <Tombol type="submit" disabled={pendingRevisi} variant="garis" className="w-fit border-amber-300 text-amber-700 hover:bg-amber-50">
+              <RotateCcw className="h-4 w-4" />
+              <span>{pendingRevisi ? "Memproses..." : "Minta Revisi"}</span>
+            </Tombol>
+            {stateRevisi.pesan && (
+              <span className={`text-xs font-medium ${stateRevisi.sukses ? "text-green-700" : "text-red-600"}`}>
+                {stateRevisi.pesan}
+              </span>
+            )}
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }

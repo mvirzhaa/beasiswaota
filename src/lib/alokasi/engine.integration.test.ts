@@ -22,10 +22,8 @@ describe.skipIf(!dbReady)("jalankanAlokasi — integrasi database sungguhan", ()
   const ids = {
     periode: "",
     mahasiswa: "",
-    userMahasiswa: "",
     tagihan: "",
     ortuAsuh: "",
-    userOrtuAsuh: "",
     userAdmin: "",
     transaksi: "",
   };
@@ -46,19 +44,8 @@ describe.skipIf(!dbReady)("jalankanAlokasi — integrasi database sungguhan", ()
     });
     ids.periode = periode.id;
 
-    const userMahasiswa = await prisma.user.create({
-      data: {
-        email: `mhs-test-6-${sufiks}@uika-bogor.ac.id`,
-        passwordHash: "x",
-        role: "MAHASISWA",
-        status: "AKTIF",
-      },
-    });
-    ids.userMahasiswa = userMahasiswa.id;
-
     const mahasiswa = await prisma.mahasiswa.create({
       data: {
-        userId: userMahasiswa.id,
         nim: `TEST6-${sufiks}`,
         nama: "Mahasiswa Uji Konkurensi",
         fakultas: "Fakultas Uji",
@@ -83,19 +70,8 @@ describe.skipIf(!dbReady)("jalankanAlokasi — integrasi database sungguhan", ()
     });
     ids.tagihan = tagihan.id;
 
-    const userOrtuAsuh = await prisma.user.create({
-      data: {
-        email: `ortu-test-6-${sufiks}@example.com`,
-        passwordHash: "x",
-        role: "ORTU_ASUH",
-        status: "AKTIF",
-      },
-    });
-    ids.userOrtuAsuh = userOrtuAsuh.id;
-
     const ortuAsuh = await prisma.ortuAsuh.create({
       data: {
-        userId: userOrtuAsuh.id,
         nama: "Donatur Uji Konkurensi",
         tipe: "INDIVIDU",
         noHp: "080000000001",
@@ -144,9 +120,7 @@ describe.skipIf(!dbReady)("jalankanAlokasi — integrasi database sungguhan", ()
     await prisma.tagihan.deleteMany({ where: { id: ids.tagihan } });
     await prisma.mahasiswa.deleteMany({ where: { id: ids.mahasiswa } });
     await prisma.ortuAsuh.deleteMany({ where: { id: ids.ortuAsuh } });
-    await prisma.user.deleteMany({
-      where: { id: { in: [ids.userMahasiswa, ids.userOrtuAsuh, ids.userAdmin] } },
-    });
+    await prisma.user.deleteMany({ where: { id: ids.userAdmin } });
     await prisma.periode.deleteMany({ where: { id: ids.periode } });
     await prisma.$disconnect();
   });

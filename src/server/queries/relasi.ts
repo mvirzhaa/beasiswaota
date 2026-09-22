@@ -1,14 +1,9 @@
 import { prisma } from "@/lib/db";
-import { ambilOrtuAsuhIdUser } from "./komitmen";
-import { ambilMahasiswaIdUser } from "./pengajuan";
 
 // ============================================================================
-// PRINSIP KERAS (CLAUDE.md aturan keras #10 & #11) — WAJIB dijaga di file ini:
-//   - "mahasiswa binaan saya" HANYA ditentukan dari tabel RelasiAsuh, TIDAK
-//     PERNAH diturunkan dari AlokasiSumber/aliran dana.
-//   - Selama RelasiAsuh.persetujuanMahasiswa masih false, donatur hanya
-//     boleh melihat AGREGAT tanpa identitas — dicek DI QUERY ini, bukan
-//     disembunyikan di komponen UI.
+// PRINSIP KERAS (CLAUDE.md aturan keras #10) — WAJIB dijaga di file ini:
+//   "mahasiswa binaan saya" HANYA ditentukan dari tabel RelasiAsuh, TIDAK
+//   PERNAH diturunkan dari AlokasiSumber/aliran dana.
 // ============================================================================
 
 /**
@@ -62,9 +57,9 @@ export async function ambilRelasiDetailAdmin(id: string) {
 }
 
 /**
- * Dashboard donatur (/donatur/binaan). Ini titik penegakan aturan keras #11:
- * relasi tanpa persetujuan mahasiswa TIDAK PERNAH mengembalikan identitas,
- * hanya masuk hitungan agregat.
+ * Halaman publik /laporan/{kodeAkses} (lihat src/app/(publik)/laporan).
+ * Tidak ada lagi syarat persetujuan mahasiswa (mahasiswa tak punya akun
+ * untuk menyetujui) — semua relasi aktif donatur ini ditampilkan lengkap.
  */
 export interface BinaanTeridentifikasi {
   relasiId: string;
@@ -76,27 +71,16 @@ export interface BinaanTeridentifikasi {
   laporanTerbaru: { periodeKode: string; status: string; isi: string } | null;
 }
 
-export interface AgregatBinaanTanpaIdentitas {
-  jumlah: number;
-  rataRataIpkTerbaru: number | null;
-}
-
-export async function ambilDaftarBinaanOrtuAsuh(userId: string): Promise<{
-  teridentifikasi: BinaanTeridentifikasi[];
-  agregat: AgregatBinaanTanpaIdentitas;
-}> {
-  const ortuAsuhId = await ambilOrtuAsuhIdUser(userId);
-
+export async function ambilDaftarBinaanOrtuAsuh(
+  ortuAsuhId: string,
+): Promise<BinaanTeridentifikasi[]> {
   const relasiAktif = await prisma.relasiAsuh.findMany({
     where: { ortuAsuhId, status: "AKTIF" },
-    select: { id: true, mahasiswaId: true, persetujuanMahasiswa: true },
+    select: { id: true, mahasiswaId: true },
   });
 
-  const disetujui = relasiAktif.filter((r) => r.persetujuanMahasiswa);
-  const belumSetuju = relasiAktif.filter((r) => !r.persetujuanMahasiswa);
-
   const teridentifikasi: BinaanTeridentifikasi[] = [];
-  for (const r of disetujui) {
+  for (const r of relasiAktif) {
     const mahasiswa = await prisma.mahasiswa.findUnique({
       where: { id: r.mahasiswaId },
       select: SELECT_MAHASISWA_UNTUK_DONATUR,
@@ -135,53 +119,5 @@ export async function ambilDaftarBinaanOrtuAsuh(userId: string): Promise<{
     });
   }
 
-  let rataRataIpkTerbaru: number | null = null;
-  if (belumSetuju.length > 0) {
-    const nilaiIpk: number[] = [];
-    for (const r of belumSetuju) {
-      const terbaru = await prisma.monitoringAkademik.findFirst({
-        where: { mahasiswaId: r.mahasiswaId },
-        orderBy: { periode: { tglBuka: "desc" } },
-        select: { ipk: true },
-      });
-      if (terbaru?.ipk !== null && terbaru?.ipk !== undefined) {
-        nilaiIpk.push(Number(terbaru.ipk));
-      }
-    }
-    if (nilaiIpk.length > 0) {
-      rataRataIpkTerbaru = nilaiIpk.reduce((a, b) => a + b, 0) / nilaiIpk.length;
-    }
-  }
-
-  return {
-    teridentifikasi,
-    agregat: { jumlah: belumSetuju.length, rataRataIpkTerbaru },
-  };
-}
-
-/** Relasi yang ditugaskan ke mahasiswa yang sedang login — untuk halaman persetujuan. */
-export async function ambilRelasiMahasiswa(userId: string) {
-  const mahasiswaId = await ambilMahasiswaIdUser(userId);
-  return prisma.relasiAsuh.findMany({
-    where: { mahasiswaId, status: "AKTIF" },
-    select: {
-      id: true,
-      persetujuanMahasiswa: true,
-      persetujuanAt: true,
-      tglMulai: true,
-      ortuAsuh: { select: { nama: true, atasNamaMunfiq: true, tipe: true, anonim: true } },
-      periodeMulai: { select: { kode: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-}
-
-/** Cek kepemilikan sebelum mahasiswa menyetujui/menarik persetujuan (lapis ketiga RBAC). */
-export async function ambilRelasiMilikMahasiswa(relasiId: string, userId: string) {
-  const mahasiswaId = await ambilMahasiswaIdUser(userId);
-  const relasi = await prisma.relasiAsuh.findUnique({ where: { id: relasiId } });
-  if (!relasi || relasi.mahasiswaId !== mahasiswaId) {
-    return null;
-  }
-  return relasi;
+  return teridentifikasi;
 }

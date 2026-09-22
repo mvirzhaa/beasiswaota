@@ -57,16 +57,6 @@ export async function tugaskanRelasi(formData: FormData): Promise<HasilAksi> {
       },
     });
 
-    await tx.notifikasi.create({
-      data: {
-        userId: mahasiswa.userId,
-        kanal: "INAPP",
-        judul: "Permintaan pemantauan dari orang tua asuh",
-        isi: "Seorang orang tua asuh ditugaskan admin untuk memantau progres Anda. Silakan tinjau dan setujui atau tolak di halaman Pembinaan.",
-        tautan: "/mahasiswa/pembinaan",
-      },
-    });
-
     await catatAudit(tx, {
       aktorId: admin.id,
       aksi: "relasi.tugaskan",
@@ -81,7 +71,7 @@ export async function tugaskanRelasi(formData: FormData): Promise<HasilAksi> {
   });
 
   revalidatePath("/admin/pembinaan");
-  return { sukses: true, pesan: `Relasi dibuat (ID ${relasi.id}), menunggu persetujuan mahasiswa.` };
+  return { sukses: true, pesan: `Relasi dibuat (ID ${relasi.id}).` };
 }
 
 export async function alihkanRelasi(relasiId: string, input: unknown): Promise<HasilAksi> {
@@ -130,18 +120,6 @@ export async function alihkanRelasi(relasiId: string, input: unknown): Promise<H
         periodeMulaiId: parsed.data.periodeMulaiId,
         tglMulai: new Date(),
         ditugaskanOlehId: admin.id,
-        // Persetujuan TIDAK dibawa dari relasi lama — mahasiswa perlu
-        // menyetujui ulang untuk pembina yang baru (aturan keras #11).
-      },
-    });
-
-    await tx.notifikasi.create({
-      data: {
-        userId: mahasiswa.userId,
-        kanal: "INAPP",
-        judul: "Pembina Anda dialihkan",
-        isi: "Anda dialihkan ke orang tua asuh baru. Silakan tinjau dan setujui atau tolak pemantauan di halaman Pembinaan.",
-        tautan: "/mahasiswa/pembinaan",
       },
     });
 
