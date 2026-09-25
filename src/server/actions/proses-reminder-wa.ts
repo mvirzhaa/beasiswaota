@@ -25,9 +25,15 @@ export interface HasilProsesReminderWa {
 export async function prosesReminderWaBulanan(db: PrismaClient): Promise<HasilProsesReminderWa> {
   const sekarang = new Date();
   const tanggalHariIni = sekarang.getDate();
+  const akhirBulan = new Date(sekarang.getFullYear(), sekarang.getMonth() + 1, 0).getDate();
+  // Kalau hari ini akhir bulan, tangkap juga tanggalPengingat 29-31 yang tidak
+  // pernah ada di bulan pendek (Februari, bulan 30 hari) — dikirim di hari
+  // terakhir bulan itu supaya donatur tetap dapat pengingat setiap bulan.
+  const kondisiTanggal =
+    tanggalHariIni === akhirBulan ? { gte: tanggalHariIni } : tanggalHariIni;
 
   const komitmenJatuhTempo = await db.komitmen.findMany({
-    where: { status: "AKTIF", tipe: "BERULANG", tanggalPengingat: tanggalHariIni },
+    where: { status: "AKTIF", tipe: "BERULANG", tanggalPengingat: kondisiTanggal },
     include: {
       ortuAsuh: {
         select: { id: true, nama: true, atasNamaMunfiq: true, noHp: true, kodeAkses: true },

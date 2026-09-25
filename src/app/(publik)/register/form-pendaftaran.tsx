@@ -37,6 +37,7 @@ export function FormPendaftaranDonatur({
   const [targetPenyaluran, setTargetPenyaluran] = useState<"SEMUA_PENERIMA" | "SATU_MAHASISWA">(
     "SEMUA_PENERIMA",
   );
+  const [tanggalPengingat, setTanggalPengingat] = useState("");
 
   const isLembaga = kategori === "LEMBAGA";
   const isInternal = !isLembaga && internal === "true";
@@ -248,18 +249,27 @@ export function FormPendaftaranDonatur({
               <span className="font-semibold text-ink">
                 Tanggal Pengingat Bulanan <span className="text-red-500">*</span>
               </span>
-              <input
-                type="number"
+              <select
                 name="tanggalPengingat"
-                min={1}
-                max={31}
-                placeholder="Contoh: 25 (setiap tgl 25)"
+                value={tanggalPengingat}
+                onChange={(e) => setTanggalPengingat(e.target.value)}
                 required
                 className={KELAS_INPUT}
-              />
+              >
+                <option value="" disabled>
+                  Pilih tanggal (1-31)
+                </option>
+                {Array.from({ length: 31 }, (_, i) => i + 1).map((tanggal) => (
+                  <option key={tanggal} value={tanggal}>
+                    Tanggal {tanggal}
+                  </option>
+                ))}
+              </select>
               <span className="flex items-start gap-1.5 text-[11px] text-muted">
                 <Info className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
-                Pengingat pembayaran via WhatsApp dikirim setiap tanggal ini.
+                Pengingat pembayaran via WhatsApp dikirim setiap tanggal ini. Untuk bulan yang
+                tidak punya tanggal ini (mis. tanggal 31 di bulan yang cuma 30 hari), pengingat
+                dikirim di hari terakhir bulan tersebut.
               </span>
             </label>
           )}
