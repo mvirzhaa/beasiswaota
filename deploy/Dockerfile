@@ -56,11 +56,13 @@ ENV NODE_ENV=production \
     APP_URL=https://beasiswaota.uika-bogor.ac.id \
     DATABASE_URL=postgresql://build:build@localhost:5432/build \
     AUTH_SECRET=build-time-placeholder-secret-32-chars-min \
+    ADMIN_LOGIN_PATH=build-time-placeholder-path \
     MINIO_ENDPOINT=localhost \
     MINIO_PORT=9000 \
     MINIO_ROOT_USER=build \
     MINIO_ROOT_PASSWORD=build \
     MINIO_BUCKET=beasiswaota-berkas \
+    MINIO_BUCKET_PUBLIK=beasiswaota-publik \
     MAIL_FROM=beasiswaota@uika-bogor.ac.id \
     CRON_SECRET=build-time-placeholder-secret-16
 
