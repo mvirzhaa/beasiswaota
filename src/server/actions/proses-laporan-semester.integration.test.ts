@@ -1,13 +1,22 @@
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import { prosesNotifikasiLaporanSemester } from "./proses-laporan-semester";
 
 // Test integrasi database sungguhan untuk notifikasi laporan akhir semester
-// (Fase 5). RESEND_API_KEY/WA_API_URL tidak diisi di lingkungan test, jadi
-// kirimEmail()/kirimWa() no-op — yang diuji adalah efek sampingnya di
-// database (Notifikasi dibuat, flag Pengaturan idempoten). Dilewati otomatis
-// kalau DATABASE_URL tidak terjangkau.
+// (Fase 5). RESEND_API_KEY tidak diisi di .env (masih placeholder), jadi
+// kirimEmail() otomatis no-op. WA_API_URL/WA_API_TOKEN DIPAKSA kosong di
+// sini secara eksplisit, terlepas dari isi .env sungguhan — @prisma/client
+// (baris `new PrismaClient()` di bawah) memuat .env sebagai efek samping,
+// jadi kalau WA sudah dikonfigurasi di .env lokal/VPS, tanpa override ini
+// test akan benar-benar mengirim WA ke ChatLoop pakai nomor uji palsu. Yang
+// diuji di sini adalah efek sampingnya di database (Notifikasi dibuat, flag
+// Pengaturan idempoten), bukan pengiriman WA/email sungguhan — itu domain
+// wa.test.ts. Dilewati otomatis kalau DATABASE_URL tidak terjangkau.
+vi.mock("@/lib/env", async (importOriginal) => {
+  const asli = await importOriginal<typeof import("@/lib/env")>();
+  return { ...asli, env: { ...asli.env, WA_API_URL: undefined, WA_API_TOKEN: undefined } };
+});
 const prisma = new PrismaClient();
 
 let dbReady = false;

@@ -35,7 +35,9 @@ VPS di tengah jadwal). Ganti URL di tiap `.service` kalau domain berbeda dari
 `beasiswaota-cron-reminder-wa` mengirim pengingat WhatsApp untuk komitmen
 berkelanjutan pada tanggal yang dipilih donatur sendiri saat mendaftar
 (`Komitmen.tanggalPengingat`) — no-op aman selama `WA_API_URL`/`WA_API_TOKEN`
-di `.env` aplikasi belum diisi (provider WA belum ditentukan).
+di `.env` aplikasi belum diisi. Provider: ChatLoop (csai.uika-bogor.ac.id) —
+`WA_API_URL` diisi base URL-nya, `WA_API_TOKEN` diisi API key yang dibuat di
+dashboard ChatLoop > Integrasi API.
 
 `beasiswaota-cron-laporan-semester` mengecek harian apakah ada periode yang
 baru dikunci admin (status SELESAI, biasanya sekitar April/Oktober) dan

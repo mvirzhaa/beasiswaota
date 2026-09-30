@@ -690,6 +690,9 @@ model Notifikasi {
   tautan      String?
   dibacaAt    DateTime? @map("dibaca_at")
   terkirimAt  DateTime? @map("terkirim_at")
+  // message_id dari respons ChatLoop POST /messages — kosong untuk kanal
+  // selain WA, atau kalau ChatLoop tidak mengembalikannya (mis. gagal kirim).
+  pesanWaId   String?   @map("pesan_wa_id")
   createdAt   DateTime  @default(now()) @map("created_at")
 
   user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)

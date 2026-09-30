@@ -45,6 +45,7 @@ export async function kirimPesanWaManual(ortuAsuhId: string, pesan: string): Pro
       judul: "Pesan dari Admin",
       isi: parsed.data,
       terkirimAt: hasilKirim.terkirim ? new Date() : null,
+      pesanWaId: hasilKirim.messageId,
     },
   });
 
@@ -86,6 +87,7 @@ export async function kirimLaporanWa(ortuAsuhId: string): Promise<HasilAksi> {
       isi: pesan,
       tautan: url,
       terkirimAt: hasilKirim.terkirim ? new Date() : null,
+      pesanWaId: hasilKirim.messageId,
     },
   });
 

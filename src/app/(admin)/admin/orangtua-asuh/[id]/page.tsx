@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, User, LinkIcon } from "lucide-react";
 import { formatRupiah } from "@/lib/uang";
 import { env } from "@/lib/env";
+import { cekStatusWa } from "@/lib/notifikasi/wa";
 import { ambilOrtuAsuhDetailAdmin, ambilNotifikasiOrtuAsuh } from "@/server/queries/ortu-asuh";
 import { Lencana } from "@/components/ui/lencana";
 import { TabDetailOrtuAsuh } from "./tab-detail-ortu-asuh";
@@ -45,6 +46,7 @@ export default async function HalamanDetailOrtuAsuhAdmin({
   const namaTampil = ortuAsuh.atasNamaMunfiq || ortuAsuh.nama;
   const tautanLaporan = `${env.APP_URL}/laporan/${ortuAsuh.kodeAkses}`;
   const riwayatNotifikasi = await ambilNotifikasiOrtuAsuh(id);
+  const statusWa = await cekStatusWa();
 
   const komitmenContent = (
     <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs space-y-4">
@@ -186,7 +188,7 @@ export default async function HalamanDetailOrtuAsuhAdmin({
             </p>
           </div>
 
-          <PanelNotifikasiWa ortuAsuhId={ortuAsuh.id} riwayat={riwayatNotifikasi} />
+          <PanelNotifikasiWa ortuAsuhId={ortuAsuh.id} riwayat={riwayatNotifikasi} statusWa={statusWa} />
         </div>
 
         {/* Right Column (7 cols): Tabbed Sections */}

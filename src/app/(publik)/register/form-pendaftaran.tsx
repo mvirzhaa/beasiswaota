@@ -328,7 +328,7 @@ export function FormPendaftaranDonatur({
               value={targetPenyaluran}
               onChange={(v) => setTargetPenyaluran(v)}
               opsi={[
-                { value: "SEMUA_PENERIMA", label: "Semua Penerima (Pool)" },
+                { value: "SEMUA_PENERIMA", label: "Semua Penerima (Gotong Royong)" },
                 { value: "SATU_MAHASISWA", label: "1 Mahasiswa Tertentu" },
               ]}
             />

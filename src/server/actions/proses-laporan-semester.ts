@@ -1,7 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { env } from "@/lib/env";
 import { kirimEmail } from "@/lib/notifikasi/email";
-import { kirimWa } from "@/lib/notifikasi/wa";
+import { kirimWaBerurutan } from "@/lib/notifikasi/wa";
 import { templateLaporanSemesterSiap } from "@/lib/notifikasi/template";
 import { pesanWaLaporanSemesterSiap } from "@/lib/notifikasi/template-wa";
 
@@ -95,10 +95,22 @@ export async function prosesNotifikasiLaporanSemester(
           templateLaporanSemesterSiap({ namaDonatur, periodeKode: periode.kode, url }),
         );
       }
-      await kirimWa(
+
+      const hasilKirimWa = await kirimWaBerurutan(
         donatur.noHp,
         pesanWaLaporanSemesterSiap({ namaDonatur, periodeKode: periode.kode, url }),
       );
+      await db.notifikasi.create({
+        data: {
+          ortuAsuhId: donatur.id,
+          kanal: "WA",
+          judul: `Laporan penyaluran periode ${periode.kode} sudah tersedia`,
+          isi: pesanWaLaporanSemesterSiap({ namaDonatur, periodeKode: periode.kode, url }),
+          tautan: `/laporan/${donatur.kodeAkses}`,
+          terkirimAt: hasilKirimWa.terkirim ? new Date() : null,
+          pesanWaId: hasilKirimWa.messageId,
+        },
+      });
 
       notifikasiTerkirim += 1;
     }

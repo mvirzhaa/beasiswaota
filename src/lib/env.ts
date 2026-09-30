@@ -43,9 +43,13 @@ const envSchema = z.object({
   MAIL_FROM: z.email(),
 
   // --- WhatsApp (pengingat komitmen berkelanjutan, opsional) ---
-  // Belum ada provider WA resmi yang dipakai UIKA saat berkas ini ditulis.
-  // Kalau kosong, kirimWa() no-op aman (lihat src/lib/notifikasi/wa.ts),
-  // sama seperti pola RESEND_API_KEY di atas.
+  // Provider: ChatLoop (csai.uika-bogor.ac.id). WA_API_URL adalah BASE URL
+  // dari dashboard ChatLoop > Integrasi API (mis.
+  // "https://csai.uika-bogor.ac.id/api/v1"), BUKAN endpoint /messages-nya —
+  // path endpoint disusun di src/lib/notifikasi/wa.ts. WA_API_TOKEN adalah
+  // API key yang dibuat di dashboard yang sama (satu key hanya berlaku
+  // untuk satu nomor CS). Kalau kosong, kirimWa() no-op aman (lihat
+  // src/lib/notifikasi/wa.ts), sama seperti pola RESEND_API_KEY di atas.
   WA_API_URL: z.url().optional(),
   WA_API_TOKEN: z.string().optional(),
 

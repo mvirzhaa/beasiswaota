@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import type { Notifikasi } from "@prisma/client";
 import { Send, MessageCircleMore } from "lucide-react";
 import type { HasilAksi } from "@/types/aksi";
+import type { HasilStatusWa } from "@/lib/notifikasi/wa";
 import { Tombol } from "@/components/ui/tombol";
 import { kirimPesanWaManual, kirimLaporanWa } from "../actions";
 
@@ -12,9 +13,11 @@ const STATE_AWAL: HasilAksi = { sukses: false, pesan: "" };
 export function PanelNotifikasiWa({
   ortuAsuhId,
   riwayat,
+  statusWa,
 }: {
   ortuAsuhId: string;
   riwayat: Notifikasi[];
+  statusWa: HasilStatusWa;
 }) {
   const [stateLaporan, kirimLaporanAction, pendingLaporan] = useActionState(
     async () => kirimLaporanWa(ortuAsuhId),
@@ -30,9 +33,20 @@ export function PanelNotifikasiWa({
 
   return (
     <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs space-y-4">
-      <div className="flex items-center gap-2 border-b border-border pb-3">
-        <MessageCircleMore className="h-4 w-4 text-primary" />
-        <h3 className="font-heading text-base font-bold text-ink">Notifikasi WhatsApp</h3>
+      <div className="flex items-center justify-between gap-2 border-b border-border pb-3">
+        <div className="flex items-center gap-2">
+          <MessageCircleMore className="h-4 w-4 text-primary" />
+          <h3 className="font-heading text-base font-bold text-ink">Notifikasi WhatsApp</h3>
+        </div>
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+            statusWa.tersambung ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
+          }`}
+          title={statusWa.alasan ?? (statusWa.nomor ? `${statusWa.nama ?? "ChatLoop"} · ${statusWa.nomor}` : undefined)}
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${statusWa.tersambung ? "bg-green-600" : "bg-red-500"}`} />
+          {statusWa.tersambung ? "ChatLoop tersambung" : "ChatLoop terputus"}
+        </span>
       </div>
 
       <form action={kirimLaporanAction} className="flex flex-col gap-2">

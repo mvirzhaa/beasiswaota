@@ -1,13 +1,21 @@
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import { prosesReminderWaBulanan } from "./proses-reminder-wa";
 
 // Test integrasi database sungguhan untuk cron pengingat WA (Fase 4).
-// WA_API_URL/WA_API_TOKEN sengaja tidak diisi di lingkungan test, jadi
-// kirimWa() di dalamnya no-op — yang diuji di sini adalah efek sampingnya
+// WA_API_URL/WA_API_TOKEN DIPAKSA kosong di sini, terlepas dari isi .env
+// sungguhan — @prisma/client (baris `new PrismaClient()` di bawah) memuat
+// .env sebagai efek samping, jadi kalau WA sudah dikonfigurasi di .env
+// lokal/VPS, tanpa override ini test akan benar-benar mengirim WA ke
+// ChatLoop pakai nomor uji palsu. Yang diuji di sini adalah efek samping
 // di database (remindedAt, Notifikasi, idempotensi), bukan pengiriman WA
-// sungguhan. Dilewati otomatis kalau DATABASE_URL tidak terjangkau.
+// sungguhan — itu domain wa.test.ts. Dilewati otomatis kalau DATABASE_URL
+// tidak terjangkau.
+vi.mock("@/lib/env", async (importOriginal) => {
+  const asli = await importOriginal<typeof import("@/lib/env")>();
+  return { ...asli, env: { ...asli.env, WA_API_URL: undefined, WA_API_TOKEN: undefined } };
+});
 const prisma = new PrismaClient();
 
 let dbReady = false;

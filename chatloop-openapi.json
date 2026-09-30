@@ -1,0 +1,3938 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ChatLoop REST API",
+    "version": "1.0.0",
+    "description": "Kirim pesan dan hubungkan data WhatsApp dengan sistem Anda.\n\n**Mulai dari GET /status** untuk memeriksa koneksi. Pilih endpoint, masukkan API key pada Authentication, lalu gunakan Test Request untuk mencoba. Permintaan dikirim ke nomor pemilik API key. Pengiriman dan perubahan data akan benar-benar dijalankan.\n\nSatu API key berlaku untuk satu nomor WhatsApp. Data kontak, riwayat, media, dan broadcast dibatasi ke nomor pemilik key. Batas default mengisi ulang 60 request/menit dengan burst 20; pengaturan server dapat mengubah batas ini. Gunakan API key dari server Anda untuk integrasi website.\n\nGunakan Authorization: Bearer <API_KEY> atau X-API-Key. Untuk kompatibilitas, backend juga menerima Authorization berisi key langsung atau query token; utamakan header agar key tidak masuk ke URL/log. Header Authorization diprioritaskan jika beberapa metode dikirim bersamaan."
+  },
+  "servers": [
+    {
+      "url": "https://csai.uika-bogor.ac.id/api/v1",
+      "description": "Server ChatLoop ini"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Sistem",
+      "description": "Periksa koneksi WhatsApp sebelum mulai mengirim."
+    },
+    {
+      "name": "Pesan",
+      "description": "Kirim pesan, cek nomor, dan unduh media."
+    },
+    {
+      "name": "Kontak",
+      "description": "Kelola data pelanggan dan status CRM."
+    },
+    {
+      "name": "Percakapan",
+      "description": "Baca percakapan dan riwayat pesan."
+    },
+    {
+      "name": "Broadcast",
+      "description": "Kirim pesan massal dan pantau hasilnya."
+    },
+    {
+      "name": "OTP",
+      "description": "Kirim dan verifikasi kode sekali pakai."
+    },
+    {
+      "name": "Grup",
+      "description": "Lihat grup dan kirim pesan ke anggota grup."
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    },
+    {
+      "apiKeyHeader": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "API key",
+        "description": "Masukkan wai_… tanpa awalan Bearer. Buat key di tab Panduan & API key."
+      },
+      "apiKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Alternatif header Authorization."
+      }
+    }
+  },
+  "paths": {
+    "/messages": {
+      "post": {
+        "operationId": "send-message",
+        "tags": [
+          "Pesan"
+        ],
+        "summary": "Kirim pesan",
+        "description": "Kirim teks, gambar, video, dokumen, kartu kontak, atau balasan pesan.\n\n- type: text membutuhkan text.\n\n- type: image, video, atau document membutuhkan media_url HTTP/HTTPS publik; caption dan filename bersifat opsional.\n\n- type: contact membutuhkan contact_number; contact_name bersifat opsional.\n\n- reply_to hanya digunakan pada type: text.\n\n- message_id terisi untuk teks pribadi tanpa reply_to. Pengiriman media, kartu kontak, balasan, dan pesan grup mengembalikan message_id kosong.\n\n- Unduhan media dibatasi 16 MB secara default (mengikuti pengaturan server), timeout 30 detik. Host jaringan internal ditolak.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "to",
+                      "text"
+                    ],
+                    "properties": {
+                      "to": {
+                        "type": "string",
+                        "pattern": "[0-9]",
+                        "description": "Nomor pribadi, format 08…, 8…, atau kode negara 62…. Tanda +, spasi, dan pemisah dihapus saat normalisasi.",
+                        "example": "6281234567890"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "text"
+                        ],
+                        "default": "text"
+                      },
+                      "text": {
+                        "type": "string",
+                        "pattern": "\\S",
+                        "description": "Isi pesan WhatsApp; tidak boleh kosong atau hanya spasi."
+                      },
+                      "reply_to": {
+                        "type": "string",
+                        "description": "Opsional: message_id yang ingin dibalas."
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "to",
+                      "type",
+                      "media_url"
+                    ],
+                    "properties": {
+                      "to": {
+                        "type": "string",
+                        "pattern": "[0-9]",
+                        "description": "Nomor pribadi, format 08…, 8…, atau kode negara 62…. Tanda +, spasi, dan pemisah dihapus saat normalisasi.",
+                        "example": "6281234567890"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "image",
+                          "video",
+                          "document"
+                        ]
+                      },
+                      "media_url": {
+                        "type": "string",
+                        "format": "uri",
+                        "pattern": "^https?://",
+                        "description": "URL HTTP/HTTPS publik file media. HTTPS disarankan; host jaringan internal ditolak."
+                      },
+                      "caption": {
+                        "type": "string",
+                        "description": "Keterangan media."
+                      },
+                      "filename": {
+                        "type": "string",
+                        "description": "Nama file dokumen."
+                      },
+                      "text": {
+                        "type": "string",
+                        "description": "Dipakai sebagai caption jika caption kosong."
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "to",
+                      "type",
+                      "contact_number"
+                    ],
+                    "properties": {
+                      "to": {
+                        "type": "string",
+                        "pattern": "[0-9]",
+                        "description": "Nomor pribadi, format 08…, 8…, atau kode negara 62…. Tanda +, spasi, dan pemisah dihapus saat normalisasi.",
+                        "example": "6281234567890"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "contact"
+                        ]
+                      },
+                      "contact_number": {
+                        "type": "string",
+                        "pattern": "[0-9]",
+                        "description": "Nomor pribadi, format 08…, 8…, atau kode negara 62…. Tanda +, spasi, dan pemisah dihapus saat normalisasi.",
+                        "example": "6281234567890"
+                      },
+                      "contact_name": {
+                        "type": "string",
+                        "description": "Nama pada kartu kontak."
+                      },
+                      "text": {
+                        "type": "string",
+                        "description": "Pesan pengantar kartu kontak."
+                      }
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "to": "6281234567890",
+                "type": "text",
+                "text": "Pesanan kamu sudah dikirim."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "sent"
+                    },
+                    "to": {
+                      "type": "string",
+                      "example": "6281234567890"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "text"
+                    },
+                    "message_id": {
+                      "type": "string",
+                      "example": "3EB0..."
+                    }
+                  }
+                },
+                "example": {
+                  "status": "sent",
+                  "to": "6281234567890",
+                  "type": "text",
+                  "message_id": "3EB0..."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, nomor, tipe pesan, atau URL/unduhan media tidak valid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Nomor WhatsApp tidak tersambung.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Gagal mengirim pesan atau mengunggah media ke WhatsApp.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/{message_id}/media": {
+      "get": {
+        "operationId": "message-media",
+        "tags": [
+          "Pesan"
+        ],
+        "summary": "Unduh media pesan",
+        "description": "Ambil media memakai message_id dari event webhook.\n\n- Respons berupa file asli, bukan JSON. Simpan body respons sebagai file atau tampilkan sebagai Blob.",
+        "parameters": [
+          {
+            "name": "message_id",
+            "in": "path",
+            "required": true,
+            "description": "ID pesan WhatsApp.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "3EB0ABC123"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File media asli.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Media tidak ditemukan untuk message_id milik nomor ini.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/{cid}": {
+      "get": {
+        "operationId": "history-media",
+        "tags": [
+          "Pesan"
+        ],
+        "summary": "Unduh media dari riwayat",
+        "description": "Unduh file media memakai ID baris riwayat pesan milik nomor ini.",
+        "parameters": [
+          {
+            "name": "cid",
+            "in": "path",
+            "required": true,
+            "description": "ID baris riwayat pesan.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 81
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File media asli.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Media tidak ditemukan untuk ID riwayat milik nomor ini. Respons dapat kosong atau teks."
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/{message_id}/analysis": {
+      "get": {
+        "operationId": "message-analysis",
+        "tags": [
+          "Pesan"
+        ],
+        "summary": "Hasil analisis gambar",
+        "description": "Ambil hasil vision, jawaban alur, kecocokan produk, dan kebutuhan validasi CS dari gambar atau stiker masuk.\n\n- status dapat bernilai pending, completed, atau failed. Hasil yang belum tersedia tetap HTTP 200 dengan nilai kosong/default.",
+        "parameters": [
+          {
+            "name": "message_id",
+            "in": "path",
+            "required": true,
+            "description": "ID pesan WhatsApp.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "3EB0ABC123"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message_id": {
+                          "type": "string",
+                          "example": "3EB0ABC123"
+                        },
+                        "from": {
+                          "type": "string",
+                          "example": "6281234567890"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "completed"
+                        },
+                        "analysis": {
+                          "type": "string",
+                          "example": "Terlihat sofa warna abu-abu dalam kondisi cukup baik."
+                        },
+                        "answer": {
+                          "type": "string",
+                          "example": "Sofa abu-abu"
+                        },
+                        "product_id": {
+                          "type": "integer",
+                          "example": 12
+                        },
+                        "confidence": {
+                          "type": "number",
+                          "example": 0.91
+                        },
+                        "needs_human": {
+                          "type": "boolean",
+                          "example": false
+                        },
+                        "model": {
+                          "type": "string",
+                          "example": "openai/gpt-4.1-mini"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "message_id": "3EB0ABC123",
+                    "from": "6281234567890",
+                    "status": "completed",
+                    "analysis": "Terlihat sofa warna abu-abu dalam kondisi cukup baik.",
+                    "answer": "Sofa abu-abu",
+                    "product_id": 12,
+                    "confidence": 0.91,
+                    "needs_human": false,
+                    "model": "openai/gpt-4.1-mini"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Pesan bukan gambar atau stiker.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pesan tidak ditemukan untuk nomor ini.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/check": {
+      "post": {
+        "operationId": "check-number",
+        "tags": [
+          "Pesan"
+        ],
+        "summary": "Cek nomor WhatsApp",
+        "description": "Periksa maksimal 100 nomor dalam satu permintaan.\n\n- Nomor tanpa digit dilewati. Jika semua nomor kosong setelah normalisasi, data bernilai null. input berisi nomor yang dikirim ke WhatsApp dalam format +62…, bukan teks input awal.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "numbers"
+                ],
+                "properties": {
+                  "numbers": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "[0-9]",
+                      "description": "Nomor pribadi, format 08…, 8…, atau kode negara 62…. Tanda +, spasi, dan pemisah dihapus saat normalisasi.",
+                      "example": "6281234567890"
+                    },
+                    "minItems": 1,
+                    "maxItems": 100
+                  }
+                }
+              },
+              "example": {
+                "numbers": [
+                  "081234567890",
+                  "628987654321"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "input": {
+                            "type": "string",
+                            "example": "+6281234567890"
+                          },
+                          "number": {
+                            "type": "string",
+                            "example": "6281234567890"
+                          },
+                          "registered": {
+                            "type": "boolean",
+                            "example": true
+                          }
+                        }
+                      },
+                      "nullable": true
+                    }
+                  }
+                },
+                "example": {
+                  "data": [
+                    {
+                      "input": "+6281234567890",
+                      "number": "6281234567890",
+                      "registered": true
+                    },
+                    {
+                      "input": "+628987654321",
+                      "number": "628987654321",
+                      "registered": false
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Daftar numbers kosong, JSON tidak valid, atau melebihi 100 nomor.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Nomor WhatsApp tidak tersambung.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Pengecekan nomor melalui WhatsApp gagal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contacts": {
+      "get": {
+        "operationId": "list-contacts",
+        "tags": [
+          "Kontak"
+        ],
+        "summary": "Daftar kontak",
+        "description": "Cari dan filter kontak tersimpan.",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "description": "nama atau nomor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tags",
+            "in": "query",
+            "required": false,
+            "description": "pencarian substring pada teks tag; bukan daftar kondisi terpisah",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "halaman",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "description": "1-500",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 50
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Alias lama per_page, hanya dipakai jika per_page tidak diisi. Nilai melebihi maksimum dibatasi; nilai tidak valid memakai default.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "number": {
+                            "type": "string",
+                            "example": "6281234567890"
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "Budi"
+                          },
+                          "tags": {
+                            "type": "string",
+                            "example": "pelanggan"
+                          }
+                        }
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "per_page": {
+                          "type": "integer",
+                          "example": 50
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "total_pages": {
+                          "type": "integer",
+                          "example": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": [
+                    {
+                      "number": "6281234567890",
+                      "name": "Budi",
+                      "tags": "pelanggan"
+                    }
+                  ],
+                  "meta": {
+                    "page": 1,
+                    "per_page": 50,
+                    "total": 1,
+                    "total_pages": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "save-contact",
+        "tags": [
+          "Kontak"
+        ],
+        "summary": "Simpan kontak",
+        "description": "Buat kontak baru atau perbarui data jika nomornya sudah ada.\n\n- Untuk kontak yang sudah ada, name, notes, dan tags yang tidak dikirim akan dikosongkan. Gunakan PUT /contacts/{number} untuk pembaruan sebagian.\n\n- lead_stage opsional: new, cold, warm, hot, customer, atau unqualified. Status yang dikirim lewat API dianggap pilihan manual.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "number"
+                ],
+                "properties": {
+                  "number": {
+                    "type": "string",
+                    "pattern": "[0-9]",
+                    "description": "Nomor pribadi, format 08…, 8…, atau kode negara 62…. Tanda +, spasi, dan pemisah dihapus saat normalisasi.",
+                    "example": "6281234567890"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Nama kontak."
+                  },
+                  "notes": {
+                    "type": "string",
+                    "description": "Catatan tentang kontak."
+                  },
+                  "tags": {
+                    "type": "string",
+                    "description": "Tag dipisahkan koma.",
+                    "example": "pelanggan,vip"
+                  },
+                  "lead_stage": {
+                    "type": "string",
+                    "enum": [
+                      "new",
+                      "cold",
+                      "warm",
+                      "hot",
+                      "customer",
+                      "unqualified"
+                    ],
+                    "description": "Pilihan manual; tidak ditimpa penilaian AI."
+                  }
+                }
+              },
+              "example": {
+                "number": "081234567890",
+                "name": "Budi",
+                "notes": "Pelanggan Jakarta",
+                "tags": "pelanggan,vip",
+                "lead_stage": "warm"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "example": 12
+                        },
+                        "number": {
+                          "type": "string",
+                          "example": "6281234567890"
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Budi"
+                        },
+                        "tags": {
+                          "type": "string",
+                          "example": "pelanggan,vip"
+                        },
+                        "lead_stage": {
+                          "type": "string",
+                          "example": "warm"
+                        },
+                        "lead_stage_source": {
+                          "type": "string",
+                          "example": "manual"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "id": 12,
+                    "number": "6281234567890",
+                    "name": "Budi",
+                    "tags": "pelanggan,vip",
+                    "lead_stage": "warm",
+                    "lead_stage_source": "manual"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, nomor, atau lead_stage tidak valid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Kontak gagal disimpan.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contacts/{number}": {
+      "get": {
+        "operationId": "get-contact",
+        "tags": [
+          "Kontak"
+        ],
+        "summary": "Detail kontak",
+        "description": "Ambil satu kontak berdasarkan nomor.",
+        "parameters": [
+          {
+            "name": "number",
+            "in": "path",
+            "required": true,
+            "description": "Nomor WhatsApp kontak atau percakapan.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "6281234567890"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "example": 12
+                        },
+                        "number": {
+                          "type": "string",
+                          "example": "6281234567890"
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Budi"
+                        },
+                        "notes": {
+                          "type": "string",
+                          "example": "Pelanggan Jakarta"
+                        },
+                        "tags": {
+                          "type": "string",
+                          "example": "pelanggan,vip"
+                        },
+                        "lead_stage": {
+                          "type": "string",
+                          "example": "warm"
+                        },
+                        "lead_stage_source": {
+                          "type": "string",
+                          "example": "ai"
+                        },
+                        "lead_stage_reason": {
+                          "type": "string",
+                          "example": "Menanyakan harga produk"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "id": 12,
+                    "number": "6281234567890",
+                    "name": "Budi",
+                    "notes": "Pelanggan Jakarta",
+                    "tags": "pelanggan,vip",
+                    "lead_stage": "warm",
+                    "lead_stage_source": "ai",
+                    "lead_stage_reason": "Menanyakan harga produk"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Kontak tidak ditemukan untuk nomor ini atau nomor kosong setelah normalisasi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "update-contact",
+        "tags": [
+          "Kontak"
+        ],
+        "summary": "Perbarui kontak",
+        "description": "Ubah nama, catatan, tag, atau status CRM tanpa membuat kontak baru.\n\n- Jika lead_stage dikirim, status dikunci sebagai pilihan manual agar tidak langsung ditimpa penilaian AI.",
+        "parameters": [
+          {
+            "name": "number",
+            "in": "path",
+            "required": true,
+            "description": "Nomor WhatsApp kontak atau percakapan.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "6281234567890"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "anyOf": [
+                  {
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "notes"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "tags"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "lead_stage"
+                    ]
+                  }
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Nama kontak."
+                  },
+                  "notes": {
+                    "type": "string",
+                    "description": "Catatan tentang kontak."
+                  },
+                  "tags": {
+                    "type": "string",
+                    "description": "Tag dipisahkan koma.",
+                    "example": "pelanggan,vip"
+                  },
+                  "lead_stage": {
+                    "type": "string",
+                    "enum": [
+                      "new",
+                      "cold",
+                      "warm",
+                      "hot",
+                      "customer",
+                      "unqualified"
+                    ],
+                    "description": "Pilihan manual; tidak ditimpa penilaian AI."
+                  }
+                }
+              },
+              "example": {
+                "name": "Budi Santoso",
+                "tags": "pelanggan,vip",
+                "lead_stage": "hot"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "example": 12
+                        },
+                        "number": {
+                          "type": "string",
+                          "example": "6281234567890"
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Budi Santoso"
+                        },
+                        "tags": {
+                          "type": "string",
+                          "example": "pelanggan,vip"
+                        },
+                        "lead_stage": {
+                          "type": "string",
+                          "example": "hot"
+                        },
+                        "lead_stage_source": {
+                          "type": "string",
+                          "example": "manual"
+                        },
+                        "lead_stage_locked": {
+                          "type": "boolean",
+                          "example": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "id": 12,
+                    "number": "6281234567890",
+                    "name": "Budi Santoso",
+                    "tags": "pelanggan,vip",
+                    "lead_stage": "hot",
+                    "lead_stage_source": "manual",
+                    "lead_stage_locked": true
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, lead_stage, atau field pembaruan tidak valid. Kirim minimal satu field yang didukung.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Kontak tidak ditemukan untuk nomor ini.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Kontak gagal diperbarui.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete-contact",
+        "tags": [
+          "Kontak"
+        ],
+        "summary": "Hapus kontak",
+        "description": "Hapus data kontak tersimpan. Riwayat percakapan tidak ikut dihapus.",
+        "parameters": [
+          {
+            "name": "number",
+            "in": "path",
+            "required": true,
+            "description": "Nomor WhatsApp kontak atau percakapan.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "6281234567890"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "deleted"
+                    },
+                    "number": {
+                      "type": "string",
+                      "example": "6281234567890"
+                    }
+                  }
+                },
+                "example": {
+                  "status": "deleted",
+                  "number": "6281234567890"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Nomor kosong setelah normalisasi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Kontak tidak ditemukan untuk nomor ini.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Kontak gagal dihapus.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chats": {
+      "get": {
+        "operationId": "list-chats",
+        "tags": [
+          "Percakapan"
+        ],
+        "summary": "Daftar percakapan",
+        "description": "Ambil percakapan terbaru beserta kontak dan status handoff.\n\n- number dapat berupa nomor pribadi atau JID grup. Endpoint riwayat /chats/{number}/messages saat ini hanya mendukung nomor pribadi.",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "description": "nomor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "halaman",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "description": "1-200",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Alias lama per_page, hanya dipakai jika per_page tidak diisi. Nilai melebihi maksimum dibatasi; nilai tidak valid memakai default.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "number": {
+                            "type": "string",
+                            "example": "6281234567890"
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "Budi"
+                          },
+                          "last_at": {
+                            "type": "string",
+                            "example": "2026-07-10T08:00:00Z"
+                          },
+                          "last_message": {
+                            "type": "string",
+                            "example": "Apakah tersedia?"
+                          },
+                          "needs_human": {
+                            "type": "boolean",
+                            "example": false
+                          }
+                        }
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "per_page": {
+                          "type": "integer",
+                          "example": 50
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "total_pages": {
+                          "type": "integer",
+                          "example": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": [
+                    {
+                      "number": "6281234567890",
+                      "name": "Budi",
+                      "last_at": "2026-07-10T08:00:00Z",
+                      "last_message": "Apakah tersedia?",
+                      "needs_human": false
+                    }
+                  ],
+                  "meta": {
+                    "page": 1,
+                    "per_page": 50,
+                    "total": 1,
+                    "total_pages": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chats/{number}/messages": {
+      "get": {
+        "operationId": "chat-messages",
+        "tags": [
+          "Percakapan"
+        ],
+        "summary": "Riwayat pesan",
+        "description": "Ambil riwayat percakapan pribadi, urutan ID terbaru lebih dahulu. Pesan gambar menyertakan hasil analisis bila tersedia.\n\n- number harus nomor pribadi, bukan JID grup.\n\n- Field analisis yang kosong atau bernilai false/0 dapat tidak muncul. wa_msg_id adalah ID pesan WhatsApp; id adalah ID baris riwayat untuk GET /media/{cid}.",
+        "parameters": [
+          {
+            "name": "number",
+            "in": "path",
+            "required": true,
+            "description": "Nomor WhatsApp kontak atau percakapan.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "6281234567890"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "halaman",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "description": "1-200",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Alias lama per_page, hanya dipakai jika per_page tidak diisi. Nilai melebihi maksimum dibatasi; nilai tidak valid memakai default.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "example": 81
+                          },
+                          "agent_id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "sender": {
+                            "type": "string",
+                            "example": "6281234567890"
+                          },
+                          "wa_msg_id": {
+                            "type": "string",
+                            "example": "3EB0ABC123"
+                          },
+                          "message": {
+                            "type": "string",
+                            "example": "Apakah tersedia?"
+                          },
+                          "reply": {
+                            "type": "string",
+                            "example": "Tersedia."
+                          },
+                          "media_type": {
+                            "type": "string",
+                            "example": "image"
+                          },
+                          "image_analysis": {
+                            "type": "string",
+                            "example": "Terlihat sofa abu-abu."
+                          },
+                          "image_analysis_confidence": {
+                            "type": "number",
+                            "example": 0.91
+                          },
+                          "image_analysis_status": {
+                            "type": "string",
+                            "example": "completed"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "example": "2026-07-10T08:00:00Z"
+                          }
+                        }
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "per_page": {
+                          "type": "integer",
+                          "example": 50
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "total_pages": {
+                          "type": "integer",
+                          "example": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": [
+                    {
+                      "id": 81,
+                      "agent_id": 1,
+                      "sender": "6281234567890",
+                      "wa_msg_id": "3EB0ABC123",
+                      "message": "Apakah tersedia?",
+                      "reply": "Tersedia.",
+                      "media_type": "image",
+                      "image_analysis": "Terlihat sofa abu-abu.",
+                      "image_analysis_confidence": 0.91,
+                      "image_analysis_status": "completed",
+                      "created_at": "2026-07-10T08:00:00Z"
+                    }
+                  ],
+                  "meta": {
+                    "page": 1,
+                    "per_page": 50,
+                    "total": 1,
+                    "total_pages": 1
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Nomor kosong setelah normalisasi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/broadcasts": {
+      "post": {
+        "operationId": "create-broadcast",
+        "tags": [
+          "Broadcast"
+        ],
+        "summary": "Buat broadcast",
+        "description": "Kirim pesan massal asinkron dengan jeda, istirahat, opt-out, dan rotasi nomor.\n\n- Maksimal 1.000 penerima per request. Nomor kosong dan duplikat setelah normalisasi dibuang; total adalah jumlah penerima hasil normalisasi.\n\n- Endpoint ini membuat broadcast teks ke nomor pribadi. Pengiriman asinkron; pantau status dan hasil per penerima.\n\n- WhatsApp offline mengembalikan HTTP 400 pada endpoint ini.\n\n- agent_ids opsional dan hanya boleh berisi nomor lain milik akun yang sama serta sedang tersambung.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "message",
+                  "recipients"
+                ],
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "pattern": "\\S",
+                    "description": "Isi pesan; {nama} diganti nama penerima. Tidak boleh kosong atau hanya spasi."
+                  },
+                  "recipients": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 1000,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "number"
+                      ],
+                      "properties": {
+                        "number": {
+                          "type": "string",
+                          "pattern": "[0-9]",
+                          "description": "Nomor pribadi, format 08…, 8…, atau kode negara 62…. Tanda +, spasi, dan pemisah dihapus saat normalisasi.",
+                          "example": "6281234567890"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "min_delay": {
+                    "type": "integer",
+                    "description": "Jeda minimum dalam detik. Nilai di bawah 8 dinaikkan menjadi 8.",
+                    "default": 8
+                  },
+                  "max_delay": {
+                    "type": "integer",
+                    "description": "Jeda maksimum dalam detik. Jika lebih kecil dari minimum hasil normalisasi, dipakai minimum + 20.",
+                    "default": 28
+                  },
+                  "rest_every": {
+                    "type": "integer",
+                    "description": "Istirahat setelah sejumlah pesan. Nilai <= 0 mematikan istirahat berkala.",
+                    "default": 0
+                  },
+                  "rest_duration": {
+                    "type": "integer",
+                    "description": "Lama istirahat dalam detik. Jika rest_every aktif dan durasi <= 0, dipakai 60 detik."
+                  },
+                  "agent_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "description": "Opsional: rotasi nomor tersambung milik akun yang sama. ID 0 dan duplikat diabaikan."
+                  }
+                }
+              },
+              "example": {
+                "message": "Halo {nama}, promo hari ini tersedia.",
+                "recipients": [
+                  {
+                    "number": "6281234567890",
+                    "name": "Budi"
+                  }
+                ],
+                "min_delay": 8,
+                "max_delay": 15,
+                "rest_every": 30,
+                "rest_duration": 120
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 42
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "pending"
+                    }
+                  }
+                },
+                "example": {
+                  "id": 42,
+                  "total": 1,
+                  "status": "pending"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input tidak valid, tidak ada penerima valid, WhatsApp offline, atau nomor rotasi tidak valid/offline.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ada broadcast nomor ini yang dijeda WhatsApp.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Broadcast gagal disimpan.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "list-broadcasts",
+        "tags": [
+          "Broadcast"
+        ],
+        "summary": "Daftar broadcast",
+        "description": "Ambil riwayat broadcast dan filter berdasarkan status.",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "pending, running, resuming, interrupted, wa_restricted, cancel_requested, cancelled, done, failed",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "halaman",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "description": "1-100",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Alias lama per_page, hanya dipakai jika per_page tidak diisi. Nilai melebihi maksimum dibatasi; nilai tidak valid memakai default.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "example": 42
+                          },
+                          "status": {
+                            "type": "string",
+                            "example": "running"
+                          },
+                          "total": {
+                            "type": "integer",
+                            "example": 100
+                          },
+                          "sent": {
+                            "type": "integer",
+                            "example": 18
+                          },
+                          "failed": {
+                            "type": "integer",
+                            "example": 0
+                          }
+                        }
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "per_page": {
+                          "type": "integer",
+                          "example": 20
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "total_pages": {
+                          "type": "integer",
+                          "example": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": [
+                    {
+                      "id": 42,
+                      "status": "running",
+                      "total": 100,
+                      "sent": 18,
+                      "failed": 0
+                    }
+                  ],
+                  "meta": {
+                    "page": 1,
+                    "per_page": 20,
+                    "total": 1,
+                    "total_pages": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/broadcasts/{id}": {
+      "get": {
+        "operationId": "broadcast-status",
+        "tags": [
+          "Broadcast"
+        ],
+        "summary": "Status broadcast",
+        "description": "Polling progres dan hasil pengiriman broadcast.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID broadcast.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 42
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 42
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "running"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 100
+                    },
+                    "sent": {
+                      "type": "integer",
+                      "example": 18
+                    },
+                    "failed": {
+                      "type": "integer",
+                      "example": 0
+                    },
+                    "skipped": {
+                      "type": "integer",
+                      "example": 0
+                    }
+                  }
+                },
+                "example": {
+                  "id": 42,
+                  "status": "running",
+                  "total": 100,
+                  "sent": 18,
+                  "failed": 0,
+                  "skipped": 0
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Broadcast tidak ditemukan untuk nomor ini.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/broadcasts/{id}/recipients": {
+      "get": {
+        "operationId": "broadcast-recipients",
+        "tags": [
+          "Broadcast"
+        ],
+        "summary": "Hasil per penerima",
+        "description": "Audit nomor yang terkirim, gagal, dilewati, atau masih menunggu.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID broadcast.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 42
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "pending, sent, failed, skipped",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "halaman",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "description": "1-500",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Alias lama per_page, hanya dipakai jika per_page tidak diisi. Nilai melebihi maksimum dibatasi; nilai tidak valid memakai default.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "number": {
+                            "type": "string",
+                            "example": "6281234567890"
+                          },
+                          "status": {
+                            "type": "string",
+                            "example": "sent"
+                          },
+                          "error": {
+                            "type": "string",
+                            "example": ""
+                          }
+                        }
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "per_page": {
+                          "type": "integer",
+                          "example": 100
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "total_pages": {
+                          "type": "integer",
+                          "example": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": [
+                    {
+                      "number": "6281234567890",
+                      "status": "sent",
+                      "error": ""
+                    }
+                  ],
+                  "meta": {
+                    "page": 1,
+                    "per_page": 100,
+                    "total": 1,
+                    "total_pages": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Broadcast tidak ditemukan untuk nomor ini.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/broadcasts/{id}/cancel": {
+      "post": {
+        "operationId": "cancel-broadcast",
+        "tags": [
+          "Broadcast"
+        ],
+        "summary": "Batalkan broadcast",
+        "description": "Minta worker berhenti dengan aman setelah proses aktif selesai.\n\n- pending, interrupted, atau wa_restricted langsung menjadi cancelled.\n\n- running atau resuming menjadi cancel_requested sampai worker berhenti.\n\n- Broadcast yang selesai (done, failed, cancelled), sedang cancel_requested, atau berubah status mengembalikan HTTP 409.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID broadcast.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 42
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "cancel_requested",
+                      "enum": [
+                        "cancel_requested",
+                        "cancelled"
+                      ]
+                    }
+                  }
+                },
+                "examples": {
+                  "running": {
+                    "summary": "Worker sedang berjalan",
+                    "value": {
+                      "status": "cancel_requested"
+                    }
+                  },
+                  "pending": {
+                    "summary": "Broadcast belum berjalan / sedang dijeda",
+                    "value": {
+                      "status": "cancelled"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ID broadcast tidak valid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Broadcast tidak ditemukan untuk nomor ini.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Broadcast selesai, sedang menunggu pembatalan, atau statusnya berubah.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Permintaan pembatalan gagal disimpan.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/otp/request": {
+      "post": {
+        "operationId": "otp-request",
+        "tags": [
+          "OTP"
+        ],
+        "summary": "Kirim OTP",
+        "description": "Buat dan kirim kode OTP dengan masa berlaku terbatas.\n\n- length: 4-8 digit; nilai di luar rentang memakai 6.\n\n- minutes: 1-30 menit; nilai di luar rentang memakai 5.\n\n- Gunakan {code} dan {minutes} pada template message. Jika {code} tidak ada, server memakai template bawaan. Satu nomor hanya dapat meminta OTP sekali per 60 detik.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "to"
+                ],
+                "properties": {
+                  "to": {
+                    "type": "string",
+                    "pattern": "[0-9]",
+                    "description": "Nomor pribadi, format 08…, 8…, atau kode negara 62…. Tanda +, spasi, dan pemisah dihapus saat normalisasi.",
+                    "example": "6281234567890"
+                  },
+                  "length": {
+                    "type": "integer",
+                    "default": 6,
+                    "description": "4–8 digit. Nilai di luar rentang memakai 6 digit, bukan ditolak."
+                  },
+                  "minutes": {
+                    "type": "integer",
+                    "default": 5,
+                    "description": "1–30 menit. Nilai di luar rentang memakai 5 menit, bukan ditolak."
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "Template opsional dengan {code} dan {minutes}."
+                  }
+                }
+              },
+              "example": {
+                "to": "6281234567890",
+                "length": 6,
+                "minutes": 5,
+                "message": "Kode verifikasi kamu: {code}. Berlaku {minutes} menit."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "sent"
+                    },
+                    "to": {
+                      "type": "string",
+                      "example": "6281234567890"
+                    },
+                    "expires_in": {
+                      "type": "integer",
+                      "example": 300
+                    }
+                  }
+                },
+                "example": {
+                  "status": "sent",
+                  "to": "6281234567890",
+                  "expires_in": 300
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON atau nomor tujuan tidak valid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Nomor WhatsApp tidak tersambung.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai, atau belum 60 detik sejak permintaan OTP terakhir ke tujuan yang sama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "OTP gagal disimpan.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "OTP gagal dikirim melalui WhatsApp.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/otp/verify": {
+      "post": {
+        "operationId": "otp-verify",
+        "tags": [
+          "OTP"
+        ],
+        "summary": "Verifikasi OTP",
+        "description": "Validasi kode OTP terbaru untuk nomor yang sama.\n\n- Respons tetap HTTP 200 untuk kode benar maupun salah. Periksa field verified.\n\n- OTP hanya dapat dipakai sekali dan dibatalkan setelah 5 percobaan salah.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "to",
+                  "code"
+                ],
+                "properties": {
+                  "to": {
+                    "type": "string",
+                    "pattern": "[0-9]",
+                    "description": "Nomor pribadi, format 08…, 8…, atau kode negara 62…. Tanda +, spasi, dan pemisah dihapus saat normalisasi.",
+                    "example": "6281234567890"
+                  },
+                  "code": {
+                    "type": "string",
+                    "pattern": "\\S",
+                    "example": "123456"
+                  }
+                }
+              },
+              "example": {
+                "to": "6281234567890",
+                "code": "123456"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "verified"
+                      ],
+                      "properties": {
+                        "verified": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "verified",
+                        "reason"
+                      ],
+                      "properties": {
+                        "verified": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        },
+                        "reason": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "examples": {
+                  "valid": {
+                    "summary": "Kode valid",
+                    "value": {
+                      "verified": true
+                    }
+                  },
+                  "invalid": {
+                    "summary": "Kode salah",
+                    "value": {
+                      "verified": false,
+                      "reason": "Kode salah."
+                    }
+                  },
+                  "expired": {
+                    "summary": "Kode kedaluwarsa",
+                    "value": {
+                      "verified": false,
+                      "reason": "OTP sudah kedaluwarsa."
+                    }
+                  },
+                  "missing": {
+                    "summary": "Tidak ada kode aktif / sudah dipakai",
+                    "value": {
+                      "verified": false,
+                      "reason": "Tidak ada OTP aktif untuk nomor ini."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON tidak valid atau to/code kosong. Kode salah/kedaluwarsa tetap HTTP 200 dengan verified: false.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups": {
+      "get": {
+        "operationId": "list-groups",
+        "tags": [
+          "Grup"
+        ],
+        "summary": "Daftar grup",
+        "description": "Ambil grup WhatsApp yang dapat diakses nomor ini.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "jid": {
+                            "type": "string",
+                            "example": "120363000000@g.us"
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "Komunitas Pelanggan"
+                          },
+                          "participants": {
+                            "type": "integer",
+                            "example": 15
+                          },
+                          "bot_is_admin": {
+                            "type": "boolean",
+                            "example": false
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": [
+                    {
+                      "jid": "120363000000@g.us",
+                      "name": "Komunitas Pelanggan",
+                      "participants": 15,
+                      "bot_is_admin": false
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Nomor WhatsApp tidak tersambung.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Daftar grup gagal diambil dari WhatsApp.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{jid}/messages": {
+      "post": {
+        "operationId": "group-message",
+        "tags": [
+          "Grup"
+        ],
+        "summary": "Kirim ke grup",
+        "description": "Kirim teks atau media ke JID grup.\n\n- to di body tidak digunakan; tujuan diambil dari jid pada URL. Kartu kontak tidak didukung untuk grup.\n\n- reply_to hanya untuk pesan teks. message_id pada respons pengiriman grup saat ini berupa string kosong.",
+        "parameters": [
+          {
+            "name": "jid",
+            "in": "path",
+            "required": true,
+            "description": "JID grup, berakhiran @g.us.",
+            "schema": {
+              "type": "string",
+              "pattern": "@g\\.us$"
+            },
+            "example": "120363000000@g.us"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "text"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "text"
+                        ],
+                        "default": "text"
+                      },
+                      "text": {
+                        "type": "string",
+                        "pattern": "\\S",
+                        "description": "Isi pesan WhatsApp; tidak boleh kosong atau hanya spasi."
+                      },
+                      "reply_to": {
+                        "type": "string",
+                        "description": "Opsional: message_id yang ingin dibalas."
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "media_url"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "image",
+                          "video",
+                          "document"
+                        ]
+                      },
+                      "media_url": {
+                        "type": "string",
+                        "format": "uri",
+                        "pattern": "^https?://",
+                        "description": "URL HTTP/HTTPS publik file media. HTTPS disarankan; host jaringan internal ditolak."
+                      },
+                      "caption": {
+                        "type": "string",
+                        "description": "Keterangan media."
+                      },
+                      "filename": {
+                        "type": "string",
+                        "description": "Nama file dokumen."
+                      },
+                      "text": {
+                        "type": "string",
+                        "description": "Dipakai sebagai caption jika caption kosong."
+                      }
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "type": "text",
+                "text": "Pengumuman terbaru untuk anggota grup."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "sent"
+                    },
+                    "to": {
+                      "type": "string",
+                      "example": "120363000000@g.us"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "text"
+                    },
+                    "message_id": {
+                      "type": "string",
+                      "example": ""
+                    }
+                  }
+                },
+                "example": {
+                  "status": "sent",
+                  "to": "120363000000@g.us",
+                  "type": "text",
+                  "message_id": ""
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JID, JSON, tipe pesan, atau URL/unduhan media tidak valid; kartu kontak tidak didukung.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Nomor WhatsApp tidak tersambung.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Gagal mengirim pesan atau media ke WhatsApp.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "operationId": "status",
+        "tags": [
+          "Sistem"
+        ],
+        "summary": "Status nomor",
+        "description": "Periksa identitas agent dan koneksi WhatsApp sebelum mengirim.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Permintaan berhasil. Contoh respons di bawah menampilkan field utama.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "agent_id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "number": {
+                      "type": "string",
+                      "example": "628111111111"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "CS Utama"
+                    },
+                    "connected": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                },
+                "example": {
+                  "agent_id": 1,
+                  "number": "628111111111",
+                  "name": "CS Utama",
+                  "connected": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key tidak ada atau tidak valid. Periksa Authorization: Bearer <API_KEY>.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Batas permintaan per nomor tercapai. Tunggu sebelum mencoba lagi.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Waktu tunggu dalam detik untuk batas request per nomor. Tidak disertakan pada cooldown OTP.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

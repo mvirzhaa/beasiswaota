@@ -1,7 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { env } from "@/lib/env";
 import { formatRupiah } from "@/lib/uang";
-import { kirimWa } from "@/lib/notifikasi/wa";
+import { kirimWaBerurutan } from "@/lib/notifikasi/wa";
 import { pesanWaReminderKomitmenBulanan } from "@/lib/notifikasi/template-wa";
 
 function tanggalSama(a: Date, b: Date): boolean {
@@ -56,20 +56,9 @@ export async function prosesReminderWaBulanan(db: PrismaClient): Promise<HasilPr
     const namaDonatur = ortuAsuh.atasNamaMunfiq || ortuAsuh.nama;
     const url = `${env.APP_URL}/laporan/${ortuAsuh.kodeAkses}`;
 
-    await db.$transaction(async (tx) => {
-      await tx.jadwalBayar.update({ where: { id: jadwal.id }, data: { remindedAt: sekarang } });
-      await tx.notifikasi.create({
-        data: {
-          ortuAsuhId: ortuAsuh.id,
-          kanal: "WA",
-          judul: "Pengingat pembayaran komitmen bulanan",
-          isi: `Komitmen Anda sebesar ${formatRupiah(jadwal.nominal)} jatuh tempo ${jadwal.jatuhTempo.toLocaleDateString("id-ID")}.`,
-          tautan: `/laporan/${ortuAsuh.kodeAkses}`,
-        },
-      });
-    });
-
-    await kirimWa(
+    // Kirim dulu, baru catat Notifikasi — supaya terkirimAt/pesanWaId
+    // merekam hasil kirim yang sesungguhnya, bukan selalu null/kosong.
+    const hasilKirim = await kirimWaBerurutan(
       ortuAsuh.noHp,
       pesanWaReminderKomitmenBulanan({
         namaDonatur,
@@ -78,6 +67,25 @@ export async function prosesReminderWaBulanan(db: PrismaClient): Promise<HasilPr
         url,
       }),
     );
+
+    await db.$transaction(async (tx) => {
+      // remindedAt ditandai terlepas dari sukses/gagalnya kirim — ini
+      // penanda "sudah dicoba hari ini" untuk idempotensi, bukan "sukses
+      // terkirim". Kalau gagal, donatur baru diingatkan lagi bulan depan.
+      await tx.jadwalBayar.update({ where: { id: jadwal.id }, data: { remindedAt: sekarang } });
+      await tx.notifikasi.create({
+        data: {
+          ortuAsuhId: ortuAsuh.id,
+          kanal: "WA",
+          judul: "Pengingat pembayaran komitmen bulanan",
+          isi: `Komitmen Anda sebesar ${formatRupiah(jadwal.nominal)} jatuh tempo ${jadwal.jatuhTempo.toLocaleDateString("id-ID")}.`,
+          tautan: `/laporan/${ortuAsuh.kodeAkses}`,
+          terkirimAt: hasilKirim.terkirim ? sekarang : null,
+          pesanWaId: hasilKirim.messageId,
+        },
+      });
+    });
+
     reminderTerkirim += 1;
   }
 
