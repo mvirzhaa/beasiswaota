@@ -40,6 +40,14 @@ export function FormUbahMahasiswa({ mahasiswa }: { mahasiswa: Mahasiswa }) {
           <option value="DO">Drop Out</option>
         </select>
       </label>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="text-ink">Status Program Beasiswa</span>
+        <select name="statusProgram" defaultValue={mahasiswa.statusProgram} className={KELAS_INPUT}>
+          <option value="AKTIF">Aktif di program ini</option>
+          <option value="MUNDUR">Mundur dari program</option>
+          <option value="PINDAH_PROGRAM_LAIN">Pindah ke beasiswa lain (mis. KIP)</option>
+        </select>
+      </label>
       <div className="sm:col-span-2">
         <Kolom name="alamat" label="Alamat (opsional)" required={false} defaultValue={mahasiswa.alamat ?? ""} />
       </div>

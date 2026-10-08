@@ -88,8 +88,8 @@ export async function ubahMahasiswa(mahasiswaId: string, formData: FormData): Pr
         aksi: "mahasiswa.ubah",
         entitas: "mahasiswa",
         entitasId: mahasiswaId,
-        sebelum: { nama: sebelum.nama, statusAkademik: sebelum.statusAkademik },
-        sesudah: { nama: parsed.data.nama, statusAkademik: parsed.data.statusAkademik },
+        sebelum: { nama: sebelum.nama, statusAkademik: sebelum.statusAkademik, statusProgram: sebelum.statusProgram },
+        sesudah: { nama: parsed.data.nama, statusAkademik: parsed.data.statusAkademik, statusProgram: parsed.data.statusProgram },
         ipAddress,
         userAgent,
       });
@@ -218,6 +218,65 @@ export async function ubahTagihan(tagihanId: string, input: unknown): Promise<Ha
     }
     throw error;
   }
+}
+
+/**
+ * Batalkan tagihan (mis. mahasiswa mundur dari program / pindah ke beasiswa
+ * lain) supaya TIDAK lagi kepilih sebagai kandidat di ambilKandidatBelumLunas()
+ * (src/lib/alokasi/engine.ts) — mesin alokasi hanya menyaring status Tagihan,
+ * tidak melihat status mahasiswa sama sekali.
+ *
+ * Sengaja hanya diizinkan kalau belum ada pembayaran (terbayar === 0) dan
+ * belum ada baris Alokasi non-DIBATALKAN yang menunjuk tagihan ini (termasuk
+ * batch DRAFT yang belum disetujui) — supaya tidak pernah membatalkan sesuatu
+ * yang sebagian dananya sudah/sedang dialokasikan. Bukan lewat setujuiBatch()
+ * (aturan keras #3) karena ini BUKAN realisasi pembayaran, melainkan
+ * pembatalan kewajiban itu sendiri — terbayar tidak disentuh sama sekali.
+ */
+export async function batalkanTagihan(tagihanId: string): Promise<HasilAksi> {
+  const admin = await sesiAdmin();
+  const { ipAddress, userAgent } = await ambilMetaPermintaan();
+
+  const sebelum = await prisma.tagihan.findUnique({ where: { id: tagihanId } });
+  if (!sebelum) {
+    return { sukses: false, pesan: "Tagihan tidak ditemukan." };
+  }
+  if (sebelum.status === "DIBATALKAN" || sebelum.status === "LUNAS") {
+    return { sukses: false, pesan: "Tagihan ini sudah tidak bisa dibatalkan." };
+  }
+  if (sebelum.terbayar > 0n) {
+    return {
+      sukses: false,
+      pesan: "Tagihan ini sudah ada pembayaran tercatat, tidak bisa dibatalkan begitu saja.",
+    };
+  }
+
+  const alokasiAktif = await prisma.alokasi.findFirst({
+    where: { tagihanId, status: { not: "DIBATALKAN" } },
+  });
+  if (alokasiAktif) {
+    return {
+      sukses: false,
+      pesan: "Tagihan ini sudah punya alokasi dana (draft/disetujui/disalurkan) — batalkan alokasinya dulu.",
+    };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.tagihan.update({ where: { id: tagihanId }, data: { status: "DIBATALKAN" } });
+    await catatAudit(tx, {
+      aktorId: admin.id,
+      aksi: "tagihan.batalkan",
+      entitas: "tagihan",
+      entitasId: tagihanId,
+      sebelum: { status: sebelum.status },
+      sesudah: { status: "DIBATALKAN" },
+      ipAddress,
+      userAgent,
+    });
+  });
+
+  revalidatePath(`/admin/mahasiswa/${sebelum.mahasiswaId}`);
+  return { sukses: true, pesan: "Tagihan dibatalkan — tidak akan lagi dipertimbangkan di alokasi berikutnya." };
 }
 
 // ============================================================================

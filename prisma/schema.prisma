@@ -246,6 +246,14 @@ model Mahasiswa {
   noHp             String   @map("no_hp")
   alamat           String?
   statusAkademik   String   @default("AKTIF") @map("status_akademik") // AKTIF|CUTI|LULUS|DO
+  // Keikutsertaan di PROGRAM BEASISWA ini — beda dari statusAkademik (status
+  // akademik di kampus). Mahasiswa bisa saja tetap AKTIF secara akademik tapi
+  // sudah tidak relevan untuk program ini (mundur, pindah ke beasiswa lain
+  // mis. KIP). Sengaja field terpisah, BUKAN ditumpuk ke statusAkademik —
+  // statusAkademik dipakai hitungRisiko() (src/lib/monitoring/risiko.ts)
+  // untuk Tingkat Risiko, jadi mencampur dua makna di situ bisa bikin
+  // monitoring akademik salah baca.
+  statusProgram    String   @default("AKTIF") @map("status_program") // AKTIF|MUNDUR|PINDAH_PROGRAM_LAIN
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
@@ -259,6 +267,7 @@ model Mahasiswa {
 
   @@index([fakultas, prodi])
   @@index([statusAkademik])
+  @@index([statusProgram])
   @@map("mahasiswa")
 }
 

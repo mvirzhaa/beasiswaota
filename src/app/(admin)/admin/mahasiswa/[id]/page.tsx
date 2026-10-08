@@ -24,6 +24,18 @@ const NADA_STATUS_AKADEMIK: Record<string, "sukses" | "peringatan" | "bahaya" | 
   DO: "bahaya",
 };
 
+const LABEL_STATUS_PROGRAM: Record<string, string> = {
+  AKTIF: "Aktif di Program",
+  MUNDUR: "Mundur",
+  PINDAH_PROGRAM_LAIN: "Pindah Beasiswa Lain",
+};
+
+const NADA_STATUS_PROGRAM: Record<string, "sukses" | "peringatan" | "bahaya" | "info" | "netral"> = {
+  AKTIF: "sukses",
+  MUNDUR: "bahaya",
+  PINDAH_PROGRAM_LAIN: "peringatan",
+};
+
 const NADA_RISIKO: Record<string, "sukses" | "peringatan" | "bahaya" | "info" | "netral"> = {
   AMAN: "sukses",
   PERHATIAN: "peringatan",
@@ -265,9 +277,14 @@ export default async function HalamanDetailMahasiswaAdmin({
               NIM: {mahasiswa.nim} · {mahasiswa.fakultas} · {mahasiswa.prodi}
             </p>
           </div>
-          <Lencana nada={NADA_STATUS_AKADEMIK[mahasiswa.statusAkademik] ?? "netral"}>
-            Status: {mahasiswa.statusAkademik}
-          </Lencana>
+          <div className="flex flex-wrap items-center gap-2">
+            <Lencana nada={NADA_STATUS_AKADEMIK[mahasiswa.statusAkademik] ?? "netral"}>
+              Akademik: {mahasiswa.statusAkademik}
+            </Lencana>
+            <Lencana nada={NADA_STATUS_PROGRAM[mahasiswa.statusProgram] ?? "netral"}>
+              {LABEL_STATUS_PROGRAM[mahasiswa.statusProgram] ?? mahasiswa.statusProgram}
+            </Lencana>
+          </div>
         </div>
       </div>
 

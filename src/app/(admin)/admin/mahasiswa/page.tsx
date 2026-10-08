@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { GraduationCap, Search, ArrowRight, UserCheck } from "lucide-react";
-import { ambilDaftarMahasiswaAdmin, ambilPeriodeUntukAdminMahasiswa } from "@/server/queries/mahasiswa";
+import {
+  ambilDaftarMahasiswaAdmin,
+  ambilPeriodeUntukAdminMahasiswa,
+  hitungMahasiswaKeluarProgram,
+} from "@/server/queries/mahasiswa";
 import { Lencana } from "@/components/ui/lencana";
 import { FormBuatMahasiswa } from "./form-buat-mahasiswa";
 import { ModalImporMonitoring } from "./modal-impor-monitoring";
@@ -12,15 +16,22 @@ const NADA_STATUS_AKADEMIK: Record<string, "sukses" | "peringatan" | "bahaya" | 
   DO: "bahaya",
 };
 
+const LABEL_STATUS_PROGRAM: Record<string, string> = {
+  MUNDUR: "Mundur",
+  PINDAH_PROGRAM_LAIN: "Pindah Beasiswa Lain",
+};
+
 export default async function HalamanMahasiswaAdmin({
   searchParams,
 }: {
-  searchParams: Promise<{ cari?: string }>;
+  searchParams: Promise<{ cari?: string; status?: string }>;
 }) {
   const params = await searchParams;
-  const [mahasiswaList, periodeList] = await Promise.all([
-    ambilDaftarMahasiswaAdmin({ cari: params.cari }),
+  const tampilkanKeluarProgram = params.status === "semua";
+  const [mahasiswaList, periodeList, jumlahKeluarProgram] = await Promise.all([
+    ambilDaftarMahasiswaAdmin({ cari: params.cari, tampilkanKeluarProgram }),
     ambilPeriodeUntukAdminMahasiswa(),
+    hitungMahasiswaKeluarProgram(),
   ]);
 
   return (
@@ -72,6 +83,20 @@ export default async function HalamanMahasiswaAdmin({
           <span className="hidden text-xs text-muted lg:inline">
             Total <strong>{mahasiswaList.length}</strong> mahasiswa
           </span>
+          {jumlahKeluarProgram > 0 && (
+            <Link
+              href={
+                tampilkanKeluarProgram
+                  ? `/admin/mahasiswa${params.cari ? `?cari=${encodeURIComponent(params.cari)}` : ""}`
+                  : `/admin/mahasiswa?status=semua${params.cari ? `&cari=${encodeURIComponent(params.cari)}` : ""}`
+              }
+              className="rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-muted hover:bg-surface-alt hover:text-ink transition-colors"
+            >
+              {tampilkanKeluarProgram
+                ? "Sembunyikan yang sudah keluar program"
+                : `Tampilkan yang sudah keluar program (${jumlahKeluarProgram})`}
+            </Link>
+          )}
           <ModalImporMonitoring periodeList={periodeList} />
           <FormBuatMahasiswa />
         </div>
@@ -128,9 +153,16 @@ export default async function HalamanMahasiswaAdmin({
                       <span className="text-muted"> / Smtr {m.semesterBerjalan}</span>
                     </td>
                     <td className="py-3 px-4 text-center">
-                      <Lencana nada={NADA_STATUS_AKADEMIK[m.statusAkademik] ?? "netral"}>
-                        {m.statusAkademik}
-                      </Lencana>
+                      <div className="flex flex-col items-center gap-1">
+                        <Lencana nada={NADA_STATUS_AKADEMIK[m.statusAkademik] ?? "netral"}>
+                          {m.statusAkademik}
+                        </Lencana>
+                        {m.statusProgram !== "AKTIF" && (
+                          <Lencana nada="bahaya">
+                            {LABEL_STATUS_PROGRAM[m.statusProgram] ?? m.statusProgram}
+                          </Lencana>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 pl-4 pr-5 text-right">
                       <Link

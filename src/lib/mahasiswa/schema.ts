@@ -13,8 +13,13 @@ export const buatMahasiswaSchema = z.object({
 
 export const statusAkademikSchema = z.enum(["AKTIF", "CUTI", "LULUS", "DO"]);
 
+// Keikutsertaan di program beasiswa ini — terpisah dari statusAkademik
+// (status akademik di kampus). Lihat komentar di prisma/schema.prisma.
+export const statusProgramSchema = z.enum(["AKTIF", "MUNDUR", "PINDAH_PROGRAM_LAIN"]);
+
 export const ubahMahasiswaSchema = buatMahasiswaSchema.extend({
   statusAkademik: statusAkademikSchema,
+  statusProgram: statusProgramSchema,
 });
 
 export type BuatMahasiswaInput = z.infer<typeof buatMahasiswaSchema>;

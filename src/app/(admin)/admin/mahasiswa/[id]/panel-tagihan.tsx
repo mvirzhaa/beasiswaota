@@ -6,6 +6,7 @@ import { formatRupiah } from "@/lib/uang";
 import { Lencana } from "@/components/ui/lencana";
 import { Tombol } from "@/components/ui/tombol";
 import { FormTagihan } from "./form-tagihan";
+import { TombolBatalkanTagihan } from "./tombol-batalkan-tagihan";
 
 const NADA_STATUS_TAGIHAN: Record<string, "sukses" | "peringatan" | "bahaya" | "info" | "netral"> = {
   BELUM_LUNAS: "netral",
@@ -97,6 +98,7 @@ export function PanelTagihan({
               </div>
               <div className="flex items-center gap-2">
                 <Lencana nada={NADA_STATUS_TAGIHAN[t.status] ?? "netral"}>{t.status}</Lencana>
+                {t.status === "BELUM_LUNAS" && <TombolBatalkanTagihan tagihanId={t.id} />}
                 <button
                   type="button"
                   onClick={() => {
