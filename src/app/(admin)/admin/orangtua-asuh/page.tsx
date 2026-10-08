@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HeartHandshake, Search, ArrowRight, UserCheck } from "lucide-react";
+import { HeartHandshake, Search, ArrowRight, UserCheck, FileSpreadsheet } from "lucide-react";
 import { ambilDaftarOrtuAsuhAdmin } from "@/server/queries/ortu-asuh";
 import { Lencana } from "@/components/ui/lencana";
 
@@ -64,9 +64,18 @@ export default async function HalamanOrtuAsuhAdmin({
           )}
         </form>
 
-        <span className="hidden text-xs text-muted lg:inline">
-          Total <strong>{daftar.length}</strong> donatur
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="hidden text-xs text-muted lg:inline">
+            Total <strong>{daftar.length}</strong> donatur
+          </span>
+          <a
+            href={`/api/admin/orangtua-asuh/ekspor${params.cari ? `?cari=${encodeURIComponent(params.cari)}` : ""}`}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-semibold text-ink hover:bg-surface-alt transition-colors"
+          >
+            <FileSpreadsheet className="h-3.5 w-3.5 text-primary" />
+            <span>Export Excel</span>
+          </a>
+        </div>
       </div>
 
       {/* Tabel Data Donatur */}
