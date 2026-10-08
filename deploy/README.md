@@ -463,3 +463,47 @@ dari panel (bukan cuma reboot dari dalam OS) supaya berlaku. Verifikasi:
 cat /proc/cpuinfo | grep -m1 flags | tr ' ' '\n' | grep -E "^(avx2|bmi2)$"
 # harus muncul "avx2"
 ```
+
+### Notifikasi WA (ChatLoop) tidak terkirim — bukan masalah API key
+
+Gejala: `kirimWa()`/`cekStatusWa()` (lihat `src/lib/notifikasi/wa.ts`) gagal
+dengan error koneksi (timeout/connection refused), padahal
+`WA_API_URL`/`WA_API_TOKEN` di `.env` sudah benar dan sudah diverifikasi
+valid sebelumnya.
+
+**Akar masalah yang ditemukan (2026-10-08): firewall jaringan kampus
+memblokir akses dari VPS ini ke domain publik ChatLoop
+(`csai.uika-bogor.ac.id`), meski secara jaringan lokal keduanya bertetangga.**
+Dikonfirmasi lewat isolasi: `curl https://<ip-lokal-chatloop>/api/v1/status`
+gagal TLS (sertifikat ChatLoop terikat ke nama domain, bukan ke IP) dan
+`curl http://<ip-lokal-chatloop>/...` nyasar ke vhost default nginx
+ChatLoop (404) karena nginx di sana merutekan lewat `Host` header, bukan IP
+tujuan. `curl --resolve csai.uika-bogor.ac.id:443:<ip-lokal-chatloop>
+https://csai.uika-bogor.ac.id/api/v1/status` — yang memaksa resolusi IP
+tapi tetap mengirim Host/SNI nama domain — berhasil 200 OK. Jadi bukan soal
+kredensial, soal rute jaringan.
+
+**Perbaikan:** `extra_hosts` pada service `app` di
+`deploy/docker-compose.prod.yml` memaksa container (bukan VPS host-nya —
+container punya `/etc/hosts` sendiri, terpisah) meresolusi
+`csai.uika-bogor.ac.id` ke IP jaringan lokal ChatLoop. `WA_API_URL` di
+`.env` TETAP pakai nama domain asli (jangan diganti ke IP mentah — sudah
+dicoba, dua skema sama-sama gagal seperti di atas). Setelah mengubah
+`extra_hosts` (atau kalau IP lokal ChatLoop berubah), perlu
+`--force-recreate`, restart biasa tidak cukup:
+
+```bash
+docker compose --env-file .env -f deploy/docker-compose.prod.yml -p beasiswaota up -d --force-recreate app
+```
+
+Verifikasi dari dalam container (bukan dari VPS host — hasil bisa beda):
+
+```bash
+docker exec beasiswaota-app wget -qO- --header "Authorization: Bearer $(grep ^WA_API_TOKEN= .env | cut -d= -f2-)" https://csai.uika-bogor.ac.id/api/v1/status
+```
+
+**Pelajaran:** kalau ada integrasi eksternal yang mendadak tidak
+terjangkau padahal kredensialnya tidak berubah, curigai jalur jaringan
+(firewall/DNS/routing) dulu sebelum curiga ke kredensial — apalagi kalau
+providernya ada di jaringan yang sama (kampus) dan punya IP lokal yang bisa
+dicoba terpisah dari domain publiknya.

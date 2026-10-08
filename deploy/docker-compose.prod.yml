@@ -30,6 +30,22 @@ services:
         condition: service_healthy
     networks:
       - internal
+    # ChatLoop (csai.uika-bogor.ac.id, provider WA notifikasi — lihat
+    # src/lib/notifikasi/wa.ts) tidak terjangkau dari VPS ini lewat domain
+    # publiknya sendiri (diblokir firewall jaringan kampus), tapi terjangkau
+    # lewat IP jaringan lokal yang sama. Paksa resolusi domain ini ke IP
+    # lokal di DALAM container (host VPS tidak relevan — container punya
+    # /etc/hosts sendiri) supaya koneksi lewat jalur lokal TAPI Host/SNI
+    # header yang dikirim tetap nama domain asli, sehingga sertifikat TLS
+    # ChatLoop (terikat ke nama domain, bukan ke IP) tetap valid dan nginx
+    # ChatLoop tetap merutekan ke vhost yang benar (name-based virtual
+    # hosting). JANGAN ganti WA_API_URL di .env ke IP mentah — itu sudah
+    # dicoba dan gagal dua arah: https gagal (cert tidak cover IP), http
+    # nyasar ke vhost default nginx ChatLoop (404). Hapus baris di bawah
+    # kalau firewall kampus suatu saat sudah membuka akses ke domain publik
+    # ChatLoop dari VPS ini.
+    extra_hosts:
+      - "csai.uika-bogor.ac.id:172.16.18.223"
 
   # Service satu-kali untuk migrasi — TIDAK auto-start (tidak ada restart
   # policy jalan terus). Jalankan manual tiap rilis baru:
