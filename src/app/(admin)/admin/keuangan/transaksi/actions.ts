@@ -1,11 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { catatAudit } from "@/lib/audit";
+import { parseRupiah } from "@/lib/uang";
 import { tolakTransaksiSchema } from "@/lib/transaksi/schema";
 import { verifikasiTransaksiInti } from "@/server/actions/verifikasi-transaksi-inti";
+import { kreditkanTransaksiBaru } from "@/server/actions/kreditkan-transaksi-baru";
+import { ambilJadwalBayarUntukTransferManual } from "@/server/queries/transfer-manual";
 import type { HasilAksi } from "@/types/aksi";
 
 async function sesiAdmin() {
@@ -130,4 +134,71 @@ export async function tolakTransaksi(transaksiId: string, input: unknown): Promi
 
   revalidatePath("/admin/keuangan/transaksi");
   return { sukses: true, pesan: "Transaksi ditolak." };
+}
+
+// ============================================================================
+// Catat transfer manual — kita TIDAK pakai payment gateway (Midtrans/VA),
+// semua donasi non-potong-gaji masuk lewat transfer ke rekening resmi yang
+// dicantumkan di sistem. Begitu admin mencatat realisasinya di sini,
+// transaksi langsung TERVERIFIKASI dan masuk ke "Pemasukan" (sama seperti
+// pola input manual potong gaji di /admin/potong-gaji — reuse
+// kreditkanTransaksiBaru yang sama, bukan logika verifikasi dua tahap).
+// ============================================================================
+
+const catatTransferManualSchema = z.object({
+  jadwalBayarId: z.string().min(1, "Pilih donatur & jadwal"),
+  nominal: z.string().min(1, "Nominal wajib diisi"),
+  tanggal: z.string().min(1, "Tanggal transfer wajib diisi"),
+});
+
+export async function catatTransaksiTransferManual(formData: FormData): Promise<HasilAksi> {
+  const admin = await sesiAdmin();
+
+  const parsed = catatTransferManualSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) {
+    return { sukses: false, pesan: parsed.error.issues[0]?.message ?? "Data tidak valid." };
+  }
+
+  let nominal: bigint;
+  try {
+    nominal = parseRupiah(parsed.data.nominal);
+  } catch {
+    return { sukses: false, pesan: "Nominal tidak valid." };
+  }
+  if (nominal <= 0n) {
+    return { sukses: false, pesan: "Nominal harus lebih besar dari nol." };
+  }
+
+  const jadwal = await ambilJadwalBayarUntukTransferManual(parsed.data.jadwalBayarId);
+  if (!jadwal) {
+    return { sukses: false, pesan: "Jadwal bayar tidak ditemukan." };
+  }
+  if (jadwal.komitmen.mekanisme !== "TRANSFER_MANUAL") {
+    return { sukses: false, pesan: "Komitmen ini bukan mekanisme Transfer Manual." };
+  }
+  if (jadwal.status === "TERBAYAR" || jadwal.status === "DIBATALKAN") {
+    return { sukses: false, pesan: "Jadwal ini sudah tidak menerima pembayaran baru." };
+  }
+
+  const hasil = await kreditkanTransaksiBaru(prisma, {
+    ortuAsuhId: jadwal.komitmen.ortuAsuhId,
+    komitmenId: jadwal.komitmen.id,
+    jadwalBayarId: jadwal.id,
+    nominal,
+    metode: "TRANSFER_MANUAL",
+    refEksternal: `transfer-manual-${jadwal.id}`,
+    tglBayar: new Date(parsed.data.tanggal),
+    periodeId: jadwal.periodeId,
+    keterangan: `Transfer manual (dicatat admin) — ${jadwal.komitmen.ortuAsuh.nama}`,
+    aktorAuditId: admin.id,
+    aksiAudit: "transaksi.input_manual_transfer",
+  });
+
+  if (!hasil.sukses) {
+    return { sukses: false, pesan: "Jadwal ini sudah pernah dicatat sebelumnya." };
+  }
+
+  revalidatePath("/admin/keuangan/transaksi");
+  revalidatePath("/admin/keuangan/pemasukan");
+  return { sukses: true, pesan: "Transfer berhasil dicatat dan masuk ke Pemasukan." };
 }

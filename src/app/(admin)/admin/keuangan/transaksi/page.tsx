@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { formatRupiah } from "@/lib/uang";
 import { ambilDaftarTransaksiAdmin } from "@/server/queries/transaksi";
+import { ambilDaftarJadwalTransferManualBelumLunas } from "@/server/queries/transfer-manual";
 import { Tombol } from "@/components/ui/tombol";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Landmark } from "lucide-react";
+import { FormCatatTransfer } from "./form-catat-transfer";
 
 type StatusFilter = "MENUNGGU_VERIFIKASI" | "TERVERIFIKASI" | "DITOLAK" | "DIKEMBALIKAN";
 
@@ -31,94 +33,118 @@ export default async function HalamanTransaksiAdmin({
     : "MENUNGGU_VERIFIKASI";
 
   const daftar = await ambilDaftarTransaksiAdmin({ status });
+  const jadwalTransferManual = await ambilDaftarJadwalTransferManualBelumLunas();
+  const opsiJadwal = jadwalTransferManual.map((j) => ({
+    id: j.id,
+    label: `${j.komitmen.ortuAsuh.atasNamaMunfiq || j.komitmen.ortuAsuh.nama} · ${j.periode.kode} · ${formatRupiah(j.nominal)}`,
+  }));
 
   return (
-    <div>
-      {/* Filter Tabs Toolbar */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-border pb-4">
-        {DAFTAR_STATUS.map((s) => {
-          const aktif = status === s;
-          return (
-            <Link
-              key={s}
-              href={`/admin/keuangan/transaksi?status=${s}`}
-              className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
-                aktif
-                  ? "bg-primary text-white shadow-xs"
-                  : "bg-surface text-muted border border-border hover:bg-surface-alt hover:text-ink"
-              }`}
-            >
-              <span>{LABEL_STATUS_TRANSAKSI[s]}</span>
-            </Link>
-          );
-        })}
-      </div>
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
+      {/* Left Column: Filter + Tabel Transaksi */}
+      <div className="lg:col-span-7 xl:col-span-8">
+        {/* Filter Tabs Toolbar */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-border pb-4">
+          {DAFTAR_STATUS.map((s) => {
+            const aktif = status === s;
+            return (
+              <Link
+                key={s}
+                href={`/admin/keuangan/transaksi?status=${s}`}
+                className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
+                  aktif
+                    ? "bg-primary text-white shadow-xs"
+                    : "bg-surface text-muted border border-border hover:bg-surface-alt hover:text-ink"
+                }`}
+              >
+                <span>{LABEL_STATUS_TRANSAKSI[s]}</span>
+              </Link>
+            );
+          })}
+        </div>
 
-      {/* Tabel Transaksi */}
-      <div className="mt-4 rounded-2xl border border-border bg-surface shadow-2xs overflow-hidden">
-        <div className="flex items-center justify-between border-b border-border px-5 py-3.5 bg-surface">
-          <div>
-            <h2 className="font-heading text-sm font-bold text-ink">Daftar Transaksi</h2>
-            <p className="text-[11px] text-muted">Menampilkan {daftar.length} data ({LABEL_STATUS_TRANSAKSI[status]})</p>
+        {/* Tabel Transaksi */}
+        <div className="mt-4 rounded-2xl border border-border bg-surface shadow-2xs overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border px-5 py-3.5 bg-surface">
+            <div>
+              <h2 className="font-heading text-sm font-bold text-ink">Daftar Transaksi</h2>
+              <p className="text-[11px] text-muted">Menampilkan {daftar.length} data ({LABEL_STATUS_TRANSAKSI[status]})</p>
+            </div>
+          </div>
+
+          <div className="max-h-[600px] overflow-y-auto overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="sticky top-0 z-10 bg-surface-alt/90 backdrop-blur-xs">
+                <tr className="border-b border-border text-[11px] font-bold uppercase tracking-wider text-muted">
+                  <th className="py-3 pl-5 pr-4">Donatur / Munfiq</th>
+                  <th className="py-3 px-4">Nominal Masuk</th>
+                  <th className="py-3 px-4">Metode</th>
+                  <th className="py-3 px-4">Tanggal Bayar</th>
+                  <th className="py-3 px-4">Peruntukan</th>
+                  <th className="py-3 pl-4 pr-5 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/60">
+                {daftar.map((t) => (
+                  <tr key={t.id} className="transition-colors hover:bg-surface-alt/50">
+                    <td className="py-3 pl-5 pr-4 font-bold text-ink">
+                      {t.ortuAsuh.atasNamaMunfiq || t.ortuAsuh.nama}
+                    </td>
+                    <td className="py-3 px-4 font-mono font-bold text-primary">
+                      {formatRupiah(t.nominal)}
+                    </td>
+                    <td className="py-3 px-4 text-muted">
+                      <span className="rounded-md bg-surface-alt px-2 py-0.5 font-medium text-ink">
+                        {t.metode.replace(/_/g, " ")}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 font-mono text-muted">
+                      {t.tglBayar.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                    </td>
+                    <td className="py-3 px-4 text-muted">
+                      {t.jadwalBayar
+                        ? `${t.jadwalBayar.periode.kode} (#${t.jadwalBayar.urutan})`
+                        : "Donasi Bebas / Non-Jadwal"}
+                    </td>
+                    <td className="py-3 pl-4 pr-5 text-right">
+                      <Link href={`/admin/keuangan/transaksi/${t.id}`}>
+                        <Tombol variant="garis" ukuran="sm" className="font-semibold text-xs">
+                          <span>Review</span>
+                          <ArrowRight className="h-3 w-3" />
+                        </Tombol>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+                {daftar.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-muted">
+                      <CheckCircle2 className="mx-auto h-8 w-8 text-muted/40 mb-2" />
+                      <p className="font-semibold text-ink">Tidak ada transaksi pada status ini</p>
+                      <p className="text-[11px] text-muted">Semua mutasi transaksi telah tertangani.</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
+      </div>
 
-        <div className="max-h-[600px] overflow-y-auto overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="sticky top-0 z-10 bg-surface-alt/90 backdrop-blur-xs">
-              <tr className="border-b border-border text-[11px] font-bold uppercase tracking-wider text-muted">
-                <th className="py-3 pl-5 pr-4">Donatur / Munfiq</th>
-                <th className="py-3 px-4">Nominal Masuk</th>
-                <th className="py-3 px-4">Metode</th>
-                <th className="py-3 px-4">Tanggal Bayar</th>
-                <th className="py-3 px-4">Peruntukan</th>
-                <th className="py-3 pl-4 pr-5 text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/60">
-              {daftar.map((t) => (
-                <tr key={t.id} className="transition-colors hover:bg-surface-alt/50">
-                  <td className="py-3 pl-5 pr-4 font-bold text-ink">
-                    {t.ortuAsuh.atasNamaMunfiq || t.ortuAsuh.nama}
-                  </td>
-                  <td className="py-3 px-4 font-mono font-bold text-primary">
-                    {formatRupiah(t.nominal)}
-                  </td>
-                  <td className="py-3 px-4 text-muted">
-                    <span className="rounded-md bg-surface-alt px-2 py-0.5 font-medium text-ink">
-                      {t.metode.replace(/_/g, " ")}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 font-mono text-muted">
-                    {t.tglBayar.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
-                  </td>
-                  <td className="py-3 px-4 text-muted">
-                    {t.jadwalBayar
-                      ? `${t.jadwalBayar.periode.kode} (#${t.jadwalBayar.urutan})`
-                      : "Donasi Bebas / Non-Jadwal"}
-                  </td>
-                  <td className="py-3 pl-4 pr-5 text-right">
-                    <Link href={`/admin/keuangan/transaksi/${t.id}`}>
-                      <Tombol variant="garis" ukuran="sm" className="font-semibold text-xs">
-                        <span>Review</span>
-                        <ArrowRight className="h-3 w-3" />
-                      </Tombol>
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-              {daftar.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-muted">
-                    <CheckCircle2 className="mx-auto h-8 w-8 text-muted/40 mb-2" />
-                    <p className="font-semibold text-ink">Tidak ada transaksi pada status ini</p>
-                    <p className="text-[11px] text-muted">Semua mutasi transaksi telah tertangani.</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      {/* Right Column: Catat Transfer Manual */}
+      <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-20">
+        <section className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
+          <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+            <Landmark className="h-4 w-4 text-primary" />
+            <h2 className="font-heading text-base font-bold text-ink">Catat Transfer Masuk</h2>
+          </div>
+          <p className="mb-4 text-[11px] text-muted">
+            Program tidak memakai payment gateway — semua donasi masuk lewat transfer ke rekening
+            resmi. Setelah donatur mengirim bukti transfer (WhatsApp/lainnya), catat realisasinya
+            di sini. Transaksi langsung tercatat Terverifikasi dan masuk ke Pemasukan.
+          </p>
+          <FormCatatTransfer opsiJadwal={opsiJadwal} />
+        </section>
       </div>
     </div>
   );

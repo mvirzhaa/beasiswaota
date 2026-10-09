@@ -46,6 +46,14 @@ export async function ambilDaftarKomitmenAdmin(filter: {
     where: filter.status ? { status: filter.status } : {},
     include: {
       ortuAsuh: { select: { nama: true, tipe: true, atasNamaMunfiq: true } },
+      // Jadwal pertama yang belum lunas -- dipakai sebagai nilai default form
+      // "Konfirmasi & Catat Pemasukan" (lihat tombol-konfirmasi.tsx).
+      jadwalBayar: {
+        where: { status: { notIn: ["TERBAYAR", "DIBATALKAN"] } },
+        orderBy: { jatuhTempo: "asc" },
+        take: 1,
+        select: { id: true, nominal: true },
+      },
     },
     orderBy: { createdAt: "desc" },
   });

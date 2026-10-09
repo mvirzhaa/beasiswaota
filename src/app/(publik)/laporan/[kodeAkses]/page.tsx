@@ -9,7 +9,6 @@ import { ambilKomitmenOrtuAsuh, ambilJadwalBayarOrtuAsuh } from "@/server/querie
 import { ambilLaporanPenyaluranOrtuAsuh } from "@/server/queries/laporan";
 import { ambilDaftarBinaanOrtuAsuh } from "@/server/queries/relasi";
 import { labelSkema } from "@/lib/pendaftaran-donatur/label";
-import { TombolBayarVA } from "./tombol-bayar-va";
 
 export const dynamic = "force-dynamic";
 
@@ -171,12 +170,9 @@ export default async function HalamanLaporanDonatur({
                     {j.jatuhTempo.toLocaleDateString("id-ID")}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Lencana nada={NADA_STATUS_JADWAL[j.status] ?? "netral"}>
-                    {LABEL_STATUS_JADWAL[j.status] ?? j.status}
-                  </Lencana>
-                  <TombolBayarVA kodeAkses={kodeAkses} jadwalBayarId={j.id} />
-                </div>
+                <Lencana nada={NADA_STATUS_JADWAL[j.status] ?? "netral"}>
+                  {LABEL_STATUS_JADWAL[j.status] ?? j.status}
+                </Lencana>
               </div>
             ))}
             {jadwalBelumLunas.length === 0 && (

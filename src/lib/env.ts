@@ -54,13 +54,6 @@ const envSchema = z.object({
   WA_API_TOKEN: z.string().optional(),
 
   CRON_SECRET: z.string().min(16, "CRON_SECRET minimal 16 karakter"),
-
-  MIDTRANS_SERVER_KEY: z.string().optional(),
-  MIDTRANS_CLIENT_KEY: z.string().optional(),
-  MIDTRANS_IS_PRODUCTION: z
-    .string()
-    .default("false")
-    .transform((v) => v === "true"),
 });
 
 function muatEnv() {

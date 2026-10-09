@@ -16,10 +16,6 @@ sistem yang menangani uang dan data pribadi.
 - [ ] `MAIL_FROM=beasiswaota@uika-bogor.ac.id` (akun asli, bukan dummy).
 - [ ] `RESEND_API_KEY` terisi key produksi asli (bukan placeholder
       `re_ganti_ini`/`re_isi_kunci_produksi`).
-- [ ] Midtrans **tidak dipakai saat ini** (program pakai transfer bank
-      manual) — pastikan `MIDTRANS_SERVER_KEY`/`MIDTRANS_CLIENT_KEY`
-      memang sengaja dibiarkan kosong di `.env`, dan tombol "Bayar via VA"
-      di halaman donatur tidak muncul.
 - [ ] `MINIO_ENDPOINT=beasiswaota.uika-bogor.ac.id`,
       `MINIO_PORT=443`, `MINIO_USE_SSL=true` — bukan `minio`/`localhost`.
 - [ ] File `.env` berizin `600`, dimiliki user aplikasi, dan **tidak**
@@ -87,23 +83,6 @@ sistem yang menangani uang dan data pribadi.
       Gmail/Outlook nyata — cek TIDAK masuk folder spam.
 - [ ] Header email uji menunjukkan `SPF: PASS` dan `DKIM: PASS` (cek lewat
       "Show original"/"View source" di klien email).
-
-## Payment gateway (tidak dipakai — lewati bagian ini)
-
-Program memakai transfer bank manual + verifikasi admin, bukan Midtrans.
-Bagian ini baru relevan kalau program mengaktifkan Midtrans lagi di masa
-depan (lihat `deploy/README.md` bagian 9):
-
-- [ ] Payment Notification URL di dashboard Midtrans produksi mengarah ke
-      `https://beasiswaota.uika-bogor.ac.id/api/webhook/payment` (domain
-      HTTPS dengan sertifikat valid, bukan IP/staging).
-- [ ] Transaksi uji nyata (nominal kecil) berhasil: status berubah di DB,
-      `AuditLog` mencatat event webhook, `DanaLedger`/pool bertambah sesuai
-      nominal.
-- [ ] Endpoint webhook menolak (401/403) payload dengan `signature_key`
-      yang salah/acak — diuji manual dengan `curl`.
-- [ ] Endpoint webhook idempoten: mengirim notifikasi sukses yang sama dua
-      kali tidak mendobelkan `Transaksi`/`AlokasiSumber`.
 
 ## Rate limiting
 

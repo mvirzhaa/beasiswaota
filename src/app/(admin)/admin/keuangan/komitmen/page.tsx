@@ -122,7 +122,12 @@ export default async function HalamanKomitmenAdmin({
                   </td>
                   <td className="py-3 pl-4 pr-5 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      {k.status === "MENUNGGU_KONFIRMASI" && <TombolKonfirmasi komitmenId={k.id} />}
+                      {k.status === "MENUNGGU_KONFIRMASI" && (
+                        <TombolKonfirmasi
+                          komitmenId={k.id}
+                          nominalAwal={k.jadwalBayar[0]?.nominal.toString() ?? ""}
+                        />
+                      )}
                       {(k.status === "MENUNGGU_KONFIRMASI" || k.status === "AKTIF" || k.status === "MENUNGGAK") && (
                         <TombolBatalkan komitmenId={k.id} />
                       )}

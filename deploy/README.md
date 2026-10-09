@@ -292,30 +292,7 @@ sukses ke API Resend) tapi bisa masuk spam atau ditolak penerima.
 
 ---
 
-## 9. Verifikasi webhook Midtrans (opsional — TIDAK dipakai saat ini)
-
-Program ini saat ini **hanya memakai transfer bank manual + verifikasi
-admin** (rekening resmi tercantum di halaman pembayaran), bukan Midtrans
-Snap — tombol "Bayar via VA" disembunyikan otomatis selama
-`MIDTRANS_SERVER_KEY`/`MIDTRANS_CLIENT_KEY` di `.env` kosong. Kode
-integrasinya tetap ada di repo (tidak dihapus) kalau suatu saat program
-memutuskan mengaktifkan payment gateway lagi — langkah di bawah ini baru
-relevan pada saat itu:
-
-1. Isi `MIDTRANS_SERVER_KEY`/`MIDTRANS_CLIENT_KEY` produksi di `.env`,
-   `MIDTRANS_IS_PRODUCTION=true`.
-2. Di dashboard Midtrans, set Payment Notification URL ke
-   `https://beasiswaota.uika-bogor.ac.id/api/webhook/payment`.
-3. Lakukan satu transaksi kecil sungguhan (atau pakai simulator Midtrans
-   kalau tersedia untuk akun produksi), lalu cek:
-   - `AuditLog` punya baris `transaksi.webhook_verifikasi`.
-   - `DanaLedger` bertambah sesuai nominal.
-   - Endpoint TIDAK bisa dipanggil tanpa `signature_key` valid (uji kirim
-     payload dengan signature acak lewat curl, harus dapat 401).
-
----
-
-## 10. Backup
+## 9. Backup
 
 Backup harian dikirim ke **Google Drive** (akun `beasiswaota@uika-bogor.ac.id`
 yang sudah ada) lewat `rclone` — dipilih karena tidak ada server kedua
@@ -385,7 +362,7 @@ backup:
 
 ---
 
-## 11. Update kode (ringkasan)
+## 10. Update kode (ringkasan)
 
 Docker: lihat langkah "Rilis baru" di bagian 6 Jalur A.
 PM2/systemd native: `git pull && npm ci && npx prisma migrate deploy && npm run build`,
@@ -397,7 +374,7 @@ LOKAL dulu sebelum deploy — bukan langsung coba-coba di produksi.
 
 ---
 
-## 12. Troubleshooting
+## 11. Troubleshooting
 
 ### App container segfault berulang ("Empty reply from server")
 
